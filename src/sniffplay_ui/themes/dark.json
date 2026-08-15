@@ -1,0 +1,14 @@
+{
+  "name": "SniffPlay Dark",
+  "window": "#101311",
+  "sidebar": "#151917",
+  "surface": "#1b201d",
+  "surfaceHover": "#242a26",
+  "border": "#303833",
+  "textPrimary": "#eef3ef",
+  "textSecondary": "#9ca8a1",
+  "accent": "#55d98b",
+  "warning": "#e9b44c",
+  "danger": "#e26d73"
+}
+
