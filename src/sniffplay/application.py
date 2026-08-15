@@ -22,7 +22,7 @@ from sniffplay.database import Database
 from sniffplay.database.repositories import HistoryRepository, PlaylistRepository
 from sniffplay.logging_config import configure_logging
 from sniffplay.player import create_player
-from sniffplay.providers import NeteaseProvider, ProviderRegistry
+from sniffplay.providers import ProviderRegistry
 from sniffplay.providers.mock import MockProvider
 from sniffplay.services.search_service import SearchService
 
@@ -64,7 +64,6 @@ def run() -> int:
 
     registry = ProviderRegistry()
     registry.register(MockProvider())
-    registry.register(NeteaseProvider())
     controller = AppController(
         search_service=SearchService(registry),
         player=create_player(),

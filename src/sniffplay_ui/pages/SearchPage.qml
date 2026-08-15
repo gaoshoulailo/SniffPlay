@@ -140,7 +140,6 @@ Item {
                 required property string source
                 required property string accent
                 required property string initials
-                required property string artwork
 
                 width: resultsList.width
                 height: 58
@@ -159,22 +158,10 @@ Item {
                         Layout.preferredHeight: 42
                         color: trackRow.accent
                         radius: Theme.radiusSmall
-                        clip: true
-
-                        Image {
-                            id: coverImage
-                            anchors.fill: parent
-                            source: trackRow.artwork
-                            fillMode: Image.PreserveAspectCrop
-                            asynchronous: true
-                            cache: true
-                            visible: status === Image.Ready
-                        }
 
                         Text {
                             anchors.centerIn: parent
                             text: trackRow.initials
-                            visible: coverImage.status !== Image.Ready
                             color: "#101311"
                             font.family: Theme.fontFamily
                             font.pixelSize: 15
