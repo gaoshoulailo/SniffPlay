@@ -108,6 +108,11 @@ class AppController(QObject):
         track = self._player.current_track
         return track.initials if track else "SP"
 
+    @Property(str, notify=playerChanged)
+    def currentArtwork(self) -> str:
+        track = self._player.current_track
+        return (track.artwork_url or "") if track else ""
+
     @Property(bool, notify=playerChanged)
     def hasCurrentTrack(self) -> bool:
         return self._player.current_track is not None
@@ -325,4 +330,3 @@ class AppController(QObject):
             await self._play_queue_index(self._queue_index + 1)
         else:
             self._set_status("播放队列已结束")
-

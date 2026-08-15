@@ -24,3 +24,7 @@ class MusicProvider(ABC):
     @abstractmethod
     async def resolve_stream(self, track: Track) -> StreamInfo:
         """Resolve a short-lived stream immediately before playback."""
+
+    async def get_lyrics(self, track: Track) -> str | None:
+        """Return LRC text when a public lyric endpoint is available."""
+        return None

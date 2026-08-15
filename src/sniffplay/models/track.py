@@ -13,6 +13,8 @@ class Track:
     duration_ms: int
     accent: str = "#55d98b"
     playback_uri: str | None = None
+    artwork_url: str | None = None
+    source_name: str | None = None
 
     @property
     def duration_text(self) -> str:
@@ -24,3 +26,7 @@ class Track:
     def initials(self) -> str:
         title = self.title.strip()
         return title[:1].upper() if title else "?"
+
+    @property
+    def source_display(self) -> str:
+        return self.source_name or self.provider_id.upper()

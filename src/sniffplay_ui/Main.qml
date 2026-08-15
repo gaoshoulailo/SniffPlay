@@ -183,8 +183,8 @@ ApplicationWindow {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 3
 
-                        Text { text: "DEMO 数据源"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 11; font.weight: Font.DemiBold }
-                        Text { text: "第一阶段模拟数据"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 10 }
+                        Text { text: "网易云 + DEMO"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 11; font.weight: Font.DemiBold }
+                        Text { text: "仅公开可播放资源"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 10 }
                     }
 
                     Rectangle {

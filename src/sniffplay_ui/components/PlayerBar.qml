@@ -88,10 +88,22 @@ Rectangle {
                 Layout.preferredHeight: 48
                 radius: Theme.radiusMedium
                 color: root.controller.currentAccent
+                clip: true
+
+                Image {
+                    id: currentCover
+                    anchors.fill: parent
+                    source: root.controller.currentArtwork
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    cache: true
+                    visible: status === Image.Ready
+                }
 
                 Text {
                     anchors.centerIn: parent
                     text: root.controller.currentInitials
+                    visible: currentCover.status !== Image.Ready
                     color: "#101311"
                     font.family: Theme.fontFamily
                     font.pixelSize: 17
@@ -265,4 +277,3 @@ Rectangle {
         }
     }
 }
-

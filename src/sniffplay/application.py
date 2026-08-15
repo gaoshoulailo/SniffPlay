@@ -3,13 +3,14 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import sys
 from pathlib import Path
 
 from sniffplay.qt_bootstrap import prepare_qt_runtime
 
 prepare_qt_runtime()
 
-from PySide6.QtCore import QCoreApplication, Qt, QUrl
+from PySide6.QtCore import QCoreApplication, Qt, QTimer, QUrl
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from qasync import QEventLoop
@@ -21,7 +22,7 @@ from sniffplay.database import Database
 from sniffplay.database.repositories import HistoryRepository, PlaylistRepository
 from sniffplay.logging_config import configure_logging
 from sniffplay.player import create_player
-from sniffplay.providers import ProviderRegistry
+from sniffplay.providers import NeteaseProvider, ProviderRegistry
 from sniffplay.providers.mock import MockProvider
 from sniffplay.services.search_service import SearchService
 
@@ -30,6 +31,16 @@ logger = logging.getLogger(__name__)
 
 def _ui_directory() -> Path:
     return Path(sniffplay_ui.__file__).resolve().parent
+
+
+def _startup_audio_path(arguments: list[str]) -> Path | None:
+    for argument in arguments[1:]:
+        if argument.startswith("-"):
+            continue
+        candidate = Path(argument).expanduser().resolve()
+        if candidate.is_file():
+            return candidate
+    return None
 
 
 def run() -> int:
@@ -43,7 +54,8 @@ def run() -> int:
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
     )
     os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Basic")
-    app = QGuiApplication([])
+    startup_audio = _startup_audio_path(sys.argv)
+    app = QGuiApplication(sys.argv)
     event_loop = QEventLoop(app)
     asyncio.set_event_loop(event_loop)
 
@@ -52,6 +64,7 @@ def run() -> int:
 
     registry = ProviderRegistry()
     registry.register(MockProvider())
+    registry.register(NeteaseProvider())
     controller = AppController(
         search_service=SearchService(registry),
         player=create_player(),
@@ -69,6 +82,10 @@ def run() -> int:
         database.close()
         event_loop.close()
         return 1
+
+    if startup_audio is not None:
+        audio_url = QUrl.fromLocalFile(str(startup_audio))
+        QTimer.singleShot(0, lambda: controller.openLocalFile(audio_url))
 
     app.aboutToQuit.connect(controller.close)
     app.aboutToQuit.connect(database.close)

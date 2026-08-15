@@ -110,10 +110,10 @@ class MpvPlayer(Player):
         duration_ms = int(float(self._read_property("duration", 0) or 0) * 1000)
         if bool(self._read_property("eof_reached", False)):
             state = PlayerState.ENDED
-        elif bool(self._read_property("core_idle", True)):
-            state = self._state
         elif bool(self._read_property("pause", False)):
             state = PlayerState.PAUSED
+        elif bool(self._read_property("core_idle", True)):
+            state = self._state
         else:
             state = PlayerState.PLAYING
         self._state = state
