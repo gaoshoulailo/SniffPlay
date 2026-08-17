@@ -13,6 +13,7 @@ class Track:
     duration_ms: int
     accent: str = "#55d98b"
     playback_uri: str | None = None
+    cover_url: str | None = None
 
     @property
     def duration_text(self) -> str:

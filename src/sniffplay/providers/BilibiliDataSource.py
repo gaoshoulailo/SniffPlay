@@ -6,12 +6,13 @@ import html
 import re
 import time
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
-from pathlib import PurePosixPath
+from dataclasses import dataclass, replace
+from pathlib import Path, PurePosixPath
 from typing import Any, AsyncIterator, Iterator, Mapping
 from urllib.parse import urlencode, urlparse
 
 import httpx
+from platformdirs import user_cache_path
 
 from sniffplay.models import StreamInfo, Track
 from sniffplay.providers.base import (
@@ -104,6 +105,10 @@ FORBIDDEN_CHARS_RE = re.compile(r"[!'()*]")
 HTML_TAG_RE = re.compile(r"<[^>]+>")
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 WBI_REFRESH_CODES = {-403, -352, -412}
+COVER_DOWNLOAD_CONCURRENCY = 10
+COVER_DOWNLOAD_TIMEOUT = 4.0
+COVER_BATCH_TIMEOUT = 6.0
+MAX_COVER_BYTES = 2 * 1024 * 1024
 
 
 class BilibiliAPIError(ProviderError):
@@ -167,6 +172,22 @@ def _clean_text(value: Any, fallback: str = "") -> str:
     return cleaned or fallback
 
 
+def _cover_url(value: Any) -> str | None:
+    url = _clean_text(value)
+    if url.startswith("//"):
+        url = f"https:{url}"
+    elif url.startswith("http://"):
+        url = f"https://{url.removeprefix('http://')}"
+    elif not url.startswith("https://"):
+        return None
+
+    hostname = urlparse(url).hostname or ""
+    if hostname == "hdslb.com" or hostname.endswith(".hdslb.com"):
+        original = url.split("?", 1)[0].split("@", 1)[0]
+        return f"{original}@128w_128h_1c.jpg"
+    return url
+
+
 def _duration_ms(value: Any) -> int:
     if isinstance(value, (int, float)):
         return max(0, int(float(value) * 1000))
@@ -195,6 +216,7 @@ class BilibiliDataSource(MusicProvider):
         key_ttl: float = 600.0,
         page: int = 1,
         client: httpx.AsyncClient | None = None,
+        cover_cache_dir: Path | None = None,
     ) -> None:
         if timeout <= 0:
             raise ValueError("timeout must be greater than zero")
@@ -206,6 +228,9 @@ class BilibiliDataSource(MusicProvider):
         self._key_ttl = key_ttl
         self._page = page
         self._external_client = client
+        self._cover_cache_dir = cover_cache_dir or (
+            user_cache_path("SniffPlay", "SniffPlay") / "covers" / self.id
+        )
         self._keys: WBIKeys | None = None
 
     async def search(self, query: str, limit: int = 30) -> list[Track]:
@@ -215,7 +240,8 @@ class BilibiliDataSource(MusicProvider):
 
         async with self._client_scope() as client:
             payload = await self._search_page(client, keyword)
-        return list(self._tracks_from_search(payload, limit=limit))
+            tracks = list(self._tracks_from_search(payload, limit=limit))
+            return await self._cache_track_covers(client, tracks)
 
     async def resolve_stream(self, track: Track) -> StreamInfo:
         if track.provider_id != self.id:
@@ -300,6 +326,81 @@ class BilibiliDataSource(MusicProvider):
             await asyncio.sleep(0.4 * (2**attempt))
 
         raise BilibiliAPIError("Bilibili 请求失败")
+
+    async def _cache_track_covers(
+        self,
+        client: httpx.AsyncClient,
+        tracks: list[Track],
+    ) -> list[Track]:
+        try:
+            await asyncio.to_thread(
+                self._cover_cache_dir.mkdir,
+                parents=True,
+                exist_ok=True,
+            )
+        except OSError:
+            return [replace(track, cover_url=None) for track in tracks]
+
+        semaphore = asyncio.Semaphore(COVER_DOWNLOAD_CONCURRENCY)
+
+        async def cache(track: Track) -> Track:
+            if not track.cover_url:
+                return track
+            async with semaphore:
+                local_uri = await self._cache_cover(client, track.cover_url)
+            return replace(track, cover_url=local_uri)
+
+        tasks = [asyncio.create_task(cache(track)) for track in tracks]
+        done, pending = await asyncio.wait(tasks, timeout=COVER_BATCH_TIMEOUT)
+        for task in pending:
+            task.cancel()
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
+
+        cached_tracks: list[Track] = []
+        for track, task in zip(tracks, tasks, strict=True):
+            if task not in done or task.cancelled() or task.exception() is not None:
+                cached_tracks.append(replace(track, cover_url=None))
+            else:
+                cached_tracks.append(task.result())
+        return cached_tracks
+
+    async def _cache_cover(
+        self,
+        client: httpx.AsyncClient,
+        remote_url: str,
+    ) -> str | None:
+        cache_key = hashlib.sha256(remote_url.encode("utf-8")).hexdigest()
+        destination = self._cover_cache_dir / f"{cache_key}.jpg"
+        try:
+            if await asyncio.to_thread(_is_usable_cache_file, destination):
+                return destination.resolve().as_uri()
+
+            response = await client.get(
+                remote_url,
+                headers={"Referer": "https://www.bilibili.com/"},
+                timeout=COVER_DOWNLOAD_TIMEOUT,
+            )
+            response.raise_for_status()
+            content_type = response.headers.get("content-type", "").lower()
+            content = response.content
+            if not content_type.startswith("image/"):
+                return None
+            if not content or len(content) > MAX_COVER_BYTES:
+                return None
+
+            temporary = destination.with_name(
+                f".{destination.name}.{time.time_ns()}.tmp"
+            )
+            try:
+                await asyncio.to_thread(temporary.write_bytes, content)
+                await asyncio.to_thread(temporary.replace, destination)
+            finally:
+                if temporary.exists():
+                    await asyncio.to_thread(temporary.unlink, missing_ok=True)
+            return destination.resolve().as_uri()
+        except (httpx.HTTPError, OSError):
+            return None
 
     async def _get_wbi_keys(
         self,
@@ -399,6 +500,7 @@ class BilibiliDataSource(MusicProvider):
                     ),
                     duration_ms=_duration_ms(item.get("duration")),
                     accent="#fb7299",
+                    cover_url=_cover_url(item.get("pic")),
                 )
                 emitted += 1
                 if emitted >= limit:
@@ -519,3 +621,10 @@ def _select_best_audio(payload: Mapping[str, Any]) -> _AudioStream:
             stream.bandwidth,
         ),
     )
+
+
+def _is_usable_cache_file(path: Path) -> bool:
+    try:
+        return path.is_file() and 0 < path.stat().st_size <= MAX_COVER_BYTES
+    except OSError:
+        return False

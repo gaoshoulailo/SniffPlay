@@ -84,10 +84,12 @@ Rectangle {
             spacing: 12
 
             Rectangle {
+                id: currentCover
                 Layout.preferredWidth: 48
                 Layout.preferredHeight: 48
                 radius: Theme.radiusMedium
                 color: root.controller.currentAccent
+                clip: true
 
                 Text {
                     anchors.centerIn: parent
@@ -96,6 +98,17 @@ Rectangle {
                     font.family: Theme.fontFamily
                     font.pixelSize: 17
                     font.bold: true
+                    visible: currentCoverImage.status !== Image.Ready
+                }
+
+                Image {
+                    id: currentCoverImage
+                    anchors.fill: parent
+                    source: root.controller.currentCoverUrl
+                    asynchronous: false
+                    cache: true
+                    fillMode: Image.PreserveAspectCrop
+                    visible: status === Image.Ready
                 }
             }
 

@@ -108,6 +108,11 @@ class AppController(QObject):
         track = self._player.current_track
         return track.initials if track else "SP"
 
+    @Property(str, notify=playerChanged)
+    def currentCoverUrl(self) -> str:
+        track = self._player.current_track
+        return track.cover_url if track and track.cover_url else ""
+
     @Property(bool, notify=playerChanged)
     def hasCurrentTrack(self) -> bool:
         return self._player.current_track is not None

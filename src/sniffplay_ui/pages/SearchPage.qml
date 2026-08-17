@@ -140,6 +140,7 @@ Item {
                 required property string source
                 required property string accent
                 required property string initials
+                required property string coverUrl
 
                 width: resultsList.width
                 height: 58
@@ -154,10 +155,12 @@ Item {
                     spacing: 14
 
                     Rectangle {
+                        id: coverContainer
                         Layout.preferredWidth: 42
                         Layout.preferredHeight: 42
                         color: trackRow.accent
                         radius: Theme.radiusSmall
+                        clip: true
 
                         Text {
                             anchors.centerIn: parent
@@ -166,6 +169,17 @@ Item {
                             font.family: Theme.fontFamily
                             font.pixelSize: 15
                             font.bold: true
+                            visible: coverImage.status !== Image.Ready
+                        }
+
+                        Image {
+                            id: coverImage
+                            anchors.fill: parent
+                            source: trackRow.coverUrl
+                            asynchronous: false
+                            cache: true
+                            fillMode: Image.PreserveAspectCrop
+                            visible: status === Image.Ready
                         }
                     }
 

@@ -42,7 +42,16 @@ class DictionaryListModel(QAbstractListModel):
 class TrackListModel(DictionaryListModel):
     def __init__(self) -> None:
         super().__init__(
-            ("title", "artist", "album", "duration", "source", "accent", "initials")
+            (
+                "title",
+                "artist",
+                "album",
+                "duration",
+                "source",
+                "accent",
+                "initials",
+                "coverUrl",
+            )
         )
         self.tracks: list[Track] = []
 
@@ -58,6 +67,7 @@ class TrackListModel(DictionaryListModel):
                     "source": track.provider_id.upper(),
                     "accent": track.accent,
                     "initials": track.initials,
+                    "coverUrl": track.cover_url or "",
                 }
                 for track in self.tracks
             ]
