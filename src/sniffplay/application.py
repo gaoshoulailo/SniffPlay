@@ -22,8 +22,8 @@ from sniffplay.database import Database
 from sniffplay.database.repositories import HistoryRepository, PlaylistRepository
 from sniffplay.logging_config import configure_logging
 from sniffplay.player import create_player
+from sniffplay.providers.BilibiliDataSource import BilibiliDataSource
 from sniffplay.providers import ProviderRegistry
-from sniffplay.providers.mock import MockProvider
 from sniffplay.services.search_service import SearchService
 
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ def run() -> int:
     database.initialize()
 
     registry = ProviderRegistry()
-    registry.register(MockProvider())
+    registry.register(BilibiliDataSource())
     controller = AppController(
         search_service=SearchService(registry),
         player=create_player(),

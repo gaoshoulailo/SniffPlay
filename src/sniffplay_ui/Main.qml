@@ -183,7 +183,7 @@ ApplicationWindow {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 3
 
-                        Text { text: "DEMO 数据源"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 11; font.weight: Font.DemiBold }
+                        Text { text: "Bilibili 数据源"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 11; font.weight: Font.DemiBold }
                         Text { text: "模拟搜索数据"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 10 }
                     }
 
