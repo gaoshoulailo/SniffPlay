@@ -44,3 +44,56 @@ def test_controller_records_history_only_after_threshold(tmp_path: Path) -> None
     controller.close()
     database.close()
     assert app is not None
+
+
+async def test_controller_manages_and_plays_playlist_tracks(tmp_path: Path) -> None:
+    class PlayableMockProvider(MockProvider):
+        async def resolve_stream(self, track: Track) -> StreamInfo:
+            return StreamInfo("test.wav")
+
+    app = QCoreApplication.instance() or QCoreApplication([])
+    database = Database(tmp_path / "playlist-controller.db")
+    database.initialize()
+    playlists = PlaylistRepository(database)
+    player = MockPlayer()
+    registry = ProviderRegistry()
+    registry.register(PlayableMockProvider())
+    controller = AppController(
+        SearchService(registry),
+        player,
+        playlists,
+        HistoryRepository(database),
+    )
+    playlist = playlists.create("测试歌单")
+
+    await controller.search("")
+    controller.addSearchTrackToPlaylist(0, playlist.id)
+    controller.addSearchTrackToPlaylist(1, playlist.id)
+    controller.openPlaylist(playlist.id)
+
+    assert controller.hasSelectedPlaylist
+    assert controller.selectedPlaylistName == "测试歌单"
+    assert [
+        entry.track.title for entry in controller._playlist_track_model.entries
+    ] == ["夜航", "迟来的风"]
+
+    second_item = controller._playlist_track_model.entries[1]
+    controller.movePlaylistItem(second_item.item_id, 0)
+    assert [
+        entry.track.title for entry in controller._playlist_track_model.entries
+    ] == ["迟来的风", "夜航"]
+
+    await controller._play_playlist_index(1)
+    assert player.current_track is not None
+    assert player.current_track.title == "夜航"
+    assert controller.queueLabel == "队列 2/2"
+    assert controller.canGoPrevious
+
+    controller.deletePlaylist(playlist.id)
+    assert not controller.hasSelectedPlaylist
+    assert controller._playlist_track_model.entries == []
+    assert playlists.list_all() == []
+
+    controller.close()
+    database.close()
+    assert app is not None

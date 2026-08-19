@@ -11,6 +11,8 @@ Item {
     id: root
 
     required property var controller
+    property int pendingTrackIndex: -1
+    property int pendingPlaylistId: -1
 
     ColumnLayout {
         anchors.fill: parent
@@ -116,7 +118,7 @@ Item {
                 Text { Layout.preferredWidth: 180; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
                 Text { Layout.preferredWidth: 72; text: "来源"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
                 Text { Layout.preferredWidth: 52; text: "时长"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-                Item { Layout.preferredWidth: 36 }
+                Item { Layout.preferredWidth: 78 }
             }
         }
 
@@ -196,6 +198,31 @@ Item {
                     Text { Layout.preferredWidth: 52; text: trackRow.duration; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12 }
 
                     Button {
+                        id: rowAddButton
+                        Layout.preferredWidth: 34
+                        Layout.preferredHeight: 34
+                        onClicked: {
+                            root.pendingTrackIndex = trackRow.index
+                            addToPlaylistDialog.open()
+                        }
+                        ToolTip.visible: hovered
+                        ToolTip.text: "加入歌单"
+
+                        contentItem: Text {
+                            text: "+"
+                            color: Theme.textPrimary
+                            font.pixelSize: 18
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        background: Rectangle {
+                            color: rowAddButton.hovered ? Theme.surfaceHover : Theme.surface
+                            border.color: Theme.border
+                            radius: 17
+                        }
+                    }
+
+                    Button {
                         id: rowPlayButton
                         Layout.preferredWidth: 34
                         Layout.preferredHeight: 34
@@ -247,6 +274,197 @@ Item {
             "所有文件 (*)"
         ]
         onAccepted: root.controller.openLocalFile(selectedFile)
+    }
+
+    Dialog {
+        id: addToPlaylistDialog
+        anchors.centerIn: parent
+        width: 390
+        height: 440
+        modal: true
+        title: "加入歌单"
+        onOpened: root.pendingPlaylistId = -1
+        palette.window: Theme.surface
+        palette.windowText: Theme.textPrimary
+        palette.buttonText: Theme.textPrimary
+
+        contentItem: ColumnLayout {
+            spacing: 10
+
+            ListView {
+                id: playlistPicker
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                spacing: 4
+                model: root.controller.playlistModel
+
+                delegate: Button {
+                    id: playlistChoice
+                    required property int playlistId
+                    required property string name
+                    required property string countLabel
+                    width: playlistPicker.width
+                    height: 52
+                    onClicked: root.pendingPlaylistId = playlistChoice.playlistId
+
+                    contentItem: RowLayout {
+                        spacing: 10
+                        Text { Layout.fillWidth: true; text: playlistChoice.name; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13; elide: Text.ElideRight }
+                        Text { text: playlistChoice.countLabel; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
+                        Text {
+                            text: "✓"
+                            visible: root.pendingPlaylistId === playlistChoice.playlistId
+                            color: Theme.accent
+                            font.pixelSize: 15
+                            font.bold: true
+                        }
+                    }
+                    background: Rectangle {
+                        color: root.pendingPlaylistId === playlistChoice.playlistId
+                            ? Theme.accentDark
+                            : (playlistChoice.hovered ? Theme.surfaceHover : Theme.window)
+                        border.color: root.pendingPlaylistId === playlistChoice.playlistId
+                            ? Theme.accent
+                            : Theme.border
+                        radius: Theme.radiusMedium
+                    }
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    visible: playlistPicker.count === 0
+                    text: "还没有歌单"
+                    color: Theme.textSecondary
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 13
+                }
+            }
+
+            AppButton {
+                Layout.fillWidth: true
+                text: "新建歌单并添加"
+                onClicked: newPlaylistWithTrackDialog.open()
+            }
+        }
+
+        footer: Rectangle {
+            implicitHeight: 58
+            color: Theme.surface
+
+            RowLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: addToPlaylistDialog.leftPadding
+                anchors.rightMargin: addToPlaylistDialog.rightPadding
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 10
+
+                Button {
+                    id: cancelAddButton
+                    Layout.fillWidth: true
+                    implicitHeight: 36
+                    onClicked: addToPlaylistDialog.reject()
+
+                    contentItem: Text {
+                        text: "取消"
+                        color: "#ffffff"
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 13
+                        font.weight: Font.DemiBold
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: "#000000"
+                        border.color: cancelAddButton.hovered ? "#ffffff" : Theme.border
+                        border.width: 1
+                        radius: Theme.radiusMedium
+                    }
+                }
+
+                Button {
+                    id: confirmAddButton
+                    Layout.fillWidth: true
+                    implicitHeight: 36
+                    enabled: root.pendingPlaylistId >= 0
+                    onClicked: {
+                        root.controller.addSearchTrackToPlaylist(
+                            root.pendingTrackIndex,
+                            root.pendingPlaylistId
+                        )
+                        addToPlaylistDialog.accept()
+                    }
+
+                    contentItem: Text {
+                        text: "确定"
+                        color: "#ffffff"
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 13
+                        font.weight: Font.DemiBold
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: "#000000"
+                        border.color: confirmAddButton.enabled && confirmAddButton.hovered
+                            ? "#ffffff"
+                            : Theme.border
+                        border.width: 1
+                        radius: Theme.radiusMedium
+                        opacity: confirmAddButton.enabled ? 1 : 0.4
+                    }
+                }
+            }
+        }
+
+        background: Rectangle {
+            color: Theme.surface
+            border.color: Theme.border
+            radius: Theme.radiusMedium
+        }
+    }
+
+    Dialog {
+        id: newPlaylistWithTrackDialog
+        anchors.centerIn: parent
+        width: 380
+        modal: true
+        title: "新建歌单"
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        onOpened: {
+            newPlaylistName.text = ""
+            newPlaylistName.forceActiveFocus()
+        }
+        onAccepted: {
+            root.controller.createPlaylistWithTrack(
+                newPlaylistName.text,
+                root.pendingTrackIndex
+            )
+            addToPlaylistDialog.close()
+        }
+        palette.window: Theme.surface
+        palette.windowText: Theme.textPrimary
+        palette.buttonText: Theme.textPrimary
+
+        contentItem: TextField {
+            id: newPlaylistName
+            implicitHeight: 40
+            color: Theme.textPrimary
+            placeholderText: "歌单名称"
+            placeholderTextColor: "#6f7a73"
+            font.family: Theme.fontFamily
+            background: Rectangle {
+                color: Theme.window
+                border.color: newPlaylistName.activeFocus ? Theme.accent : Theme.border
+                radius: Theme.radiusMedium
+            }
+        }
+        background: Rectangle {
+            color: Theme.surface
+            border.color: Theme.border
+            radius: Theme.radiusMedium
+        }
     }
 
     Component.onCompleted: root.controller.search("")

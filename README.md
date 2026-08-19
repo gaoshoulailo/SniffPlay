@@ -86,3 +86,6 @@ $env:SNIFFPLAY_DATA_DIR = "$PWD\data"
 ```powershell
 .\.venv\Scripts\python -m pytest
 ```
+
+
+.\.venv\Scripts\python.exe -m sniffplay

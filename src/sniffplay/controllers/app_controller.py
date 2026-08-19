@@ -10,6 +10,7 @@ from qasync import asyncSlot
 from sniffplay.controllers.list_models import (
     HistoryListModel,
     PlaylistListModel,
+    PlaylistTrackListModel,
     TrackListModel,
 )
 from sniffplay.database.repositories import HistoryRepository, PlaylistRepository
@@ -26,6 +27,7 @@ class AppController(QObject):
     searchingChanged = Signal()
     statusMessageChanged = Signal()
     playerChanged = Signal()
+    playlistSelectionChanged = Signal()
 
     def __init__(
         self,
@@ -41,6 +43,7 @@ class AppController(QObject):
         self._history_repository = history_repository
         self._track_model = TrackListModel()
         self._playlist_model = PlaylistListModel()
+        self._playlist_track_model = PlaylistTrackListModel()
         self._history_model = HistoryListModel()
         self._searching = False
         self._status_message = (
@@ -53,6 +56,8 @@ class AppController(QObject):
         self._queue_index = -1
         self._history_recorded = False
         self._advance_scheduled = False
+        self._selected_playlist_id = -1
+        self._selected_playlist_name = ""
 
         self._player_timer = QTimer(self)
         self._player_timer.setInterval(250)
@@ -69,8 +74,24 @@ class AppController(QObject):
         return self._playlist_model
 
     @Property(QObject, constant=True)
+    def playlistTrackModel(self) -> QObject:
+        return self._playlist_track_model
+
+    @Property(QObject, constant=True)
     def historyModel(self) -> QObject:
         return self._history_model
+
+    @Property(int, notify=playlistSelectionChanged)
+    def selectedPlaylistId(self) -> int:
+        return self._selected_playlist_id
+
+    @Property(str, notify=playlistSelectionChanged)
+    def selectedPlaylistName(self) -> str:
+        return self._selected_playlist_name
+
+    @Property(bool, notify=playlistSelectionChanged)
+    def hasSelectedPlaylist(self) -> bool:
+        return self._selected_playlist_id >= 0
 
     @Property(bool, notify=searchingChanged)
     def searching(self) -> bool:
@@ -283,13 +304,152 @@ class AppController(QObject):
         self._playlist_model.set_playlists(self._playlist_repository.list_all())
         self._set_status(f"已创建歌单：{playlist.name}")
 
+    @Slot(str, int)
+    def createPlaylistWithTrack(self, name: str, track_index: int) -> None:
+        if not 0 <= track_index < len(self._track_model.tracks):
+            return
+        try:
+            playlist = self._playlist_repository.create(name)
+            self._playlist_repository.add_track(
+                playlist.id,
+                self._track_model.tracks[track_index],
+            )
+        except (LookupError, ValueError) as error:
+            self._set_status(str(error))
+            return
+        self._refresh_playlists()
+        self._set_status(f"已创建歌单并添加歌曲：{playlist.name}")
+
+    @Slot(int)
+    def openPlaylist(self, playlist_id: int) -> None:
+        try:
+            playlist = self._playlist_repository.get(playlist_id)
+            entries = self._playlist_repository.list_tracks(playlist_id)
+        except LookupError as error:
+            self._set_status(str(error))
+            return
+        self._selected_playlist_id = playlist.id
+        self._selected_playlist_name = playlist.name
+        self._playlist_track_model.set_entries(entries)
+        self.playlistSelectionChanged.emit()
+
+    @Slot()
+    def closePlaylist(self) -> None:
+        self._clear_selected_playlist()
+
+    @Slot(int, str)
+    def renamePlaylist(self, playlist_id: int, name: str) -> None:
+        try:
+            playlist = self._playlist_repository.rename(playlist_id, name)
+        except (LookupError, ValueError) as error:
+            self._set_status(str(error))
+            return
+        self._refresh_playlists()
+        if self._selected_playlist_id == playlist_id:
+            self._selected_playlist_name = playlist.name
+            self.playlistSelectionChanged.emit()
+        self._set_status(f"已重命名歌单：{playlist.name}")
+
+    @Slot(int)
+    def deletePlaylist(self, playlist_id: int) -> None:
+        try:
+            playlist = self._playlist_repository.get(playlist_id)
+            self._playlist_repository.delete(playlist_id)
+        except LookupError as error:
+            self._set_status(str(error))
+            return
+        if self._selected_playlist_id == playlist_id:
+            self._clear_selected_playlist()
+        self._refresh_playlists()
+        self._set_status(f"已删除歌单：{playlist.name}")
+
+    @Slot(int, int)
+    def addSearchTrackToPlaylist(self, track_index: int, playlist_id: int) -> None:
+        if not 0 <= track_index < len(self._track_model.tracks):
+            return
+        track = self._track_model.tracks[track_index]
+        try:
+            playlist = self._playlist_repository.get(playlist_id)
+            self._playlist_repository.add_track(playlist_id, track)
+        except (LookupError, ValueError) as error:
+            self._set_status(str(error))
+            return
+        self._refresh_playlists()
+        self._refresh_selected_playlist_if(playlist_id)
+        self._set_status(f"已将《{track.title}》添加到 {playlist.name}")
+
+    @Slot(int)
+    def removePlaylistItem(self, item_id: int) -> None:
+        if not self.hasSelectedPlaylist:
+            return
+        try:
+            self._playlist_repository.remove_item(
+                self._selected_playlist_id,
+                item_id,
+            )
+        except LookupError as error:
+            self._set_status(str(error))
+            return
+        self._refresh_playlists()
+        self._refresh_selected_playlist_if(self._selected_playlist_id)
+        self._set_status("已从歌单移除歌曲")
+
+    @Slot(int, int)
+    def movePlaylistItem(self, item_id: int, target_index: int) -> None:
+        if not self.hasSelectedPlaylist:
+            return
+        try:
+            self._playlist_repository.move_item(
+                self._selected_playlist_id,
+                item_id,
+                target_index,
+            )
+        except (LookupError, ValueError) as error:
+            self._set_status(str(error))
+            return
+        self._refresh_selected_playlist_if(self._selected_playlist_id)
+
+    @asyncSlot(int)
+    async def playPlaylistItem(self, index: int) -> None:
+        await self._play_playlist_index(index)
+
+    async def _play_playlist_index(self, index: int) -> None:
+        entries = self._playlist_track_model.entries
+        if not 0 <= index < len(entries):
+            return
+        self._queue = [entry.track for entry in entries]
+        await self._play_queue_index(index)
+
+    @asyncSlot()
+    async def playSelectedPlaylist(self) -> None:
+        if self._playlist_track_model.entries:
+            await self._play_playlist_index(0)
+
     @Slot()
     def refreshLibrary(self) -> None:
         self.refresh_library()
 
     def refresh_library(self) -> None:
-        self._playlist_model.set_playlists(self._playlist_repository.list_all())
+        self._refresh_playlists()
         self._history_model.set_entries(self._history_repository.recent())
+
+    def _refresh_playlists(self) -> None:
+        self._playlist_model.set_playlists(self._playlist_repository.list_all())
+
+    def _refresh_selected_playlist_if(self, playlist_id: int) -> None:
+        if self._selected_playlist_id != playlist_id:
+            return
+        self._playlist_track_model.set_entries(
+            self._playlist_repository.list_tracks(playlist_id)
+        )
+
+    def _clear_selected_playlist(self) -> None:
+        if not self.hasSelectedPlaylist:
+            return
+        self._selected_playlist_id = -1
+        self._selected_playlist_name = ""
+        self._playlist_track_model.set_entries([])
+        self.playlistSelectionChanged.emit()
 
     @Slot()
     def close(self) -> None:

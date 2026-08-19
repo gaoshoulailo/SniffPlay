@@ -6,7 +6,10 @@ from typing import Any
 from PySide6.QtCore import QAbstractListModel, QByteArray, QModelIndex, Qt
 
 from sniffplay.database.repositories.history import HistoryEntry
-from sniffplay.database.repositories.playlists import PlaylistSummary
+from sniffplay.database.repositories.playlists import (
+    PlaylistSummary,
+    PlaylistTrackEntry,
+)
 from sniffplay.models import Track
 
 
@@ -88,6 +91,52 @@ class PlaylistListModel(DictionaryListModel):
                     "countLabel": f"{playlist.item_count} 首歌曲",
                 }
                 for playlist in playlists
+            ]
+        )
+
+
+class PlaylistTrackListModel(DictionaryListModel):
+    def __init__(self) -> None:
+        super().__init__(
+            (
+                "itemId",
+                "playlistId",
+                "position",
+                "title",
+                "artist",
+                "album",
+                "duration",
+                "source",
+                "accent",
+                "initials",
+                "coverUrl",
+                "canMoveUp",
+                "canMoveDown",
+            )
+        )
+        self.entries: list[PlaylistTrackEntry] = []
+
+    def set_entries(self, entries: Sequence[PlaylistTrackEntry]) -> None:
+        self.entries = list(entries)
+        last_index = len(self.entries) - 1
+        self.replace(
+            [
+                {
+                    "itemId": entry.item_id,
+                    "playlistId": entry.playlist_id,
+                    "position": entry.position,
+                    "title": entry.track.title,
+                    "artist": entry.track.artist,
+                    "album": entry.track.album,
+                    "duration": entry.track.duration_text,
+                    "source": entry.track.provider_id.upper(),
+                    "accent": entry.track.accent,
+                    "initials": entry.track.initials,
+                    "coverUrl": entry.track.cover_url or "",
+                    "canMoveUp": index > 0,
+                    "canMoveDown": index < last_index,
+                }
+                for index, entry in enumerate(self.entries)
             ]
         )
 

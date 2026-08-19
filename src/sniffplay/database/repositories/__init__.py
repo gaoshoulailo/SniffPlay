@@ -1,5 +1,8 @@
 from sniffplay.database.repositories.history import HistoryRepository
-from sniffplay.database.repositories.playlists import PlaylistRepository
+from sniffplay.database.repositories.playlists import (
+    PlaylistRepository,
+    PlaylistTrackEntry,
+)
 
-__all__ = ["HistoryRepository", "PlaylistRepository"]
+__all__ = ["HistoryRepository", "PlaylistRepository", "PlaylistTrackEntry"]
 
