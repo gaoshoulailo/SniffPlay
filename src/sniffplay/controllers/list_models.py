@@ -6,6 +6,7 @@ from typing import Any
 from PySide6.QtCore import QAbstractListModel, QByteArray, QModelIndex, Qt
 
 from sniffplay.database.repositories.history import HistoryEntry
+from sniffplay.database.repositories.favorites import FavoriteEntry
 from sniffplay.database.repositories.playlists import (
     PlaylistSummary,
     PlaylistTrackEntry,
@@ -54,12 +55,18 @@ class TrackListModel(DictionaryListModel):
                 "accent",
                 "initials",
                 "coverUrl",
+                "isFavorite",
             )
         )
         self.tracks: list[Track] = []
 
-    def set_tracks(self, tracks: Sequence[Track]) -> None:
+    def set_tracks(
+        self,
+        tracks: Sequence[Track],
+        favorite_keys: set[tuple[str, str]] | None = None,
+    ) -> None:
         self.tracks = list(tracks)
+        favorite_keys = favorite_keys or set()
         self.replace(
             [
                 {
@@ -71,6 +78,10 @@ class TrackListModel(DictionaryListModel):
                     "accent": track.accent,
                     "initials": track.initials,
                     "coverUrl": track.cover_url or "",
+                    "isFavorite": (
+                        track.provider_id,
+                        track.provider_track_id,
+                    ) in favorite_keys,
                 }
                 for track in self.tracks
             ]
@@ -91,6 +102,47 @@ class PlaylistListModel(DictionaryListModel):
                     "countLabel": f"{playlist.item_count} 首歌曲",
                 }
                 for playlist in playlists
+            ]
+        )
+
+
+class FavoriteListModel(DictionaryListModel):
+    def __init__(self) -> None:
+        super().__init__(
+            (
+                "favoriteId",
+                "title",
+                "artist",
+                "album",
+                "duration",
+                "source",
+                "accent",
+                "initials",
+                "coverUrl",
+                "favoritedAt",
+            )
+        )
+        self.entries: list[FavoriteEntry] = []
+
+    def set_entries(self, entries: Sequence[FavoriteEntry]) -> None:
+        self.entries = list(entries)
+        self.replace(
+            [
+                {
+                    "favoriteId": entry.id,
+                    "title": entry.track.title,
+                    "artist": entry.track.artist,
+                    "album": entry.track.album,
+                    "duration": entry.track.duration_text,
+                    "source": entry.track.provider_id.upper(),
+                    "accent": entry.track.accent,
+                    "initials": entry.track.initials,
+                    "coverUrl": entry.track.cover_url or "",
+                    "favoritedAt": entry.favorited_at.astimezone().strftime(
+                        "%m-%d %H:%M"
+                    ),
+                }
+                for entry in self.entries
             ]
         )
 

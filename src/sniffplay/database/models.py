@@ -67,9 +67,21 @@ class PlayHistoryRecord(Base):
     completed: Mapped[bool] = mapped_column(default=False)
 
 
+class FavoriteRecord(Base):
+    __tablename__ = "favorites"
+    __table_args__ = (UniqueConstraint("track_id", name="uq_favorite_track"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    track_id: Mapped[int] = mapped_column(
+        ForeignKey("tracks.id", ondelete="CASCADE"), index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+
+
 class SettingRecord(Base):
     __tablename__ = "settings"
 
     key: Mapped[str] = mapped_column(String(120), primary_key=True)
     value: Mapped[str] = mapped_column(String(1000))
-

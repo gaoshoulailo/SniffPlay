@@ -154,18 +154,26 @@ ApplicationWindow {
 
                 NavButton {
                     Layout.fillWidth: true
-                    text: "我的歌单"
-                    marker: "P"
+                    text: "我的收藏"
+                    marker: "F"
                     selected: root.currentPage === 1
                     onClicked: root.currentPage = 1
                 }
 
                 NavButton {
                     Layout.fillWidth: true
-                    text: "播放历史"
-                    marker: "H"
+                    text: "我的歌单"
+                    marker: "P"
                     selected: root.currentPage === 2
                     onClicked: root.currentPage = 2
+                }
+
+                NavButton {
+                    Layout.fillWidth: true
+                    text: "播放历史"
+                    marker: "H"
+                    selected: root.currentPage === 3
+                    onClicked: root.currentPage = 3
                 }
 
                 Item { Layout.fillHeight: true }
@@ -211,6 +219,7 @@ ApplicationWindow {
                 currentIndex: root.currentPage
 
                 SearchPage { controller: root.controller }
+                FavoritesPage { controller: root.controller }
                 PlaylistPage { controller: root.controller }
                 HistoryPage { controller: root.controller }
             }

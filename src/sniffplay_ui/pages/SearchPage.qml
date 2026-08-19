@@ -118,7 +118,7 @@ Item {
                 Text { Layout.preferredWidth: 180; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
                 Text { Layout.preferredWidth: 72; text: "来源"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
                 Text { Layout.preferredWidth: 52; text: "时长"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-                Item { Layout.preferredWidth: 78 }
+                Item { Layout.preferredWidth: 114 }
             }
         }
 
@@ -143,6 +143,7 @@ Item {
                 required property string accent
                 required property string initials
                 required property string coverUrl
+                required property bool isFavorite
 
                 width: resultsList.width
                 height: 58
@@ -196,6 +197,28 @@ Item {
                     Text { Layout.preferredWidth: 180; text: trackRow.album; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12; elide: Text.ElideRight }
                     Text { Layout.preferredWidth: 72; text: trackRow.source; color: Theme.accent; font.family: Theme.fontFamily; font.pixelSize: 11; font.weight: Font.DemiBold }
                     Text { Layout.preferredWidth: 52; text: trackRow.duration; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12 }
+
+                    Button {
+                        id: favoriteButton
+                        Layout.preferredWidth: 34
+                        Layout.preferredHeight: 34
+                        onClicked: root.controller.toggleTrackFavorite(trackRow.index)
+                        ToolTip.visible: hovered
+                        ToolTip.text: trackRow.isFavorite ? "取消收藏" : "收藏"
+
+                        contentItem: Text {
+                            text: trackRow.isFavorite ? "♥" : "♡"
+                            color: trackRow.isFavorite ? Theme.danger : Theme.textSecondary
+                            font.pixelSize: 19
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        background: Rectangle {
+                            color: favoriteButton.hovered ? Theme.surfaceHover : Theme.surface
+                            border.color: trackRow.isFavorite ? Theme.danger : Theme.border
+                            radius: 17
+                        }
+                    }
 
                     Button {
                         id: rowAddButton

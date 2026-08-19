@@ -8,7 +8,11 @@ from PySide6.QtCore import QCoreApplication
 
 from sniffplay.controllers import AppController
 from sniffplay.database import Database
-from sniffplay.database.repositories import HistoryRepository, PlaylistRepository
+from sniffplay.database.repositories import (
+    FavoriteRepository,
+    HistoryRepository,
+    PlaylistRepository,
+)
 from sniffplay.models import StreamInfo, Track
 from sniffplay.player import MockPlayer
 from sniffplay.providers import ProviderRegistry
@@ -94,6 +98,43 @@ async def test_controller_manages_and_plays_playlist_tracks(tmp_path: Path) -> N
     assert controller._playlist_track_model.entries == []
     assert playlists.list_all() == []
 
+    controller.close()
+    database.close()
+    assert app is not None
+
+
+async def test_controller_updates_favorite_roles_and_current_state(
+    tmp_path: Path,
+) -> None:
+    app = QCoreApplication.instance() or QCoreApplication([])
+    database = Database(tmp_path / "favorite-controller.db")
+    database.initialize()
+    registry = ProviderRegistry()
+    registry.register(MockProvider())
+    favorites = FavoriteRepository(database)
+    controller = AppController(
+        SearchService(registry),
+        MockPlayer(),
+        PlaylistRepository(database),
+        HistoryRepository(database),
+        favorites,
+    )
+
+    await controller.search("")
+    controller.toggleTrackFavorite(0)
+    assert controller.favoriteCount == 1
+    assert controller.favoriteModel.rowCount() == 1
+    assert controller.trackModel.data(
+        controller.trackModel.index(0, 0),
+        next(
+            role
+            for role, name in controller.trackModel.roleNames().items()
+            if bytes(name).decode() == "isFavorite"
+        ),
+    )
+
+    controller.toggleTrackFavorite(0)
+    assert controller.favoriteCount == 0
     controller.close()
     database.close()
     assert app is not None

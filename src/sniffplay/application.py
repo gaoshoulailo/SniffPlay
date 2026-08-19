@@ -19,7 +19,11 @@ import sniffplay_ui
 from sniffplay.config import AppSettings
 from sniffplay.controllers import AppController
 from sniffplay.database import Database
-from sniffplay.database.repositories import HistoryRepository, PlaylistRepository
+from sniffplay.database.repositories import (
+    FavoriteRepository,
+    HistoryRepository,
+    PlaylistRepository,
+)
 from sniffplay.logging_config import configure_logging
 from sniffplay.player import create_player
 from sniffplay.providers.BilibiliDataSource import BilibiliDataSource
@@ -69,6 +73,7 @@ def run() -> int:
         player=create_player(),
         playlist_repository=PlaylistRepository(database),
         history_repository=HistoryRepository(database),
+        favorite_repository=FavoriteRepository(database),
     )
 
     engine = QQmlApplicationEngine()

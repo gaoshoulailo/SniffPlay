@@ -8,12 +8,17 @@ from PySide6.QtCore import Property, QObject, QTimer, QUrl, Signal, Slot
 from qasync import asyncSlot
 
 from sniffplay.controllers.list_models import (
+    FavoriteListModel,
     HistoryListModel,
     PlaylistListModel,
     PlaylistTrackListModel,
     TrackListModel,
 )
-from sniffplay.database.repositories import HistoryRepository, PlaylistRepository
+from sniffplay.database.repositories import (
+    FavoriteRepository,
+    HistoryRepository,
+    PlaylistRepository,
+)
 from sniffplay.models import Track
 from sniffplay.player import Player, PlayerState, PlayerUnavailableError
 from sniffplay.player.base import PlayerSnapshot
@@ -27,7 +32,9 @@ class AppController(QObject):
     searchingChanged = Signal()
     statusMessageChanged = Signal()
     playerChanged = Signal()
+    currentFavoriteChanged = Signal()
     playlistSelectionChanged = Signal()
+    favoritesChanged = Signal()
 
     def __init__(
         self,
@@ -35,13 +42,16 @@ class AppController(QObject):
         player: Player,
         playlist_repository: PlaylistRepository,
         history_repository: HistoryRepository,
+        favorite_repository: FavoriteRepository | None = None,
     ) -> None:
         super().__init__()
         self._search_service = search_service
         self._player = player
         self._playlist_repository = playlist_repository
         self._history_repository = history_repository
+        self._favorite_repository = favorite_repository
         self._track_model = TrackListModel()
+        self._favorite_model = FavoriteListModel()
         self._playlist_model = PlaylistListModel()
         self._playlist_track_model = PlaylistTrackListModel()
         self._history_model = HistoryListModel()
@@ -58,6 +68,7 @@ class AppController(QObject):
         self._advance_scheduled = False
         self._selected_playlist_id = -1
         self._selected_playlist_name = ""
+        self._favorite_keys: set[tuple[str, str]] = set()
 
         self._player_timer = QTimer(self)
         self._player_timer.setInterval(250)
@@ -80,6 +91,14 @@ class AppController(QObject):
     @Property(QObject, constant=True)
     def historyModel(self) -> QObject:
         return self._history_model
+
+    @Property(QObject, constant=True)
+    def favoriteModel(self) -> QObject:
+        return self._favorite_model
+
+    @Property(int, notify=favoritesChanged)
+    def favoriteCount(self) -> int:
+        return len(self._favorite_model.entries)
 
     @Property(int, notify=playlistSelectionChanged)
     def selectedPlaylistId(self) -> int:
@@ -137,6 +156,11 @@ class AppController(QObject):
     @Property(bool, notify=playerChanged)
     def hasCurrentTrack(self) -> bool:
         return self._player.current_track is not None
+
+    @Property(bool, notify=currentFavoriteChanged)
+    def currentFavorite(self) -> bool:
+        track = self._player.current_track
+        return bool(track and self._is_favorite(track))
 
     @Property(bool, notify=playerChanged)
     def playing(self) -> bool:
@@ -202,7 +226,7 @@ class AppController(QObject):
         self._set_status("正在搜索...")
         try:
             tracks = await self._search_service.search(query)
-            self._track_model.set_tracks(tracks)
+            self._track_model.set_tracks(tracks, self._favorite_keys)
             self._set_status(f"找到 {len(tracks)} 首歌曲")
         except Exception:
             logger.exception("Search failed")
@@ -259,6 +283,7 @@ class AppController(QObject):
         self._history_recorded = False
         self._advance_scheduled = False
         self.playerChanged.emit()
+        self.currentFavoriteChanged.emit()
         self._set_status(f"正在播放：{track.title}")
 
     @Slot()
@@ -293,6 +318,52 @@ class AppController(QObject):
         self._player.set_volume(volume)
         self._snapshot = self._player.snapshot()
         self.playerChanged.emit()
+
+    @Slot(int)
+    def toggleTrackFavorite(self, track_index: int) -> None:
+        if self._favorite_repository is None:
+            self._set_status("收藏功能尚未初始化")
+            return
+        if not 0 <= track_index < len(self._track_model.tracks):
+            return
+        track = self._track_model.tracks[track_index]
+        is_favorite = self._favorite_repository.toggle(track)
+        self._refresh_favorites()
+        self._set_status(
+            f"已收藏：{track.title}" if is_favorite else f"已取消收藏：{track.title}"
+        )
+
+    @Slot()
+    def toggleCurrentFavorite(self) -> None:
+        track = self._player.current_track
+        if track is None:
+            return
+        if self._favorite_repository is None:
+            self._set_status("收藏功能尚未初始化")
+            return
+        is_favorite = self._favorite_repository.toggle(track)
+        self._refresh_favorites()
+        self.playerChanged.emit()
+        self.currentFavoriteChanged.emit()
+        self._set_status(
+            f"已收藏：{track.title}" if is_favorite else f"已取消收藏：{track.title}"
+        )
+
+    @Slot(int)
+    def removeFavorite(self, favorite_id: int) -> None:
+        if self._favorite_repository is None:
+            return
+        self._favorite_repository.remove_by_id(favorite_id)
+        self._refresh_favorites()
+        self._set_status("已取消收藏")
+
+    @asyncSlot(int)
+    async def playFavorite(self, index: int) -> None:
+        entries = self._favorite_model.entries
+        if not 0 <= index < len(entries):
+            return
+        self._queue = [entry.track for entry in entries]
+        await self._play_queue_index(index)
 
     @Slot(str)
     def createPlaylist(self, name: str) -> None:
@@ -432,9 +503,31 @@ class AppController(QObject):
     def refresh_library(self) -> None:
         self._refresh_playlists()
         self._history_model.set_entries(self._history_repository.recent())
+        self._refresh_favorites()
 
     def _refresh_playlists(self) -> None:
         self._playlist_model.set_playlists(self._playlist_repository.list_all())
+
+    def _refresh_favorites(self) -> None:
+        if self._favorite_repository is None:
+            self._favorite_keys = set()
+            self._favorite_model.set_entries([])
+        else:
+            entries = self._favorite_repository.list_all()
+            self._favorite_model.set_entries(entries)
+            self._favorite_keys = {
+                (entry.track.provider_id, entry.track.provider_track_id)
+                for entry in entries
+            }
+        self._track_model.set_tracks(self._track_model.tracks, self._favorite_keys)
+        self.favoritesChanged.emit()
+        self.currentFavoriteChanged.emit()
+
+    def _is_favorite(self, track: Track) -> bool:
+        return (
+            track.provider_id,
+            track.provider_track_id,
+        ) in self._favorite_keys
 
     def _refresh_selected_playlist_if(self, playlist_id: int) -> None:
         if self._selected_playlist_id != playlist_id:

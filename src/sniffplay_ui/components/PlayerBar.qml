@@ -140,6 +140,27 @@ Rectangle {
             Item { Layout.fillWidth: true }
 
             Button {
+                id: favoriteButton
+                Layout.preferredWidth: 34
+                Layout.preferredHeight: 34
+                enabled: root.controller.hasCurrentTrack
+                onClicked: root.controller.toggleCurrentFavorite()
+                ToolTip.visible: hovered
+                ToolTip.text: root.controller.currentFavorite ? "取消收藏" : "收藏"
+                contentItem: Text {
+                    text: root.controller.currentFavorite ? "♥" : "♡"
+                    color: root.controller.currentFavorite ? Theme.danger : (favoriteButton.enabled ? Theme.textPrimary : "#58605b")
+                    font.pixelSize: 19
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                background: Rectangle {
+                    color: favoriteButton.hovered ? Theme.surfaceHover : Theme.transparent
+                    radius: 17
+                }
+            }
+
+            Button {
                 id: previousButton
                 Layout.preferredWidth: 34
                 Layout.preferredHeight: 34
