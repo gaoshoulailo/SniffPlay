@@ -23,9 +23,11 @@ def _candidate_directories() -> tuple[Path, ...]:
     configured_path = Path(configured_dll).expanduser().parent if configured_dll else None
     project_root = Path(__file__).resolve().parents[3]
     executable_dir = Path(sys.executable).resolve().parent
+    frozen_root = Path(getattr(sys, "_MEIPASS", "")) if getattr(sys, "_MEIPASS", "") else None
     candidates = [
         configured_path,
         project_root / "vendor" / "mpv",
+        frozen_root / "vendor" / "mpv" if frozen_root else None,
         executable_dir / "vendor" / "mpv",
         executable_dir,
     ]
