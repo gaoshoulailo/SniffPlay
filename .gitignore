@@ -8,8 +8,9 @@ build/
 dist/
 *.egg-info/
 .idea/
+.reasonix/
+demo.txt
 data/
 vendor/mpv/*.dll
 vendor/mpv/*.exe
 vendor/mpv/*.zip
-
