@@ -20,7 +20,35 @@ def test_playlist_and_history_are_persisted(tmp_path: Path) -> None:
 
     assert created.name == "通勤"
     assert playlists.list_all()[0].item_count == 0
-    assert history.recent()[0].title == "测试歌曲"
+    assert history.recent()[0].track.title == "测试歌曲"
+
+    database.close()
+
+
+def test_history_restores_playable_tracks_and_recent_order(tmp_path: Path) -> None:
+    database = Database(tmp_path / "history-tracks.db")
+    database.initialize()
+    history = HistoryRepository(database)
+    local_path = tmp_path / "local.flac"
+    first = Track("demo", "one", "网络歌曲", "歌手", "专辑", 120_000)
+    local = Track(
+        "local",
+        str(local_path),
+        "本地歌曲",
+        "本地文件",
+        tmp_path.name,
+        0,
+        playback_uri=str(local_path),
+    )
+
+    history.record(first, listened_ms=30_000)
+    history.record(local, listened_ms=45_000)
+    entries = history.recent()
+
+    assert [entry.track.title for entry in entries] == ["本地歌曲", "网络歌曲"]
+    assert entries[0].track.playback_uri == str(local_path)
+    assert entries[0].listened_ms == 45_000
+    assert entries[1].track.provider_id == "demo"
 
     database.close()
 

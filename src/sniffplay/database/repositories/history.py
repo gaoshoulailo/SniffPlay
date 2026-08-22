@@ -14,9 +14,10 @@ from sniffplay.models import Track
 @dataclass(frozen=True, slots=True)
 class HistoryEntry:
     id: int
-    title: str
-    artist: str
+    track: Track
     played_at: datetime
+    listened_ms: int
+    completed: bool
 
 
 class HistoryRepository:
@@ -35,12 +36,38 @@ class HistoryRepository:
             rows = session.execute(
                 select(
                     PlayHistoryRecord.id,
+                    PlayHistoryRecord.played_at,
+                    PlayHistoryRecord.listened_ms,
+                    PlayHistoryRecord.completed,
+                    TrackRecord.provider_id,
+                    TrackRecord.provider_track_id,
                     TrackRecord.title,
                     TrackRecord.artist,
-                    PlayHistoryRecord.played_at,
+                    TrackRecord.album,
+                    TrackRecord.duration_ms,
                 )
                 .join(TrackRecord, TrackRecord.id == PlayHistoryRecord.track_id)
-                .order_by(PlayHistoryRecord.played_at.desc())
+                .order_by(
+                    PlayHistoryRecord.played_at.desc(),
+                    PlayHistoryRecord.id.desc(),
+                )
                 .limit(limit)
             ).all()
-        return [HistoryEntry(row[0], row[1], row[2], row[3]) for row in rows]
+        return [
+            HistoryEntry(
+                id=row[0],
+                played_at=row[1],
+                listened_ms=row[2],
+                completed=row[3],
+                track=Track(
+                    provider_id=row[4],
+                    provider_track_id=row[5],
+                    title=row[6],
+                    artist=row[7],
+                    album=row[8],
+                    duration_ms=row[9],
+                    playback_uri=row[5] if row[4] == "local" else None,
+                ),
+            )
+            for row in rows
+        ]

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Sequence
 from pathlib import Path
 
 from PySide6.QtCore import Property, QObject, QTimer, QUrl, Signal, Slot
@@ -237,10 +238,7 @@ class AppController(QObject):
 
     @asyncSlot(int)
     async def playTrack(self, index: int) -> None:
-        if not 0 <= index < len(self._track_model.tracks):
-            return
-        self._queue = list(self._track_model.tracks)
-        await self._play_queue_index(index)
+        await self._play_tracks(self._track_model.tracks, index)
 
     @asyncSlot(QUrl)
     async def openLocalFile(self, file_url: QUrl) -> None:
@@ -258,8 +256,13 @@ class AppController(QObject):
             accent="#e9b44c",
             playback_uri=str(path),
         )
-        self._queue = [track]
-        await self._play_queue_index(0)
+        await self._play_tracks([track], 0)
+
+    async def _play_tracks(self, tracks: Sequence[Track], index: int) -> None:
+        if not 0 <= index < len(tracks):
+            return
+        self._queue = list(tracks)
+        await self._play_queue_index(index)
 
     async def _play_queue_index(self, index: int) -> None:
         if not 0 <= index < len(self._queue):
@@ -359,11 +362,17 @@ class AppController(QObject):
 
     @asyncSlot(int)
     async def playFavorite(self, index: int) -> None:
-        entries = self._favorite_model.entries
-        if not 0 <= index < len(entries):
-            return
-        self._queue = [entry.track for entry in entries]
-        await self._play_queue_index(index)
+        await self._play_tracks(
+            [entry.track for entry in self._favorite_model.entries],
+            index,
+        )
+
+    @asyncSlot(int)
+    async def playHistory(self, index: int) -> None:
+        await self._play_tracks(
+            [entry.track for entry in self._history_model.entries],
+            index,
+        )
 
     @Slot(str)
     def createPlaylist(self, name: str) -> None:
@@ -485,11 +494,10 @@ class AppController(QObject):
         await self._play_playlist_index(index)
 
     async def _play_playlist_index(self, index: int) -> None:
-        entries = self._playlist_track_model.entries
-        if not 0 <= index < len(entries):
-            return
-        self._queue = [entry.track for entry in entries]
-        await self._play_queue_index(index)
+        await self._play_tracks(
+            [entry.track for entry in self._playlist_track_model.entries],
+            index,
+        )
 
     @asyncSlot()
     async def playSelectedPlaylist(self) -> None:

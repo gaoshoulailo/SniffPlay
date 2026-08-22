@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from pathlib import Path
 
 from sniffplay.models import StreamInfo, Track
 from sniffplay.providers import ProviderRegistry
@@ -32,6 +33,8 @@ class SearchService:
 
     async def resolve_stream(self, track: Track) -> StreamInfo:
         if track.playback_uri:
+            if track.provider_id == "local" and not Path(track.playback_uri).is_file():
+                raise FileNotFoundError("本地音频文件已不存在")
             return StreamInfo(track.playback_uri)
         provider = self._registry.get(track.provider_id)
         return await provider.resolve_stream(track)

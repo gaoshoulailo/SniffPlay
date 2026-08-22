@@ -195,17 +195,48 @@ class PlaylistTrackListModel(DictionaryListModel):
 
 class HistoryListModel(DictionaryListModel):
     def __init__(self) -> None:
-        super().__init__(("historyId", "title", "artist", "playedAt"))
+        super().__init__(
+            (
+                "historyId",
+                "title",
+                "artist",
+                "album",
+                "duration",
+                "source",
+                "accent",
+                "initials",
+                "coverUrl",
+                "playedAt",
+                "listenedText",
+                "completed",
+            )
+        )
+        self.entries: list[HistoryEntry] = []
 
     def set_entries(self, entries: Sequence[HistoryEntry]) -> None:
+        self.entries = list(entries)
         self.replace(
             [
                 {
                     "historyId": entry.id,
-                    "title": entry.title,
-                    "artist": entry.artist,
+                    "title": entry.track.title,
+                    "artist": entry.track.artist,
+                    "album": entry.track.album,
+                    "duration": entry.track.duration_text,
+                    "source": entry.track.provider_id.upper(),
+                    "accent": entry.track.accent,
+                    "initials": entry.track.initials,
+                    "coverUrl": entry.track.cover_url or "",
                     "playedAt": entry.played_at.astimezone().strftime("%m-%d %H:%M"),
+                    "listenedText": self._format_duration(entry.listened_ms),
+                    "completed": entry.completed,
                 }
-                for entry in entries
+                for entry in self.entries
             ]
         )
+
+    @staticmethod
+    def _format_duration(milliseconds: int) -> str:
+        total_seconds = max(0, milliseconds // 1000)
+        minutes, seconds = divmod(total_seconds, 60)
+        return f"{minutes}:{seconds:02d}"

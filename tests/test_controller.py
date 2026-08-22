@@ -138,3 +138,36 @@ async def test_controller_updates_favorite_roles_and_current_state(
     controller.close()
     database.close()
     assert app is not None
+
+
+async def test_controller_plays_history_as_a_queue(tmp_path: Path) -> None:
+    class PlayableMockProvider(MockProvider):
+        async def resolve_stream(self, track: Track) -> StreamInfo:
+            return StreamInfo("test.wav")
+
+    app = QCoreApplication.instance() or QCoreApplication([])
+    database = Database(tmp_path / "history-controller.db")
+    database.initialize()
+    history = HistoryRepository(database)
+    history.record(Track("demo", "one", "较早", "歌手", "专辑", 60_000))
+    history.record(Track("demo", "two", "最近", "歌手", "专辑", 60_000))
+    registry = ProviderRegistry()
+    registry.register(PlayableMockProvider())
+    player = MockPlayer()
+    controller = AppController(
+        SearchService(registry),
+        player,
+        PlaylistRepository(database),
+        history,
+    )
+
+    await controller.playHistory(1)
+
+    assert player.current_track is not None
+    assert player.current_track.title == "较早"
+    assert controller.queueLabel == "队列 2/2"
+    assert controller.canGoPrevious
+
+    controller.close()
+    database.close()
+    assert app is not None
