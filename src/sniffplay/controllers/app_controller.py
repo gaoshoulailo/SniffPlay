@@ -65,6 +65,7 @@ class AppController(QObject):
         self._snapshot = player.snapshot()
         self._queue: list[Track] = []
         self._queue_index = -1
+        self._play_request_id = 0
         self._history_recorded = False
         self._advance_scheduled = False
         self._selected_playlist_id = -1
@@ -259,28 +260,41 @@ class AppController(QObject):
         await self._play_tracks([track], 0)
 
     async def _play_tracks(self, tracks: Sequence[Track], index: int) -> None:
-        if not 0 <= index < len(tracks):
+        candidate_queue = list(tracks)
+        if not 0 <= index < len(candidate_queue):
             return
-        self._queue = list(tracks)
-        await self._play_queue_index(index)
+        await self._play_candidate(candidate_queue, index)
 
     async def _play_queue_index(self, index: int) -> None:
-        if not 0 <= index < len(self._queue):
+        candidate_queue = list(self._queue)
+        if not 0 <= index < len(candidate_queue):
             return
-        track = self._queue[index]
+        await self._play_candidate(candidate_queue, index)
+
+    async def _play_candidate(self, candidate_queue: list[Track], index: int) -> None:
+        self._play_request_id += 1
+        request_id = self._play_request_id
+        track = candidate_queue[index]
         self._set_status(f"正在解析：{track.title}")
         try:
             stream = await self._search_service.resolve_stream(track)
+            if request_id != self._play_request_id:
+                return
             self._player.play(track, stream)
         except (LookupError, OSError, ProviderError, PlayerUnavailableError) as error:
+            if request_id != self._play_request_id:
+                return
             logger.warning("Could not play %s: %s", track.title, error)
             self._set_status(str(error))
             return
         except Exception:
+            if request_id != self._play_request_id:
+                return
             logger.exception("Unexpected playback failure for %s", track.title)
             self._set_status("播放失败，请检查音频来源")
             return
 
+        self._queue = candidate_queue
         self._queue_index = index
         self._snapshot = self._player.snapshot()
         self._history_recorded = False
@@ -554,6 +568,7 @@ class AppController(QObject):
 
     @Slot()
     def close(self) -> None:
+        self._play_request_id += 1
         self._player_timer.stop()
         self._player.close()
 
@@ -572,7 +587,7 @@ class AppController(QObject):
             self._set_status("播放内核发生错误")
         elif self._snapshot.state is PlayerState.ENDED and not self._advance_scheduled:
             self._advance_scheduled = True
-            asyncio.create_task(self._advance_after_end())
+            asyncio.create_task(self._advance_after_end(self._play_request_id))
 
     def _record_history_when_eligible(self) -> None:
         track = self._player.current_track
@@ -586,7 +601,9 @@ class AppController(QObject):
         self._history_model.set_entries(self._history_repository.recent())
         self._history_recorded = True
 
-    async def _advance_after_end(self) -> None:
+    async def _advance_after_end(self, expected_request_id: int) -> None:
+        if expected_request_id != self._play_request_id:
+            return
         if self.canGoNext:
             await self._play_queue_index(self._queue_index + 1)
         else:

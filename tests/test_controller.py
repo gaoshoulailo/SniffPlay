@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 
 from sniffplay.qt_bootstrap import prepare_qt_runtime
@@ -16,6 +17,7 @@ from sniffplay.database.repositories import (
 from sniffplay.models import StreamInfo, Track
 from sniffplay.player import MockPlayer
 from sniffplay.providers import ProviderRegistry
+from sniffplay.providers.base import ProviderError
 from sniffplay.providers.mock import MockProvider
 from sniffplay.services.search_service import SearchService
 
@@ -167,6 +169,99 @@ async def test_controller_plays_history_as_a_queue(tmp_path: Path) -> None:
     assert player.current_track.title == "较早"
     assert controller.queueLabel == "队列 2/2"
     assert controller.canGoPrevious
+
+    controller.close()
+    database.close()
+    assert app is not None
+
+
+async def test_controller_ignores_stale_playback_resolution(tmp_path: Path) -> None:
+    class ControlledSearchService:
+        def __init__(self) -> None:
+            self.gates = {"old": asyncio.Event(), "new": asyncio.Event()}
+
+        async def resolve_stream(self, track: Track) -> StreamInfo:
+            await self.gates[track.provider_track_id].wait()
+            return StreamInfo(f"{track.provider_track_id}.wav")
+
+    app = QCoreApplication.instance() or QCoreApplication([])
+    database = Database(tmp_path / "playback-race-controller.db")
+    database.initialize()
+    service = ControlledSearchService()
+    player = MockPlayer()
+    controller = AppController(
+        service,  # type: ignore[arg-type]
+        player,
+        PlaylistRepository(database),
+        HistoryRepository(database),
+    )
+    old_queue = [
+        Track("demo", "old", "旧请求", "歌手", "专辑", 60_000),
+        Track("demo", "old-next", "旧队列下一首", "歌手", "专辑", 60_000),
+    ]
+    new_queue = [
+        Track("demo", "new", "新请求", "歌手", "专辑", 60_000),
+        Track("demo", "new-next", "新队列下一首", "歌手", "专辑", 60_000),
+    ]
+
+    old_request = asyncio.create_task(controller._play_tracks(old_queue, 0))
+    await asyncio.sleep(0)
+    new_request = asyncio.create_task(controller._play_tracks(new_queue, 0))
+    await asyncio.sleep(0)
+
+    service.gates["new"].set()
+    await new_request
+    service.gates["old"].set()
+    await old_request
+
+    assert player.current_track == new_queue[0]
+    assert controller._queue == new_queue
+    assert controller.queueLabel == "队列 1/2"
+
+    controller.close()
+    database.close()
+    assert app is not None
+
+
+async def test_controller_keeps_committed_queue_when_new_playback_fails(
+    tmp_path: Path,
+) -> None:
+    class FailingSearchService:
+        async def resolve_stream(self, track: Track) -> StreamInfo:
+            if track.provider_track_id == "broken":
+                raise ProviderError("无法解析新歌曲")
+            return StreamInfo(f"{track.provider_track_id}.wav")
+
+    app = QCoreApplication.instance() or QCoreApplication([])
+    database = Database(tmp_path / "playback-failure-controller.db")
+    database.initialize()
+    player = MockPlayer()
+    controller = AppController(
+        FailingSearchService(),  # type: ignore[arg-type]
+        player,
+        PlaylistRepository(database),
+        HistoryRepository(database),
+    )
+    committed_queue = [
+        Track("demo", "playing", "正在播放", "歌手", "专辑", 60_000),
+        Track("demo", "next", "下一首", "歌手", "专辑", 60_000),
+    ]
+    broken_queue = [
+        Track("demo", "broken", "无法播放", "歌手", "专辑", 60_000)
+    ]
+
+    await controller._play_tracks(committed_queue, 0)
+    committed_request_id = controller._play_request_id
+    await controller._play_tracks(broken_queue, 0)
+
+    assert player.current_track == committed_queue[0]
+    assert controller._queue == committed_queue
+    assert controller._queue_index == 0
+    assert controller.statusMessage == "无法解析新歌曲"
+
+    await controller._advance_after_end(committed_request_id)
+    assert player.current_track == committed_queue[0]
+    assert controller._queue_index == 0
 
     controller.close()
     database.close()
