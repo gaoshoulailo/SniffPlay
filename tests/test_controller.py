@@ -135,6 +135,18 @@ async def test_controller_updates_favorite_roles_and_current_state(
         ),
     )
 
+    playlist = controller._playlist_repository.create("收藏歌单")
+    controller.addFavoriteTrackToPlaylist(0, playlist.id)
+    assert controller._playlist_repository.list_tracks(playlist.id)[0].track.title == "夜航"
+
+    controller.createPlaylistWithFavorite("新建收藏歌单", 0)
+    created = next(
+        item
+        for item in controller._playlist_repository.list_all()
+        if item.name == "新建收藏歌单"
+    )
+    assert controller._playlist_repository.list_tracks(created.id)[0].track.title == "夜航"
+
     controller.toggleTrackFavorite(0)
     assert controller.favoriteCount == 0
     controller.close()

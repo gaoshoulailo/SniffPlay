@@ -3,12 +3,16 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "../components"
 import "../themes"
 
 Item {
     id: root
 
     required property var controller
+    property int contextFavoriteIndex: -1
+    property int contextFavoriteId: -1
+    property int pendingPlaylistId: -1
 
     ColumnLayout {
         anchors.fill: parent
@@ -62,7 +66,9 @@ Item {
 
                 width: favoriteView.width
                 height: 60
-                color: rowMouse.containsMouse ? Theme.surfaceHover : Theme.transparent
+                color: root.contextFavoriteIndex === favoriteRow.index
+                    ? Theme.accentDark
+                    : (rowMouse.containsMouse ? Theme.surfaceHover : Theme.transparent)
                 radius: Theme.radiusMedium
 
                 RowLayout {
@@ -116,8 +122,18 @@ Item {
                     anchors.fill: parent
                     z: 0
                     hoverEnabled: true
-                    acceptedButtons: Qt.LeftButton
-                    onDoubleClicked: root.controller.playFavorite(favoriteRow.index)
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onClicked: function(mouse) {
+                        if (mouse.button !== Qt.RightButton)
+                            return
+                        root.contextFavoriteIndex = favoriteRow.index
+                        root.contextFavoriteId = favoriteRow.favoriteId
+                        favoriteContextMenu.popup()
+                    }
+                    onDoubleClicked: function(mouse) {
+                        if (mouse.button === Qt.LeftButton)
+                            root.controller.playFavorite(favoriteRow.index)
+                    }
                 }
             }
 
@@ -128,6 +144,207 @@ Item {
                 Text { anchors.horizontalCenter: parent.horizontalCenter; text: "还没有收藏"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 16; font.weight: Font.DemiBold }
                 Text { anchors.horizontalCenter: parent.horizontalCenter; text: "在搜索结果或播放器中点击爱心收藏歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12 }
             }
+        }
+    }
+
+    Menu {
+        id: favoriteContextMenu
+        implicitWidth: 210
+        modal: true
+        palette.window: Theme.surface
+        palette.windowText: Theme.textPrimary
+
+        onClosed: {
+            root.contextFavoriteIndex = -1
+            root.contextFavoriteId = -1
+        }
+
+        background: Rectangle {
+            color: Theme.surface
+            border.color: Theme.border
+            radius: Theme.radiusMedium
+        }
+
+        ContextMenuItem {
+            text: "播放"
+            onTriggered: root.controller.playFavorite(root.contextFavoriteIndex)
+        }
+
+        ContextMenuItem {
+            text: "添加到歌单..."
+            onTriggered: {
+                root.pendingFavoriteIndex = root.contextFavoriteIndex
+                addFavoriteToPlaylistDialog.open()
+            }
+        }
+
+        MenuSeparator {
+            contentItem: Rectangle {
+                implicitHeight: 1
+                color: Theme.border
+            }
+        }
+
+        ContextMenuItem {
+            text: "取消收藏"
+            onTriggered: root.controller.removeFavorite(root.contextFavoriteId)
+        }
+    }
+
+    property int pendingFavoriteIndex: -1
+
+    Dialog {
+        id: addFavoriteToPlaylistDialog
+        anchors.centerIn: parent
+        width: 390
+        height: 440
+        modal: true
+        title: "加入歌单"
+        onOpened: root.pendingPlaylistId = -1
+        palette.window: Theme.surface
+        palette.windowText: Theme.textPrimary
+        palette.button: Theme.accent
+        palette.buttonText: "#0c1710"
+
+        contentItem: ColumnLayout {
+            spacing: 10
+
+            ListView {
+                id: favoritePlaylistPicker
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                spacing: 4
+                model: root.controller.playlistModel
+
+                delegate: Button {
+                    id: playlistChoice
+                    required property int playlistId
+                    required property string name
+                    required property string countLabel
+                    width: favoritePlaylistPicker.width
+                    height: 52
+                    onClicked: root.pendingPlaylistId = playlistChoice.playlistId
+
+                    contentItem: RowLayout {
+                        spacing: 10
+                        Text { Layout.fillWidth: true; text: playlistChoice.name; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13; elide: Text.ElideRight }
+                        Text { text: playlistChoice.countLabel; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
+                        Text { text: "✓"; visible: root.pendingPlaylistId === playlistChoice.playlistId; color: Theme.accent; font.pixelSize: 15; font.bold: true }
+                    }
+
+                    background: Rectangle {
+                        color: root.pendingPlaylistId === playlistChoice.playlistId
+                            ? Theme.accentDark
+                            : (playlistChoice.hovered ? Theme.surfaceHover : Theme.window)
+                        border.color: root.pendingPlaylistId === playlistChoice.playlistId
+                            ? Theme.accent
+                            : Theme.border
+                        radius: Theme.radiusMedium
+                    }
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    visible: favoritePlaylistPicker.count === 0
+                    text: "还没有歌单"
+                    color: Theme.textSecondary
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 13
+                }
+            }
+
+            AppButton {
+                Layout.fillWidth: true
+                text: "新建歌单并添加"
+                primary: true
+                onClicked: newPlaylistWithFavoriteDialog.open()
+            }
+        }
+
+        footer: Rectangle {
+            implicitHeight: 58
+            color: Theme.surface
+
+            RowLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: addFavoriteToPlaylistDialog.leftPadding
+                anchors.rightMargin: addFavoriteToPlaylistDialog.rightPadding
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 10
+
+                AppButton {
+                    Layout.fillWidth: true
+                    text: "取消"
+                    primary: true
+                    onClicked: addFavoriteToPlaylistDialog.reject()
+                }
+
+                AppButton {
+                    Layout.fillWidth: true
+                    text: "确定"
+                    primary: true
+                    enabled: root.pendingPlaylistId >= 0
+                    onClicked: {
+                        root.controller.addFavoriteTrackToPlaylist(
+                            root.pendingFavoriteIndex,
+                            root.pendingPlaylistId
+                        )
+                        addFavoriteToPlaylistDialog.accept()
+                    }
+                }
+            }
+        }
+
+        background: Rectangle {
+            color: Theme.surface
+            border.color: Theme.border
+            radius: Theme.radiusMedium
+        }
+    }
+
+    Dialog {
+        id: newPlaylistWithFavoriteDialog
+        anchors.centerIn: parent
+        width: 380
+        modal: true
+        title: "新建歌单"
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        onOpened: {
+            newFavoritePlaylistName.text = ""
+            newFavoritePlaylistName.forceActiveFocus()
+        }
+        onAccepted: {
+            root.controller.createPlaylistWithFavorite(
+                newFavoritePlaylistName.text,
+                root.pendingFavoriteIndex
+            )
+            addFavoriteToPlaylistDialog.close()
+        }
+        palette.window: Theme.surface
+        palette.windowText: Theme.textPrimary
+        palette.button: Theme.accent
+        palette.buttonText: "#0c1710"
+
+        contentItem: TextField {
+            id: newFavoritePlaylistName
+            implicitHeight: 40
+            color: Theme.textPrimary
+            placeholderText: "歌单名称"
+            placeholderTextColor: "#6f7a73"
+            font.family: Theme.fontFamily
+            background: Rectangle {
+                color: Theme.window
+                border.color: newFavoritePlaylistName.activeFocus ? Theme.accent : Theme.border
+                radius: Theme.radiusMedium
+            }
+        }
+
+        background: Rectangle {
+            color: Theme.surface
+            border.color: Theme.border
+            radius: Theme.radiusMedium
         }
     }
 }

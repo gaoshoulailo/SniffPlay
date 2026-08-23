@@ -394,6 +394,28 @@ class AppController(QObject):
         self._refresh_favorites()
         self._set_status("已取消收藏")
 
+    @Slot(int, int)
+    def addFavoriteTrackToPlaylist(
+        self,
+        favorite_index: int,
+        playlist_id: int,
+    ) -> None:
+        if not 0 <= favorite_index < len(self._favorite_model.entries):
+            return
+        self._add_track_to_playlist(
+            self._favorite_model.entries[favorite_index].track,
+            playlist_id,
+        )
+
+    @Slot(str, int)
+    def createPlaylistWithFavorite(self, name: str, favorite_index: int) -> None:
+        if not 0 <= favorite_index < len(self._favorite_model.entries):
+            return
+        self._create_playlist_with_track(
+            name,
+            self._favorite_model.entries[favorite_index].track,
+        )
+
     @asyncSlot(int)
     async def playFavorite(self, index: int) -> None:
         await self._play_tracks(
@@ -422,12 +444,12 @@ class AppController(QObject):
     def createPlaylistWithTrack(self, name: str, track_index: int) -> None:
         if not 0 <= track_index < len(self._track_model.tracks):
             return
+        self._create_playlist_with_track(name, self._track_model.tracks[track_index])
+
+    def _create_playlist_with_track(self, name: str, track: Track) -> None:
         try:
             playlist = self._playlist_repository.create(name)
-            self._playlist_repository.add_track(
-                playlist.id,
-                self._track_model.tracks[track_index],
-            )
+            self._playlist_repository.add_track(playlist.id, track)
         except (LookupError, ValueError) as error:
             self._set_status(str(error))
             return
@@ -481,7 +503,9 @@ class AppController(QObject):
     def addSearchTrackToPlaylist(self, track_index: int, playlist_id: int) -> None:
         if not 0 <= track_index < len(self._track_model.tracks):
             return
-        track = self._track_model.tracks[track_index]
+        self._add_track_to_playlist(self._track_model.tracks[track_index], playlist_id)
+
+    def _add_track_to_playlist(self, track: Track, playlist_id: int) -> None:
         try:
             playlist = self._playlist_repository.get(playlist_id)
             self._playlist_repository.add_track(playlist_id, track)
