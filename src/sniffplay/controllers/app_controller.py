@@ -466,7 +466,7 @@ class AppController(QObject):
             return
         self._selected_playlist_id = playlist.id
         self._selected_playlist_name = playlist.name
-        self._playlist_track_model.set_entries(entries)
+        self._playlist_track_model.set_entries(entries, self._favorite_keys)
         self.playlistSelectionChanged.emit()
 
     @Slot()
@@ -532,6 +532,37 @@ class AppController(QObject):
         self._refresh_selected_playlist_if(self._selected_playlist_id)
         self._set_status("已从歌单移除歌曲")
 
+    @Slot(int)
+    def togglePlaylistTrackFavorite(self, index: int) -> None:
+        if self._favorite_repository is None:
+            return
+        if not 0 <= index < len(self._playlist_track_model.entries):
+            return
+        track = self._playlist_track_model.entries[index].track
+        is_favorite = self._favorite_repository.toggle(track)
+        self._refresh_favorites()
+        self._set_status(
+            f"已收藏：{track.title}" if is_favorite else f"已取消收藏：{track.title}"
+        )
+
+    @Slot(int, int)
+    def addPlaylistTrackToPlaylist(self, track_index: int, playlist_id: int) -> None:
+        if not 0 <= track_index < len(self._playlist_track_model.entries):
+            return
+        self._add_track_to_playlist(
+            self._playlist_track_model.entries[track_index].track,
+            playlist_id,
+        )
+
+    @Slot(str, int)
+    def createPlaylistWithPlaylistTrack(self, name: str, track_index: int) -> None:
+        if not 0 <= track_index < len(self._playlist_track_model.entries):
+            return
+        self._create_playlist_with_track(
+            name,
+            self._playlist_track_model.entries[track_index].track,
+        )
+
     @Slot(int, int)
     def movePlaylistItem(self, item_id: int, target_index: int) -> None:
         if not self.hasSelectedPlaylist:
@@ -586,6 +617,10 @@ class AppController(QObject):
                 for entry in entries
             }
         self._track_model.set_tracks(self._track_model.tracks, self._favorite_keys)
+        self._playlist_track_model.set_entries(
+            self._playlist_track_model.entries,
+            self._favorite_keys,
+        )
         self.favoritesChanged.emit()
         self.currentFavoriteChanged.emit()
 
@@ -599,7 +634,8 @@ class AppController(QObject):
         if self._selected_playlist_id != playlist_id:
             return
         self._playlist_track_model.set_entries(
-            self._playlist_repository.list_tracks(playlist_id)
+            self._playlist_repository.list_tracks(playlist_id),
+            self._favorite_keys,
         )
 
     def _clear_selected_playlist(self) -> None:

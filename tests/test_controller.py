@@ -69,6 +69,7 @@ async def test_controller_manages_and_plays_playlist_tracks(tmp_path: Path) -> N
         player,
         playlists,
         HistoryRepository(database),
+        FavoriteRepository(database),
     )
     playlist = playlists.create("测试歌单")
 
@@ -95,10 +96,21 @@ async def test_controller_manages_and_plays_playlist_tracks(tmp_path: Path) -> N
     assert controller.queueLabel == "队列 2/2"
     assert controller.canGoPrevious
 
+    controller.togglePlaylistTrackFavorite(0)
+    assert controller._playlist_track_model._items[0]["isFavorite"] is True
+
+    copied_playlist = playlists.create("复制歌曲")
+    controller.addPlaylistTrackToPlaylist(0, copied_playlist.id)
+    assert playlists.list_tracks(copied_playlist.id)[0].track.title == "迟来的风"
+
+    controller.createPlaylistWithPlaylistTrack("新歌单", 1)
+    created = next(item for item in playlists.list_all() if item.name == "新歌单")
+    assert playlists.list_tracks(created.id)[0].track.title == "夜航"
+
     controller.deletePlaylist(playlist.id)
     assert not controller.hasSelectedPlaylist
     assert controller._playlist_track_model.entries == []
-    assert playlists.list_all() == []
+    assert all(item.id != playlist.id for item in playlists.list_all())
 
     controller.close()
     database.close()

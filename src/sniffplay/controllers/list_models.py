@@ -162,14 +162,20 @@ class PlaylistTrackListModel(DictionaryListModel):
                 "accent",
                 "initials",
                 "coverUrl",
+                "isFavorite",
                 "canMoveUp",
                 "canMoveDown",
             )
         )
         self.entries: list[PlaylistTrackEntry] = []
 
-    def set_entries(self, entries: Sequence[PlaylistTrackEntry]) -> None:
+    def set_entries(
+        self,
+        entries: Sequence[PlaylistTrackEntry],
+        favorite_keys: set[tuple[str, str]] | None = None,
+    ) -> None:
         self.entries = list(entries)
+        favorite_keys = favorite_keys or set()
         last_index = len(self.entries) - 1
         self.replace(
             [
@@ -185,6 +191,10 @@ class PlaylistTrackListModel(DictionaryListModel):
                     "accent": entry.track.accent,
                     "initials": entry.track.initials,
                     "coverUrl": entry.track.cover_url or "",
+                    "isFavorite": (
+                        entry.track.provider_id,
+                        entry.track.provider_track_id,
+                    ) in favorite_keys,
                     "canMoveUp": index > 0,
                     "canMoveDown": index < last_index,
                 }
