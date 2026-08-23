@@ -318,12 +318,12 @@ Item {
             radius: Theme.radiusMedium
         }
 
-        MenuItem {
+        ContextMenuItem {
             text: "播放"
             onTriggered: root.controller.playTrack(root.contextTrackIndex)
         }
 
-        MenuItem {
+        ContextMenuItem {
             text: root.contextTrackFavorite ? "取消收藏" : "收藏"
             onTriggered: {
                 root.controller.toggleTrackFavorite(root.contextTrackIndex)
@@ -331,9 +331,14 @@ Item {
             }
         }
 
-        MenuSeparator {}
+        MenuSeparator {
+            contentItem: Rectangle {
+                implicitHeight: 1
+                color: Theme.border
+            }
+        }
 
-        MenuItem {
+        ContextMenuItem {
             text: "添加到歌单..."
             onTriggered: {
                 root.pendingTrackIndex = root.contextTrackIndex
@@ -341,7 +346,7 @@ Item {
             }
         }
 
-        MenuItem {
+        ContextMenuItem {
             text: "复制歌曲信息"
             onTriggered: root.controller.copySearchTrackInfo(root.contextTrackIndex)
         }
@@ -367,7 +372,8 @@ Item {
         onOpened: root.pendingPlaylistId = -1
         palette.window: Theme.surface
         palette.windowText: Theme.textPrimary
-        palette.buttonText: Theme.textPrimary
+        palette.button: Theme.accent
+        palette.buttonText: "#0c1710"
 
         contentItem: ColumnLayout {
             spacing: 10
@@ -425,6 +431,7 @@ Item {
             AppButton {
                 Layout.fillWidth: true
                 text: "新建歌单并添加"
+                primary: true
                 onClicked: newPlaylistWithTrackDialog.open()
             }
         }
@@ -449,7 +456,7 @@ Item {
 
                     contentItem: Text {
                         text: "取消"
-                        color: "#ffffff"
+                        color: "#0c1710"
                         font.family: Theme.fontFamily
                         font.pixelSize: 13
                         font.weight: Font.DemiBold
@@ -457,8 +464,8 @@ Item {
                         verticalAlignment: Text.AlignVCenter
                     }
                     background: Rectangle {
-                        color: "#000000"
-                        border.color: cancelAddButton.hovered ? "#ffffff" : Theme.border
+                        color: cancelAddButton.hovered ? "#72e5a0" : Theme.accent
+                        border.color: Theme.accent
                         border.width: 1
                         radius: Theme.radiusMedium
                     }
@@ -479,7 +486,7 @@ Item {
 
                     contentItem: Text {
                         text: "确定"
-                        color: "#ffffff"
+                        color: "#0c1710"
                         font.family: Theme.fontFamily
                         font.pixelSize: 13
                         font.weight: Font.DemiBold
@@ -487,10 +494,8 @@ Item {
                         verticalAlignment: Text.AlignVCenter
                     }
                     background: Rectangle {
-                        color: "#000000"
-                        border.color: confirmAddButton.enabled && confirmAddButton.hovered
-                            ? "#ffffff"
-                            : Theme.border
+                        color: confirmAddButton.hovered ? "#72e5a0" : Theme.accent
+                        border.color: Theme.accent
                         border.width: 1
                         radius: Theme.radiusMedium
                         opacity: confirmAddButton.enabled ? 1 : 0.4
@@ -526,7 +531,8 @@ Item {
         }
         palette.window: Theme.surface
         palette.windowText: Theme.textPrimary
-        palette.buttonText: Theme.textPrimary
+        palette.button: Theme.accent
+        palette.buttonText: "#0c1710"
 
         contentItem: TextField {
             id: newPlaylistName
