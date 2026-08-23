@@ -280,7 +280,7 @@ Item {
         width: 380
         onOpened: { playlistName.text = ""; playlistName.forceActiveFocus() }
         onAccepted: root.controller.createPlaylist(playlistName.text)
-        palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.buttonText: Theme.textPrimary
+        palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.button: Theme.accent; palette.buttonText: "#0c1710"
         contentItem: TextField {
             id: playlistName
             implicitHeight: 40
@@ -302,7 +302,7 @@ Item {
         width: 380
         onOpened: { renamedPlaylistName.text = root.controller.selectedPlaylistName; renamedPlaylistName.selectAll(); renamedPlaylistName.forceActiveFocus() }
         onAccepted: root.controller.renamePlaylist(root.controller.selectedPlaylistId, renamedPlaylistName.text)
-        palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.buttonText: Theme.textPrimary
+        palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.button: Theme.accent; palette.buttonText: "#0c1710"
         contentItem: TextField {
             id: renamedPlaylistName
             implicitHeight: 40
@@ -320,7 +320,7 @@ Item {
         title: "删除歌单"
         standardButtons: Dialog.Yes | Dialog.Cancel
         onAccepted: root.controller.deletePlaylist(root.controller.selectedPlaylistId)
-        palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.buttonText: Theme.textPrimary
+        palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.button: Theme.accent; palette.buttonText: "#0c1710"
         contentItem: Text { text: "确定删除“" + root.controller.selectedPlaylistName + "”吗？\n歌曲文件和播放历史不会被删除。"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13 }
         background: Rectangle { color: Theme.surface; border.color: Theme.border; radius: Theme.radiusMedium }
     }
@@ -332,7 +332,7 @@ Item {
         title: "移除歌曲"
         standardButtons: Dialog.Yes | Dialog.Cancel
         onAccepted: root.controller.removePlaylistItem(root.pendingRemoveItemId)
-        palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.buttonText: Theme.textPrimary
+        palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.button: Theme.accent; palette.buttonText: "#0c1710"
         contentItem: Text { text: "确定从当前歌单移除这首歌曲吗？"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13 }
         background: Rectangle { color: Theme.surface; border.color: Theme.border; radius: Theme.radiusMedium }
     }

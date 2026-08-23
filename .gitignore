@@ -11,6 +11,7 @@ dist/
 .reasonix/
 demo.txt
 data/
+/*.lnk
 vendor/mpv/*.dll
 vendor/mpv/*.exe
 vendor/mpv/*.zip

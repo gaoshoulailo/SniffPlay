@@ -77,6 +77,22 @@ python -m venv .venv
 .\.venv\Scripts\sniffplay
 ```
 
+创建可双击启动的 Windows 快捷方式：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\create_shortcut.ps1
+```
+
+该命令会在项目根目录和当前用户桌面生成 `SniffPlay.lnk`，并通过
+`pythonw.exe` 无控制台启动应用。默认使用 `02` 号薄荷高亮图标，也可以选择
+`01` 到 `06` 号快捷方式图标，例如：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\create_shortcut.ps1 -IconVariant 06
+```
+
+项目目录移动后，需要重新运行该脚本以更新快捷方式中的绝对路径。
+
 从命令行直接打开本地音频：
 
 ```powershell
