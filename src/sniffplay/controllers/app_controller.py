@@ -6,6 +6,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from PySide6.QtCore import Property, QObject, QTimer, QUrl, Signal, Slot
+from PySide6.QtGui import QGuiApplication
 from qasync import asyncSlot
 
 from sniffplay.controllers.list_models import (
@@ -348,6 +349,25 @@ class AppController(QObject):
         self._refresh_favorites()
         self._set_status(
             f"已收藏：{track.title}" if is_favorite else f"已取消收藏：{track.title}"
+        )
+
+    @Slot(int)
+    def copySearchTrackInfo(self, track_index: int) -> None:
+        if not 0 <= track_index < len(self._track_model.tracks):
+            return
+        track = self._track_model.tracks[track_index]
+        QGuiApplication.clipboard().setText(self._format_track_info(track))
+        self._set_status(f"已复制歌曲信息：{track.title}")
+
+    @staticmethod
+    def _format_track_info(track: Track) -> str:
+        return "\n".join(
+            (
+                f"{track.title} - {track.artist}",
+                f"专辑：{track.album or '未知专辑'}",
+                f"来源：{track.provider_id.upper()}",
+                f"时长：{track.duration_text}",
+            )
         )
 
     @Slot()

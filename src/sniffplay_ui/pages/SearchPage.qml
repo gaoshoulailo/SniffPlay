@@ -13,6 +13,8 @@ Item {
     required property var controller
     property int pendingTrackIndex: -1
     property int pendingPlaylistId: -1
+    property int contextTrackIndex: -1
+    property bool contextTrackFavorite: false
 
     ColumnLayout {
         anchors.fill: parent
@@ -147,7 +149,9 @@ Item {
 
                 width: resultsList.width
                 height: 58
-                color: rowMouse.containsMouse ? Theme.surfaceHover : Theme.transparent
+                color: root.contextTrackIndex === trackRow.index
+                    ? Theme.accentDark
+                    : (rowMouse.containsMouse ? Theme.surfaceHover : Theme.transparent)
                 radius: Theme.radiusMedium
 
                 RowLayout {
@@ -272,9 +276,19 @@ Item {
                     id: rowMouse
                     anchors.fill: parent
                     hoverEnabled: true
-                    acceptedButtons: Qt.LeftButton
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
                     z: 0
-                    onDoubleClicked: root.controller.playTrack(trackRow.index)
+                    onClicked: function(mouse) {
+                        if (mouse.button !== Qt.RightButton)
+                            return
+                        root.contextTrackIndex = trackRow.index
+                        root.contextTrackFavorite = trackRow.isFavorite
+                        trackContextMenu.popup()
+                    }
+                    onDoubleClicked: function(mouse) {
+                        if (mouse.button === Qt.LeftButton)
+                            root.controller.playTrack(trackRow.index)
+                    }
                 }
             }
 
@@ -286,6 +300,50 @@ Item {
                 font.family: Theme.fontFamily
                 font.pixelSize: 14
             }
+        }
+    }
+
+    Menu {
+        id: trackContextMenu
+        implicitWidth: 210
+        modal: true
+        palette.window: Theme.surface
+        palette.windowText: Theme.textPrimary
+
+        onClosed: root.contextTrackIndex = -1
+
+        background: Rectangle {
+            color: Theme.surface
+            border.color: Theme.border
+            radius: Theme.radiusMedium
+        }
+
+        MenuItem {
+            text: "播放"
+            onTriggered: root.controller.playTrack(root.contextTrackIndex)
+        }
+
+        MenuItem {
+            text: root.contextTrackFavorite ? "取消收藏" : "收藏"
+            onTriggered: {
+                root.controller.toggleTrackFavorite(root.contextTrackIndex)
+                root.contextTrackFavorite = !root.contextTrackFavorite
+            }
+        }
+
+        MenuSeparator {}
+
+        MenuItem {
+            text: "添加到歌单..."
+            onTriggered: {
+                root.pendingTrackIndex = root.contextTrackIndex
+                addToPlaylistDialog.open()
+            }
+        }
+
+        MenuItem {
+            text: "复制歌曲信息"
+            onTriggered: root.controller.copySearchTrackInfo(root.contextTrackIndex)
         }
     }
 

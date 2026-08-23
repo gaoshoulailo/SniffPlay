@@ -142,6 +142,56 @@ async def test_controller_updates_favorite_roles_and_current_state(
     assert app is not None
 
 
+async def test_controller_copies_search_track_information(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    class Clipboard:
+        text = ""
+
+        def setText(self, value: str) -> None:
+            self.text = value
+
+    class GuiApplication:
+        clipboard_instance = Clipboard()
+
+        @classmethod
+        def clipboard(cls) -> Clipboard:
+            return cls.clipboard_instance
+
+    app = QCoreApplication.instance() or QCoreApplication([])
+    database = Database(tmp_path / "copy-track-controller.db")
+    database.initialize()
+    registry = ProviderRegistry()
+    registry.register(MockProvider())
+    controller = AppController(
+        SearchService(registry),
+        MockPlayer(),
+        PlaylistRepository(database),
+        HistoryRepository(database),
+    )
+    monkeypatch.setattr(
+        "sniffplay.controllers.app_controller.QGuiApplication",
+        GuiApplication,
+    )
+
+    await controller.search("")
+    controller.copySearchTrackInfo(0)
+
+    assert GuiApplication.clipboard_instance.text == (
+        "夜航 - 林屿\n专辑：城市回声\n来源：DEMO\n时长：3:45"
+    )
+    assert controller.statusMessage == "已复制歌曲信息：夜航"
+
+    controller.copySearchTrackInfo(-1)
+    controller.copySearchTrackInfo(99)
+    assert GuiApplication.clipboard_instance.text.startswith("夜航 - 林屿")
+
+    controller.close()
+    database.close()
+    assert app is not None
+
+
 async def test_controller_plays_history_as_a_queue(tmp_path: Path) -> None:
     class PlayableMockProvider(MockProvider):
         async def resolve_stream(self, track: Track) -> StreamInfo:
