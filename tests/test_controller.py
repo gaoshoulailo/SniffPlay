@@ -235,6 +235,7 @@ async def test_controller_plays_history_as_a_queue(tmp_path: Path) -> None:
         player,
         PlaylistRepository(database),
         history,
+        FavoriteRepository(database),
     )
 
     await controller.playHistory(1)
@@ -243,6 +244,30 @@ async def test_controller_plays_history_as_a_queue(tmp_path: Path) -> None:
     assert player.current_track.title == "较早"
     assert controller.queueLabel == "队列 2/2"
     assert controller.canGoPrevious
+
+    controller.toggleHistoryTrackFavorite(0)
+    assert controller._history_model._items[0]["isFavorite"] is True
+
+    target_playlist = controller._playlist_repository.create("历史歌曲")
+    controller.addHistoryTrackToPlaylist(0, target_playlist.id)
+    assert history.recent()[0].track.title == "最近"
+    assert (
+        controller._playlist_repository.list_tracks(target_playlist.id)[0].track.title
+        == "最近"
+    )
+
+    controller.createPlaylistWithHistoryTrack("新建历史歌单", 1)
+    created = next(
+        item
+        for item in controller._playlist_repository.list_all()
+        if item.name == "新建历史歌单"
+    )
+    assert controller._playlist_repository.list_tracks(created.id)[0].track.title == "较早"
+
+    removed_id = controller._history_model.entries[0].id
+    controller.removeHistory(removed_id)
+    assert all(entry.id != removed_id for entry in history.recent())
+    assert controller._history_model.rowCount() == 1
 
     controller.close()
     database.close()

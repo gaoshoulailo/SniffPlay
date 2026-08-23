@@ -219,12 +219,18 @@ class HistoryListModel(DictionaryListModel):
                 "playedAt",
                 "listenedText",
                 "completed",
+                "isFavorite",
             )
         )
         self.entries: list[HistoryEntry] = []
 
-    def set_entries(self, entries: Sequence[HistoryEntry]) -> None:
+    def set_entries(
+        self,
+        entries: Sequence[HistoryEntry],
+        favorite_keys: set[tuple[str, str]] | None = None,
+    ) -> None:
         self.entries = list(entries)
+        favorite_keys = favorite_keys or set()
         self.replace(
             [
                 {
@@ -240,6 +246,10 @@ class HistoryListModel(DictionaryListModel):
                     "playedAt": entry.played_at.astimezone().strftime("%m-%d %H:%M"),
                     "listenedText": self._format_duration(entry.listened_ms),
                     "completed": entry.completed,
+                    "isFavorite": (
+                        entry.track.provider_id,
+                        entry.track.provider_track_id,
+                    ) in favorite_keys,
                 }
                 for entry in self.entries
             ]

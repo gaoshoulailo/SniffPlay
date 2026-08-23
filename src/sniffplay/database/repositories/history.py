@@ -71,3 +71,9 @@ class HistoryRepository:
             )
             for row in rows
         ]
+
+    def remove_by_id(self, history_id: int) -> None:
+        with self._database.session_factory.begin() as session:
+            record = session.get(PlayHistoryRecord, history_id)
+            if record is not None:
+                session.delete(record)

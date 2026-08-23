@@ -430,6 +430,43 @@ class AppController(QObject):
             index,
         )
 
+    @Slot(int)
+    def toggleHistoryTrackFavorite(self, index: int) -> None:
+        if self._favorite_repository is None:
+            return
+        if not 0 <= index < len(self._history_model.entries):
+            return
+        track = self._history_model.entries[index].track
+        is_favorite = self._favorite_repository.toggle(track)
+        self._refresh_favorites()
+        self._set_status(
+            f"已收藏：{track.title}" if is_favorite else f"已取消收藏：{track.title}"
+        )
+
+    @Slot(int, int)
+    def addHistoryTrackToPlaylist(self, history_index: int, playlist_id: int) -> None:
+        if not 0 <= history_index < len(self._history_model.entries):
+            return
+        self._add_track_to_playlist(
+            self._history_model.entries[history_index].track,
+            playlist_id,
+        )
+
+    @Slot(str, int)
+    def createPlaylistWithHistoryTrack(self, name: str, history_index: int) -> None:
+        if not 0 <= history_index < len(self._history_model.entries):
+            return
+        self._create_playlist_with_track(
+            name,
+            self._history_model.entries[history_index].track,
+        )
+
+    @Slot(int)
+    def removeHistory(self, history_id: int) -> None:
+        self._history_repository.remove_by_id(history_id)
+        self._refresh_history()
+        self._set_status("已删除播放记录")
+
     @Slot(str)
     def createPlaylist(self, name: str) -> None:
         try:
@@ -599,7 +636,7 @@ class AppController(QObject):
 
     def refresh_library(self) -> None:
         self._refresh_playlists()
-        self._history_model.set_entries(self._history_repository.recent())
+        self._refresh_history()
         self._refresh_favorites()
 
     def _refresh_playlists(self) -> None:
@@ -621,6 +658,10 @@ class AppController(QObject):
             self._playlist_track_model.entries,
             self._favorite_keys,
         )
+        self._history_model.set_entries(
+            self._history_model.entries,
+            self._favorite_keys,
+        )
         self.favoritesChanged.emit()
         self.currentFavoriteChanged.emit()
 
@@ -635,6 +676,12 @@ class AppController(QObject):
             return
         self._playlist_track_model.set_entries(
             self._playlist_repository.list_tracks(playlist_id),
+            self._favorite_keys,
+        )
+
+    def _refresh_history(self) -> None:
+        self._history_model.set_entries(
+            self._history_repository.recent(),
             self._favorite_keys,
         )
 
@@ -678,7 +725,7 @@ class AppController(QObject):
         if self._snapshot.position_ms < threshold:
             return
         self._history_repository.record(track, listened_ms=self._snapshot.position_ms)
-        self._history_model.set_entries(self._history_repository.recent())
+        self._refresh_history()
         self._history_recorded = True
 
     async def _advance_after_end(self, expected_request_id: int) -> None:
