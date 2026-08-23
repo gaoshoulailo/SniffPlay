@@ -151,24 +151,6 @@ $env:SNIFFPLAY_DATA_DIR = "$PWD\data"
   src\sniffplay_ui\components\PlayerBar.qml
 ```
 
-## 构建 Windows EXE
-
-项目提供一键构建脚本。它会在 `.venv` 中安装 PyInstaller，清理旧产物，将 QML、主题资源和 `vendor/mpv/libmpv-2.dll` 打包进单文件 EXE，并输出文件大小和 SHA-256：
-
-```powershell
-.\scripts\build_exe.ps1
-```
-
-也可以直接双击 `scripts\build_exe.cmd`，它会绕过本机 PowerShell 脚本执行策略并调用同一套构建流程。
-
-产物位于 `dist\SniffPlay.exe`。如果 PyInstaller 已经安装，可以跳过安装步骤：
-
-```powershell
-.\scripts\build_exe.ps1 -SkipInstall
-```
-
-构建脚本默认要求 `vendor/mpv/libmpv-2.dll` 存在，因为这是包含完整播放功能的发行构建。该 DLL 使用的许可证和分发要求见 `vendor/mpv/README.md`。
-
 ## 扩展音乐来源
 
 新的音乐来源应实现 `MusicProvider`：
