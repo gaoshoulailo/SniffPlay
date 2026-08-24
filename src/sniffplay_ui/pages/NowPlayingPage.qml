@@ -153,7 +153,7 @@ Item {
                         Text {
                             anchors.centerIn: parent
                             text: root.controller.currentInitials
-                            color: "#101311"
+                            color: Theme.coverText
                             font.family: Theme.fontFamily
                             font.pixelSize: 44
                             font.bold: true
@@ -262,7 +262,7 @@ Item {
                             ToolTip.text: root.controller.playing ? "暂停" : "播放"
                             contentItem: Text {
                                 text: root.controller.loading ? "…" : (root.controller.playing ? "Ⅱ" : "▶")
-                                color: "#0c1710"
+                                color: Theme.buttonText
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 18
                                 font.bold: true
@@ -270,7 +270,7 @@ Item {
                                 verticalAlignment: Text.AlignVCenter
                             }
                             background: Rectangle {
-                                color: playButton.enabled ? (playButton.hovered ? "#72e5a0" : Theme.accent) : Theme.surface
+                                color: playButton.enabled ? (playButton.hovered ? Theme.accentHover : Theme.accent) : Theme.surface
                                 radius: 27
                                 opacity: playButton.enabled ? 1 : 0.45
                             }

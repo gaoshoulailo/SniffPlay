@@ -11,7 +11,7 @@ MenuItem {
 
     contentItem: Text {
         text: control.text
-        color: control.highlighted ? "#0c1710" : Theme.textPrimary
+        color: control.highlighted ? Theme.buttonText : Theme.textPrimary
         font.family: Theme.fontFamily
         font.pixelSize: 13
         verticalAlignment: Text.AlignVCenter

@@ -91,7 +91,7 @@ Item {
                 leftPadding: 14
                 rightPadding: 14
                 placeholderText: "输入歌曲、歌手或专辑"
-                placeholderTextColor: "#6f7a73"
+                placeholderTextColor: Theme.placeholderText
                 color: Theme.textPrimary
                 selectionColor: Theme.accentDark
                 selectedTextColor: Theme.textPrimary
@@ -183,7 +183,7 @@ Item {
                                 ? root.controller.currentInitials
                                 : "⌕"
                             color: root.controller.hasCurrentTrack
-                                ? "#101311"
+                                ? Theme.coverText
                                 : Theme.textSecondary
                             font.family: root.controller.hasCurrentTrack
                                 ? Theme.fontFamily
@@ -334,7 +334,7 @@ Item {
                         Text {
                             anchors.centerIn: parent
                             text: trackRow.initials
-                            color: "#101311"
+                            color: Theme.coverText
                             font.family: Theme.fontFamily
                             font.pixelSize: 15
                             font.bold: true
@@ -558,7 +558,7 @@ Item {
         palette.window: Theme.surface
         palette.windowText: Theme.textPrimary
         palette.button: Theme.accent
-        palette.buttonText: "#0c1710"
+        palette.buttonText: Theme.buttonText
 
         contentItem: ColumnLayout {
             spacing: 10
@@ -641,7 +641,7 @@ Item {
 
                     contentItem: Text {
                         text: "取消"
-                        color: "#0c1710"
+                        color: Theme.buttonText
                         font.family: Theme.fontFamily
                         font.pixelSize: 13
                         font.weight: Font.DemiBold
@@ -649,7 +649,7 @@ Item {
                         verticalAlignment: Text.AlignVCenter
                     }
                     background: Rectangle {
-                        color: cancelAddButton.hovered ? "#72e5a0" : Theme.accent
+                        color: cancelAddButton.hovered ? Theme.accentHover : Theme.accent
                         border.color: Theme.accent
                         border.width: 1
                         radius: Theme.radiusMedium
@@ -671,7 +671,7 @@ Item {
 
                     contentItem: Text {
                         text: "确定"
-                        color: "#0c1710"
+                        color: Theme.buttonText
                         font.family: Theme.fontFamily
                         font.pixelSize: 13
                         font.weight: Font.DemiBold
@@ -679,7 +679,7 @@ Item {
                         verticalAlignment: Text.AlignVCenter
                     }
                     background: Rectangle {
-                        color: confirmAddButton.hovered ? "#72e5a0" : Theme.accent
+                        color: confirmAddButton.hovered ? Theme.accentHover : Theme.accent
                         border.color: Theme.accent
                         border.width: 1
                         radius: Theme.radiusMedium
@@ -717,14 +717,14 @@ Item {
         palette.window: Theme.surface
         palette.windowText: Theme.textPrimary
         palette.button: Theme.accent
-        palette.buttonText: "#0c1710"
+        palette.buttonText: Theme.buttonText
 
         contentItem: TextField {
             id: newPlaylistName
             implicitHeight: 40
             color: Theme.textPrimary
             placeholderText: "歌单名称"
-            placeholderTextColor: "#6f7a73"
+            placeholderTextColor: Theme.placeholderText
             font.family: Theme.fontFamily
             background: Rectangle {
                 color: Theme.window

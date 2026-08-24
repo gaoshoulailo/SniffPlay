@@ -98,7 +98,7 @@ Item {
                                 ? root.controller.currentInitials
                                 : "♥"
                             color: root.controller.hasCurrentTrack
-                                ? "#101311"
+                                ? Theme.coverText
                                 : Theme.textSecondary
                             font.family: root.controller.hasCurrentTrack
                                 ? Theme.fontFamily
@@ -325,7 +325,7 @@ Item {
         palette.window: Theme.surface
         palette.windowText: Theme.textPrimary
         palette.button: Theme.accent
-        palette.buttonText: "#0c1710"
+        palette.buttonText: Theme.buttonText
 
         contentItem: ColumnLayout {
             spacing: 10
@@ -446,14 +446,14 @@ Item {
         palette.window: Theme.surface
         palette.windowText: Theme.textPrimary
         palette.button: Theme.accent
-        palette.buttonText: "#0c1710"
+        palette.buttonText: Theme.buttonText
 
         contentItem: TextField {
             id: newFavoritePlaylistName
             implicitHeight: 40
             color: Theme.textPrimary
             placeholderText: "歌单名称"
-            placeholderTextColor: "#6f7a73"
+            placeholderTextColor: Theme.placeholderText
             font.family: Theme.fontFamily
             background: Rectangle {
                 color: Theme.window

@@ -183,7 +183,7 @@ ApplicationWindow {
                         Text {
                             anchors.centerIn: parent
                             text: "S"
-                            color: "#0c1710"
+                            color: Theme.buttonText
                             font.family: Theme.fontFamily
                             font.pixelSize: 14
                             font.bold: true

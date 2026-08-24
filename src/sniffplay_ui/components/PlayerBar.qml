@@ -94,7 +94,7 @@ Rectangle {
                 Text {
                     anchors.centerIn: parent
                     text: root.controller.currentInitials
-                    color: "#101311"
+                    color: Theme.coverText
                     font.family: Theme.fontFamily
                     font.pixelSize: 17
                     font.bold: true
@@ -149,7 +149,7 @@ Rectangle {
                 ToolTip.text: root.controller.currentFavorite ? "取消收藏" : "收藏"
                 contentItem: Text {
                     text: root.controller.currentFavorite ? "♥" : "♡"
-                    color: root.controller.currentFavorite ? Theme.danger : (favoriteButton.enabled ? Theme.textPrimary : "#58605b")
+                    color: root.controller.currentFavorite ? Theme.danger : (favoriteButton.enabled ? Theme.textPrimary : Theme.disabledText)
                     font.family: "Segoe UI Symbol"
                     font.pixelSize: 19
                     font.weight: Font.Normal
@@ -172,7 +172,7 @@ Rectangle {
                 ToolTip.text: "上一首"
                 contentItem: Text {
                     text: "◀|"
-                    color: previousButton.enabled ? Theme.textPrimary : "#58605b"
+                    color: previousButton.enabled ? Theme.textPrimary : Theme.disabledText
                     font.pixelSize: 11
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
@@ -194,7 +194,7 @@ Rectangle {
 
                 contentItem: Text {
                     text: root.controller.loading ? "…" : (root.controller.playing ? "Ⅱ" : "▶")
-                    color: playButton.enabled ? "#0c1710" : "#58605b"
+                    color: playButton.enabled ? Theme.buttonText : Theme.disabledText
                     font.family: Theme.fontFamily
                     font.pixelSize: 15
                     font.bold: true
@@ -204,7 +204,7 @@ Rectangle {
 
                 background: Rectangle {
                     color: playButton.enabled
-                        ? (playButton.hovered ? "#72e5a0" : Theme.accent)
+                        ? (playButton.hovered ? Theme.accentHover : Theme.accent)
                         : Theme.surface
                     radius: 21
                 }
@@ -220,7 +220,7 @@ Rectangle {
                 ToolTip.text: "下一首"
                 contentItem: Text {
                     text: "|▶"
-                    color: nextButton.enabled ? Theme.textPrimary : "#58605b"
+                    color: nextButton.enabled ? Theme.textPrimary : Theme.disabledText
                     font.pixelSize: 11
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter

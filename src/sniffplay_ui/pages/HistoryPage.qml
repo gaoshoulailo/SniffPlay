@@ -87,14 +87,14 @@ Item {
                     Rectangle {
                         Layout.preferredWidth: 42
                         Layout.preferredHeight: 42
-                        color: historyRow.accent
+                        color: Theme.accent
                         radius: Theme.radiusSmall
                         clip: true
 
                         Text {
                             anchors.centerIn: parent
                             text: historyRow.initials
-                            color: "#101311"
+                            color: Theme.buttonText
                             font.family: Theme.fontFamily
                             font.pixelSize: 15
                             font.bold: true
@@ -266,7 +266,7 @@ Item {
         palette.window: Theme.surface
         palette.windowText: Theme.textPrimary
         palette.button: Theme.accent
-        palette.buttonText: "#0c1710"
+        palette.buttonText: Theme.buttonText
 
         contentItem: ColumnLayout {
             spacing: 10
@@ -387,14 +387,14 @@ Item {
         palette.window: Theme.surface
         palette.windowText: Theme.textPrimary
         palette.button: Theme.accent
-        palette.buttonText: "#0c1710"
+        palette.buttonText: Theme.buttonText
 
         contentItem: TextField {
             id: newHistoryPlaylistName
             implicitHeight: 40
             color: Theme.textPrimary
             placeholderText: "歌单名称"
-            placeholderTextColor: "#6f7a73"
+            placeholderTextColor: Theme.placeholderText
             font.family: Theme.fontFamily
             background: Rectangle {
                 color: Theme.window

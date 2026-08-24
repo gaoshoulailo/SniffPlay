@@ -240,10 +240,10 @@ Item {
                             Rectangle {
                                 Layout.preferredWidth: 42
                                 Layout.preferredHeight: 42
-                                color: trackRow.accent
+                                color: Theme.accent
                                 radius: Theme.radiusSmall
                                 clip: true
-                                Text { anchors.centerIn: parent; text: trackRow.initials; color: "#101311"; font.family: Theme.fontFamily; font.bold: true; visible: trackCover.status !== Image.Ready }
+                                Text { anchors.centerIn: parent; text: trackRow.initials; color: Theme.buttonText; font.family: Theme.fontFamily; font.bold: true; visible: trackCover.status !== Image.Ready }
                                 Image { id: trackCover; anchors.fill: parent; source: trackRow.coverUrl; sourceSize.width: 96; sourceSize.height: 96; fillMode: Image.PreserveAspectCrop; asynchronous: true; visible: status === Image.Ready }
                             }
 
@@ -447,7 +447,7 @@ Item {
         palette.window: Theme.surface
         palette.windowText: Theme.textPrimary
         palette.button: Theme.accent
-        palette.buttonText: "#0c1710"
+        palette.buttonText: Theme.buttonText
 
         contentItem: ColumnLayout {
             spacing: 10
@@ -559,14 +559,14 @@ Item {
         palette.window: Theme.surface
         palette.windowText: Theme.textPrimary
         palette.button: Theme.accent
-        palette.buttonText: "#0c1710"
+        palette.buttonText: Theme.buttonText
 
         contentItem: TextField {
             id: newPlaylistWithTrackName
             implicitHeight: 40
             color: Theme.textPrimary
             placeholderText: "歌单名称"
-            placeholderTextColor: "#6f7a73"
+            placeholderTextColor: Theme.placeholderText
             font.family: Theme.fontFamily
             background: Rectangle {
                 color: Theme.window
@@ -591,13 +591,13 @@ Item {
         width: 380
         onOpened: { playlistName.text = ""; playlistName.forceActiveFocus() }
         onAccepted: root.controller.createPlaylist(playlistName.text)
-        palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.button: Theme.accent; palette.buttonText: "#0c1710"
+        palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.button: Theme.accent; palette.buttonText: Theme.buttonText
         contentItem: TextField {
             id: playlistName
             implicitHeight: 40
             color: Theme.textPrimary
             placeholderText: "例如：通勤播放"
-            placeholderTextColor: "#6f7a73"
+            placeholderTextColor: Theme.placeholderText
             font.family: Theme.fontFamily
             background: Rectangle { color: Theme.window; border.color: playlistName.activeFocus ? Theme.accent : Theme.border; radius: Theme.radiusMedium }
         }
@@ -613,7 +613,7 @@ Item {
         width: 380
         onOpened: { renamedPlaylistName.text = root.dialogPlaylistName; renamedPlaylistName.selectAll(); renamedPlaylistName.forceActiveFocus() }
         onAccepted: root.controller.renamePlaylist(root.dialogPlaylistId, renamedPlaylistName.text)
-        palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.button: Theme.accent; palette.buttonText: "#0c1710"
+        palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.button: Theme.accent; palette.buttonText: Theme.buttonText
         contentItem: TextField {
             id: renamedPlaylistName
             implicitHeight: 40
@@ -631,7 +631,7 @@ Item {
         title: "删除歌单"
         standardButtons: Dialog.Yes | Dialog.Cancel
         onAccepted: root.controller.deletePlaylist(root.dialogPlaylistId)
-        palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.button: Theme.accent; palette.buttonText: "#0c1710"
+        palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.button: Theme.accent; palette.buttonText: Theme.buttonText
         contentItem: Text { text: "确定删除“" + root.dialogPlaylistName + "”吗？\n歌曲文件和播放历史不会被删除。"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13 }
         background: Rectangle { color: Theme.surface; border.color: Theme.border; radius: Theme.radiusMedium }
     }
@@ -643,7 +643,7 @@ Item {
         title: "移除歌曲"
         standardButtons: Dialog.Yes | Dialog.Cancel
         onAccepted: root.controller.removePlaylistItem(root.pendingRemoveItemId)
-        palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.button: Theme.accent; palette.buttonText: "#0c1710"
+        palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.button: Theme.accent; palette.buttonText: Theme.buttonText
         contentItem: Text { text: "确定从当前歌单移除这首歌曲吗？"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13 }
         background: Rectangle { color: Theme.surface; border.color: Theme.border; radius: Theme.radiusMedium }
     }

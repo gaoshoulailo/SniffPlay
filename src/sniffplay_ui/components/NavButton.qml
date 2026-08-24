@@ -19,12 +19,12 @@ Button {
             width: 24
             height: 24
             radius: 6
-            color: control.selected ? Theme.accent : Theme.surface
+            color: control.selected ? Theme.accentDark : Theme.surface
 
             Text {
                 anchors.centerIn: parent
                 text: control.marker
-                color: control.selected ? "#0c1710" : Theme.textSecondary
+                color: control.selected ? Theme.accent : Theme.textSecondary
                 font.family: Theme.fontFamily
                 font.pixelSize: 11
                 font.weight: Font.Bold
