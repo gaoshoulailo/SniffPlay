@@ -126,7 +126,16 @@ $env:SNIFFPLAY_MPV_DLL = "D:\path\to\mpv-2.dll"
 
 ## 本地数据
 
-数据库、日志和其他应用数据默认保存在 Windows 用户数据目录。开发时可以指定独立目录：
+数据库、日志和封面缓存默认保存在程序当前运行目录的 `data` 文件夹，不再写入 Windows 用户数据目录：
+
+```text
+data/
+├── sniffplay.db
+├── logs/sniffplay.log
+└── cache/covers/bilibili/*.jpg
+```
+
+仍可通过环境变量指定其他位置：
 
 ```powershell
 $env:SNIFFPLAY_DATA_DIR = "$PWD\data"
@@ -140,6 +149,9 @@ $env:SNIFFPLAY_DATA_DIR = "$PWD\data"
 - 歌单及歌曲顺序
 - 有效播放历史
 - 应用设置
+- Bilibili 音频封面缓存
+
+旧版本位于 Windows 用户目录的数据不会被自动删除。确认本地 `data` 目录运行正常后，可自行清理旧目录以释放 C 盘空间。
 
 ## 测试
 

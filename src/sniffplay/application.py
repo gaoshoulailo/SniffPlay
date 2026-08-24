@@ -67,7 +67,9 @@ def run() -> int:
     database.initialize()
 
     registry = ProviderRegistry()
-    registry.register(BilibiliDataSource())
+    registry.register(
+        BilibiliDataSource(cover_cache_dir=settings.cover_cache_dir)
+    )
     controller = AppController(
         search_service=SearchService(registry),
         player=create_player(),

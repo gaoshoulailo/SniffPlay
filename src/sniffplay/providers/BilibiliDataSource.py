@@ -12,7 +12,6 @@ from typing import Any, AsyncIterator, Iterator, Mapping
 from urllib.parse import urlencode, urlparse
 
 import httpx
-from platformdirs import user_cache_path
 
 from sniffplay.models import StreamInfo, Track
 from sniffplay.providers.base import (
@@ -230,7 +229,7 @@ class BilibiliDataSource(MusicProvider):
         self._page = page
         self._external_client = client
         self._cover_cache_dir = cover_cache_dir or (
-            user_cache_path("SniffPlay", "SniffPlay") / "covers" / self.id
+            Path.cwd() / "data" / "cache" / "covers" / self.id
         )
         self._keys: WBIKeys | None = None
 
