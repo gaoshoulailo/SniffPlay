@@ -90,6 +90,14 @@ async def test_controller_manages_and_plays_playlist_tracks(tmp_path: Path) -> N
     assert player.current_track.title == "迟来的风"
     assert controller._queue_model._items[1]["isCurrent"] is True
 
+    controller.playQueueTrackNext(0)
+    assert [track.title for track in controller._queue] == ["迟来的风", "夜航"]
+    assert controller._queue_index == 0
+
+    controller.removeQueueTrack(1)
+    assert [track.title for track in controller._queue] == ["迟来的风"]
+    assert controller._queue_model.rowCount() == 1
+
     controller.openPlaylist(playlist.id)
 
     assert controller.hasSelectedPlaylist
@@ -109,6 +117,10 @@ async def test_controller_manages_and_plays_playlist_tracks(tmp_path: Path) -> N
     assert player.current_track.title == "夜航"
     assert controller.queueLabel == "队列 2/2"
     assert controller.canGoPrevious
+
+    controller.clearQueueExceptCurrent()
+    assert [track.title for track in controller._queue] == ["夜航"]
+    assert controller._queue_index == 0
 
     controller.togglePlaylistTrackFavorite(0)
     assert controller._playlist_track_model._items[0]["isFavorite"] is True
@@ -375,6 +387,47 @@ async def test_controller_keeps_committed_queue_when_new_playback_fails(
     await controller._advance_after_end(committed_request_id)
     assert player.current_track == committed_queue[0]
     assert controller._queue_index == 0
+
+    controller.close()
+    database.close()
+    assert app is not None
+
+
+async def test_queue_edit_invalidates_pending_queue_switch(tmp_path: Path) -> None:
+    class DelayedQueueService:
+        def __init__(self) -> None:
+            self.next_gate = asyncio.Event()
+
+        async def resolve_stream(self, track: Track) -> StreamInfo:
+            if track.provider_track_id == "next":
+                await self.next_gate.wait()
+            return StreamInfo(f"{track.provider_track_id}.wav")
+
+    app = QCoreApplication.instance() or QCoreApplication([])
+    database = Database(tmp_path / "queue-edit-controller.db")
+    database.initialize()
+    service = DelayedQueueService()
+    player = MockPlayer()
+    controller = AppController(
+        service,  # type: ignore[arg-type]
+        player,
+        PlaylistRepository(database),
+        HistoryRepository(database),
+    )
+    current = Track("demo", "current", "当前歌曲", "歌手", "专辑", 60_000)
+    next_track = Track("demo", "next", "待播歌曲", "歌手", "专辑", 60_000)
+
+    await controller._play_tracks([current, next_track], 0)
+    pending_switch = controller.playQueueTrack(1)
+    await asyncio.sleep(0)
+    controller.removeQueueTrack(1)
+    service.next_gate.set()
+    await pending_switch
+
+    assert player.current_track == current
+    assert controller._queue == [current]
+    assert controller._queue_index == 0
+    assert controller._queue_model.rowCount() == 1
 
     controller.close()
     database.close()

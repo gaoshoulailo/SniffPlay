@@ -69,6 +69,7 @@ class AppController(QObject):
         self._snapshot = player.snapshot()
         self._queue: list[Track] = []
         self._queue_index = -1
+        self._queue_revision = 0
         self._play_request_id = 0
         self._history_recorded = False
         self._advance_scheduled = False
@@ -281,9 +282,18 @@ class AppController(QObject):
         candidate_queue = list(self._queue)
         if not 0 <= index < len(candidate_queue):
             return
-        await self._play_candidate(candidate_queue, index)
+        await self._play_candidate(
+            candidate_queue,
+            index,
+            expected_queue_revision=self._queue_revision,
+        )
 
-    async def _play_candidate(self, candidate_queue: list[Track], index: int) -> None:
+    async def _play_candidate(
+        self,
+        candidate_queue: list[Track],
+        index: int,
+        expected_queue_revision: int | None = None,
+    ) -> None:
         self._play_request_id += 1
         request_id = self._play_request_id
         track = candidate_queue[index]
@@ -291,6 +301,11 @@ class AppController(QObject):
         try:
             stream = await self._search_service.resolve_stream(track)
             if request_id != self._play_request_id:
+                return
+            if (
+                expected_queue_revision is not None
+                and expected_queue_revision != self._queue_revision
+            ):
                 return
             self._player.play(track, stream)
         except (LookupError, OSError, ProviderError, PlayerUnavailableError) as error:
@@ -308,6 +323,7 @@ class AppController(QObject):
 
         self._queue = candidate_queue
         self._queue_index = index
+        self._queue_revision += 1
         self._refresh_queue_model()
         self._snapshot = self._player.snapshot()
         self._history_recorded = False
@@ -333,6 +349,34 @@ class AppController(QObject):
     @asyncSlot(int)
     async def playQueueTrack(self, index: int) -> None:
         await self._play_queue_index(index)
+
+    @Slot(int)
+    def playQueueTrackNext(self, index: int) -> None:
+        if not 0 <= index < len(self._queue) or index == self._queue_index:
+            return
+        track = self._queue.pop(index)
+        if index < self._queue_index:
+            self._queue_index -= 1
+        self._queue.insert(self._queue_index + 1, track)
+        self._commit_queue_edit(f"下一首播放：{track.title}")
+
+    @Slot(int)
+    def removeQueueTrack(self, index: int) -> None:
+        if not 0 <= index < len(self._queue) or index == self._queue_index:
+            return
+        track = self._queue.pop(index)
+        if index < self._queue_index:
+            self._queue_index -= 1
+        self._commit_queue_edit(f"已从队列移除：{track.title}")
+
+    @Slot()
+    def clearQueueExceptCurrent(self) -> None:
+        if not 0 <= self._queue_index < len(self._queue) or len(self._queue) <= 1:
+            return
+        current = self._queue[self._queue_index]
+        self._queue = [current]
+        self._queue_index = 0
+        self._commit_queue_edit("已清理播放队列")
 
     @asyncSlot()
     async def previousTrack(self) -> None:
@@ -700,6 +744,12 @@ class AppController(QObject):
     def _refresh_queue_model(self) -> None:
         self._queue_model.set_tracks(self._queue, self._queue_index)
         self.queueChanged.emit()
+
+    def _commit_queue_edit(self, status_message: str) -> None:
+        self._queue_revision += 1
+        self._refresh_queue_model()
+        self.playerChanged.emit()
+        self._set_status(status_message)
 
     def _refresh_selected_playlist_if(self, playlist_id: int) -> None:
         if self._selected_playlist_id != playlist_id:

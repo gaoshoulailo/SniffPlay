@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "../components"
 import "../themes"
 
 Item {
@@ -10,6 +11,8 @@ Item {
 
     required property var controller
     readonly property bool compact: width < 650
+    property int contextQueueIndex: -1
+    property bool contextQueueCurrent: false
 
     ColumnLayout {
         anchors.fill: parent
@@ -244,6 +247,26 @@ Item {
                     Text { text: "播放队列"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12; font.weight: Font.DemiBold }
                     Item { Layout.fillWidth: true }
                     Text { text: queueView.count + " 首"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
+                    Button {
+                        id: clearQueueButton
+                        implicitWidth: 30
+                        implicitHeight: 30
+                        enabled: queueView.count > 1
+                        onClicked: root.controller.clearQueueExceptCurrent()
+                        ToolTip.visible: hovered
+                        ToolTip.text: "清除其他歌曲"
+                        contentItem: Text {
+                            text: "×"
+                            color: clearQueueButton.enabled ? Theme.textSecondary : Theme.border
+                            font.pixelSize: 18
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        background: Rectangle {
+                            color: clearQueueButton.hovered ? Theme.surfaceHover : Theme.transparent
+                            radius: Theme.radiusSmall
+                        }
+                    }
                 }
 
                 ListView {
@@ -300,8 +323,17 @@ Item {
                             id: queueMouse
                             anchors.fill: parent
                             hoverEnabled: true
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root.controller.playQueueTrack(queueRow.index)
+                            onClicked: function(mouse) {
+                                if (mouse.button === Qt.LeftButton) {
+                                    root.controller.playQueueTrack(queueRow.index)
+                                    return
+                                }
+                                root.contextQueueIndex = queueRow.index
+                                root.contextQueueCurrent = queueRow.isCurrent
+                                queueContextMenu.popup()
+                            }
                         }
                     }
 
@@ -314,6 +346,45 @@ Item {
                     }
                 }
             }
+        }
+    }
+
+    Menu {
+        id: queueContextMenu
+        implicitWidth: 190
+        modal: true
+        palette.window: Theme.surface
+        palette.windowText: Theme.textPrimary
+        onClosed: {
+            root.contextQueueIndex = -1
+            root.contextQueueCurrent = false
+        }
+
+        background: Rectangle {
+            color: Theme.surface
+            border.color: Theme.border
+            radius: Theme.radiusMedium
+        }
+
+        ContextMenuItem {
+            text: "播放"
+            onTriggered: root.controller.playQueueTrack(root.contextQueueIndex)
+        }
+
+        ContextMenuItem {
+            text: "下一首播放"
+            enabled: !root.contextQueueCurrent
+            onTriggered: root.controller.playQueueTrackNext(root.contextQueueIndex)
+        }
+
+        MenuSeparator {
+            contentItem: Rectangle { implicitHeight: 1; color: Theme.border }
+        }
+
+        ContextMenuItem {
+            text: "从队列移除"
+            enabled: !root.contextQueueCurrent
+            onTriggered: root.controller.removeQueueTrack(root.contextQueueIndex)
         }
     }
 }
