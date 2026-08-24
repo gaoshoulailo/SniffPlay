@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import random
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -39,6 +40,7 @@ class AppController(QObject):
     playlistSelectionChanged = Signal()
     favoritesChanged = Signal()
     queueChanged = Signal()
+    playbackModeChanged = Signal()
 
     def __init__(
         self,
@@ -70,6 +72,8 @@ class AppController(QObject):
         self._queue: list[Track] = []
         self._queue_index = -1
         self._queue_revision = 0
+        self._shuffle_enabled = False
+        self._repeat_mode = 0
         self._play_request_id = 0
         self._history_recorded = False
         self._advance_scheduled = False
@@ -205,13 +209,28 @@ class AppController(QObject):
     def volume(self) -> int:
         return self._snapshot.volume
 
+    @Property(bool, notify=playbackModeChanged)
+    def shuffleEnabled(self) -> bool:
+        return self._shuffle_enabled
+
+    @Property(int, notify=playbackModeChanged)
+    def repeatMode(self) -> int:
+        return self._repeat_mode
+
     @Property(bool, notify=playerChanged)
     def canGoPrevious(self) -> bool:
-        return self._queue_index > 0 or self._snapshot.position_ms > 0
+        return (
+            self._queue_index > 0
+            or self._snapshot.position_ms > 0
+            or (self._repeat_mode == 1 and len(self._queue) > 1)
+        )
 
     @Property(bool, notify=playerChanged)
     def canGoNext(self) -> bool:
-        return 0 <= self._queue_index < len(self._queue) - 1
+        return (
+            0 <= self._queue_index < len(self._queue) - 1
+            or (self._repeat_mode == 1 and len(self._queue) > 1)
+        )
 
     @Property(str, notify=playerChanged)
     def queueLabel(self) -> str:
@@ -321,6 +340,12 @@ class AppController(QObject):
             self._set_status("播放失败，请检查音频来源")
             return
 
+        if self._shuffle_enabled and expected_queue_revision is None:
+            remaining = candidate_queue[:index] + candidate_queue[index + 1 :]
+            random.shuffle(remaining)
+            candidate_queue = [track, *remaining]
+            index = 0
+
         self._queue = candidate_queue
         self._queue_index = index
         self._queue_revision += 1
@@ -341,10 +366,40 @@ class AppController(QObject):
         self._snapshot = self._player.snapshot()
         self.playerChanged.emit()
 
+    @Slot()
+    def toggleShuffle(self) -> None:
+        self._shuffle_enabled = not self._shuffle_enabled
+        if self._shuffle_enabled and 0 <= self._queue_index < len(self._queue):
+            current = self._queue[self._queue_index]
+            remaining = (
+                self._queue[: self._queue_index]
+                + self._queue[self._queue_index + 1 :]
+            )
+            random.shuffle(remaining)
+            self._queue = [current, *remaining]
+            self._queue_index = 0
+            self._queue_revision += 1
+            self._refresh_queue_model()
+        self.playbackModeChanged.emit()
+        self.playerChanged.emit()
+        self._set_status("已开启随机播放" if self._shuffle_enabled else "已关闭随机播放")
+
+    @Slot()
+    def cycleRepeatMode(self) -> None:
+        self._repeat_mode = (self._repeat_mode + 1) % 3
+        self.playbackModeChanged.emit()
+        self.playerChanged.emit()
+        labels = ("已关闭循环播放", "已开启列表循环", "已开启单曲循环")
+        self._set_status(labels[self._repeat_mode])
+
     @asyncSlot()
     async def nextTrack(self) -> None:
-        if self.canGoNext:
-            await self._play_queue_index(self._queue_index + 1)
+        if not self.canGoNext:
+            return
+        next_index = self._queue_index + 1
+        if next_index >= len(self._queue):
+            next_index = 0
+        await self._play_queue_index(next_index)
 
     @asyncSlot(int)
     async def playQueueTrack(self, index: int) -> None:
@@ -380,10 +435,15 @@ class AppController(QObject):
 
     @asyncSlot()
     async def previousTrack(self) -> None:
-        if self._snapshot.position_ms > 5_000 or self._queue_index <= 0:
+        if self._snapshot.position_ms > 5_000:
             self.seek(0)
             return
-        await self._play_queue_index(self._queue_index - 1)
+        if self._queue_index > 0:
+            await self._play_queue_index(self._queue_index - 1)
+        elif self._repeat_mode == 1 and len(self._queue) > 1:
+            await self._play_queue_index(len(self._queue) - 1)
+        else:
+            self.seek(0)
 
     @Slot(int)
     def seek(self, position_ms: int) -> None:
@@ -811,7 +871,12 @@ class AppController(QObject):
     async def _advance_after_end(self, expected_request_id: int) -> None:
         if expected_request_id != self._play_request_id:
             return
-        if self.canGoNext:
-            await self._play_queue_index(self._queue_index + 1)
+        if self._repeat_mode == 2 and 0 <= self._queue_index < len(self._queue):
+            await self._play_queue_index(self._queue_index)
+        elif self.canGoNext:
+            next_index = self._queue_index + 1
+            if next_index >= len(self._queue):
+                next_index = 0
+            await self._play_queue_index(next_index)
         else:
             self._set_status("播放队列已结束")

@@ -432,3 +432,107 @@ async def test_queue_edit_invalidates_pending_queue_switch(tmp_path: Path) -> No
     controller.close()
     database.close()
     assert app is not None
+
+
+async def test_controller_shuffles_queue_without_losing_current_track(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    class PlayableSearchService:
+        async def resolve_stream(self, track: Track) -> StreamInfo:
+            return StreamInfo(f"{track.provider_track_id}.wav")
+
+    app = QCoreApplication.instance() or QCoreApplication([])
+    database = Database(tmp_path / "shuffle-controller.db")
+    database.initialize()
+    player = MockPlayer()
+    controller = AppController(
+        PlayableSearchService(),  # type: ignore[arg-type]
+        player,
+        PlaylistRepository(database),
+        HistoryRepository(database),
+    )
+    tracks = [
+        Track("demo", "one", "第一首", "歌手", "专辑", 60_000),
+        Track("demo", "two", "第二首", "歌手", "专辑", 60_000),
+        Track("demo", "three", "第三首", "歌手", "专辑", 60_000),
+    ]
+    monkeypatch.setattr(
+        "sniffplay.controllers.app_controller.random.shuffle",
+        lambda items: items.reverse(),
+    )
+
+    await controller._play_tracks(tracks, 1)
+    controller.toggleShuffle()
+
+    assert controller.shuffleEnabled
+    assert player.current_track == tracks[1]
+    assert controller._queue == [tracks[1], tracks[2], tracks[0]]
+    assert controller._queue_index == 0
+    assert controller._queue_model._items[0]["isCurrent"] is True
+    assert len(set(controller._queue)) == len(tracks)
+
+    new_tracks = [
+        Track("demo", "four", "第四首", "歌手", "专辑", 60_000),
+        Track("demo", "five", "第五首", "歌手", "专辑", 60_000),
+        Track("demo", "six", "第六首", "歌手", "专辑", 60_000),
+    ]
+    await controller._play_tracks(new_tracks, 2)
+
+    assert player.current_track == new_tracks[2]
+    assert controller._queue == [new_tracks[2], new_tracks[1], new_tracks[0]]
+    assert controller._queue_index == 0
+
+    controller.close()
+    database.close()
+    assert app is not None
+
+
+async def test_controller_cycles_repeat_modes_and_wraps_queue(tmp_path: Path) -> None:
+    class PlayableSearchService:
+        async def resolve_stream(self, track: Track) -> StreamInfo:
+            return StreamInfo(f"{track.provider_track_id}.wav")
+
+    app = QCoreApplication.instance() or QCoreApplication([])
+    database = Database(tmp_path / "repeat-controller.db")
+    database.initialize()
+    player = MockPlayer()
+    controller = AppController(
+        PlayableSearchService(),  # type: ignore[arg-type]
+        player,
+        PlaylistRepository(database),
+        HistoryRepository(database),
+    )
+    tracks = [
+        Track("demo", "one", "第一首", "歌手", "专辑", 60_000),
+        Track("demo", "two", "第二首", "歌手", "专辑", 60_000),
+    ]
+    await controller._play_tracks(tracks, 0)
+
+    controller.cycleRepeatMode()
+    assert controller.repeatMode == 1
+    assert controller.canGoPrevious
+    await controller.previousTrack()
+    assert controller._queue_index == 1
+    await controller._advance_after_end(controller._play_request_id)
+    assert controller._queue_index == 0
+    await controller.previousTrack()
+    assert controller._queue_index == 1
+    await controller.nextTrack()
+    assert controller._queue_index == 0
+
+    controller.cycleRepeatMode()
+    assert controller.repeatMode == 2
+    request_id = controller._play_request_id
+    await controller._advance_after_end(request_id)
+    assert controller._play_request_id == request_id + 1
+    assert player.current_track == tracks[0]
+    assert controller._queue_index == 0
+    assert controller._queue_model._items[0]["isCurrent"] is True
+
+    controller.cycleRepeatMode()
+    assert controller.repeatMode == 0
+
+    controller.close()
+    database.close()
+    assert app is not None

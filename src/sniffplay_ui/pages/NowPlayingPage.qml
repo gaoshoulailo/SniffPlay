@@ -33,6 +33,66 @@ Item {
             Item { Layout.fillWidth: true }
 
             Button {
+                id: shuffleButton
+                implicitWidth: 38
+                implicitHeight: 38
+                onClicked: root.controller.toggleShuffle()
+                ToolTip.visible: hovered
+                ToolTip.text: root.controller.shuffleEnabled ? "关闭随机播放" : "开启随机播放"
+
+                contentItem: Text {
+                    text: "⤨"
+                    color: root.controller.shuffleEnabled ? Theme.accent : Theme.textSecondary
+                    font.family: "Segoe UI Symbol"
+                    font.pixelSize: 19
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                background: Rectangle {
+                    color: root.controller.shuffleEnabled ? Theme.accentDark : (shuffleButton.hovered ? Theme.surfaceHover : Theme.surface)
+                    border.color: root.controller.shuffleEnabled ? Theme.accent : Theme.border
+                    radius: 19
+                }
+            }
+
+            Button {
+                id: repeatButton
+                implicitWidth: 38
+                implicitHeight: 38
+                onClicked: root.controller.cycleRepeatMode()
+                ToolTip.visible: hovered
+                ToolTip.text: root.controller.repeatMode === 0 ? "开启列表循环"
+                    : (root.controller.repeatMode === 1 ? "切换为单曲循环" : "关闭循环播放")
+
+                contentItem: Item {
+                    Text {
+                        anchors.centerIn: parent
+                        text: "↻"
+                        color: root.controller.repeatMode > 0 ? Theme.accent : Theme.textSecondary
+                        font.family: "Segoe UI Symbol"
+                        font.pixelSize: 20
+                    }
+                    Text {
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        anchors.rightMargin: 2
+                        anchors.bottomMargin: 1
+                        visible: root.controller.repeatMode === 2
+                        text: "1"
+                        color: Theme.accent
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 9
+                        font.bold: true
+                    }
+                }
+                background: Rectangle {
+                    color: root.controller.repeatMode > 0 ? Theme.accentDark : (repeatButton.hovered ? Theme.surfaceHover : Theme.surface)
+                    border.color: root.controller.repeatMode > 0 ? Theme.accent : Theme.border
+                    radius: 19
+                }
+            }
+
+            Button {
                 id: favoriteButton
                 implicitWidth: 38
                 implicitHeight: 38
