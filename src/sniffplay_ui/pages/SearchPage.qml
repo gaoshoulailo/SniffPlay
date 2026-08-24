@@ -15,35 +15,78 @@ Item {
     property int pendingPlaylistId: -1
     property int contextTrackIndex: -1
     property bool contextTrackFavorite: false
+    readonly property bool compact: width < 760
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 30
         spacing: 18
 
-        Text {
-            text: "搜索"
-            color: Theme.textPrimary
-            font.family: Theme.fontFamily
-            font.pixelSize: 26
-            font.weight: Font.Bold
-        }
+        RowLayout {
+            Layout.fillWidth: true
 
-        Text {
-            text: "在已启用的音乐来源中查找歌曲、歌手或专辑"
-            color: Theme.textSecondary
-            font.family: Theme.fontFamily
-            font.pixelSize: 13
+            Text {
+                text: "搜索"
+                color: Theme.textPrimary
+                font.family: Theme.fontFamily
+                font.pixelSize: 26
+                font.weight: Font.Bold
+            }
+
+            Item { Layout.fillWidth: true }
+
+            Button {
+                id: headerShuffleButton
+                implicitWidth: 38
+                implicitHeight: 38
+                onClicked: root.controller.toggleShuffle()
+                ToolTip.visible: hovered
+                ToolTip.text: root.controller.shuffleEnabled ? "关闭随机播放" : "开启随机播放"
+                contentItem: Text {
+                    text: "⤨"
+                    color: root.controller.shuffleEnabled ? Theme.accent : Theme.textSecondary
+                    font.family: "Segoe UI Symbol"
+                    font.pixelSize: 18
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                background: Rectangle {
+                    color: headerShuffleButton.hovered ? Theme.surfaceHover : Theme.transparent
+                    radius: 19
+                }
+            }
+
+            Button {
+                id: refreshButton
+                implicitWidth: 38
+                implicitHeight: 38
+                enabled: !root.controller.searching
+                onClicked: root.controller.search(searchField.text)
+                ToolTip.visible: hovered
+                ToolTip.text: "刷新"
+                contentItem: Text {
+                    text: "↻"
+                    color: Theme.textSecondary
+                    font.family: "Segoe UI Symbol"
+                    font.pixelSize: 20
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                background: Rectangle {
+                    color: refreshButton.hovered ? Theme.surfaceHover : Theme.transparent
+                    radius: 19
+                    opacity: refreshButton.enabled ? 1 : 0.4
+                }
+            }
         }
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 10
+            spacing: 8
 
             TextField {
                 id: searchField
                 Layout.fillWidth: true
-                Layout.maximumWidth: 680
                 implicitHeight: 42
                 leftPadding: 14
                 rightPadding: 14
@@ -65,12 +108,14 @@ Item {
             }
 
             AppButton {
-                text: "打开音频"
+                text: "+"
+                ToolTip.visible: hovered
+                ToolTip.text: "打开本地音频"
                 onClicked: localFileDialog.open()
             }
 
             AppButton {
-                text: root.controller.searching ? "搜索中" : "搜索"
+                text: root.controller.searching ? "…" : "搜索"
                 primary: true
                 enabled: !root.controller.searching
                 onClicked: root.controller.search(searchField.text)
@@ -82,6 +127,119 @@ Item {
                 palette.highlight: Theme.accent
             }
         }
+
+        GridLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            columns: root.compact ? 1 : 2
+            columnSpacing: 22
+            rowSpacing: 18
+
+            Rectangle {
+                Layout.fillWidth: root.compact
+                Layout.preferredWidth: root.compact ? -1 : 330
+                Layout.maximumWidth: root.compact ? 760 : 350
+                Layout.fillHeight: !root.compact
+                Layout.preferredHeight: root.compact ? 250 : -1
+                color: Theme.sidebar
+                border.color: Theme.border
+                radius: Theme.radiusMedium
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: root.compact ? 14 : 22
+                    spacing: root.compact ? 8 : 14
+
+                    Text {
+                        text: "发现新音乐"
+                        color: Theme.textPrimary
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 18
+                        font.weight: Font.DemiBold
+                    }
+
+                    Text {
+                        visible: !root.compact
+                        text: "搜索歌曲、歌手或专辑"
+                        color: Theme.textSecondary
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 12
+                    }
+
+                    Rectangle {
+                        id: discoveryCover
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: root.compact ? 100 : width
+                        Layout.maximumHeight: root.compact ? 100 : width
+                        color: root.controller.hasCurrentTrack
+                            ? root.controller.currentAccent
+                            : Theme.surface
+                        radius: Theme.radiusMedium
+                        clip: true
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: root.controller.hasCurrentTrack
+                                ? root.controller.currentInitials
+                                : "⌕"
+                            color: root.controller.hasCurrentTrack
+                                ? "#101311"
+                                : Theme.textSecondary
+                            font.family: root.controller.hasCurrentTrack
+                                ? Theme.fontFamily
+                                : "Segoe UI Symbol"
+                            font.pixelSize: root.compact ? 42 : 64
+                            font.bold: root.controller.hasCurrentTrack
+                            opacity: root.controller.hasCurrentTrack ? 1 : 0.65
+                            visible: discoveryCoverImage.status !== Image.Ready
+                        }
+
+                        Image {
+                            id: discoveryCoverImage
+                            anchors.fill: parent
+                            source: root.controller.currentCoverUrl
+                            sourceSize.width: 640
+                            sourceSize.height: 640
+                            asynchronous: true
+                            cache: true
+                            fillMode: Image.PreserveAspectCrop
+                            visible: status === Image.Ready
+                        }
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: root.controller.hasCurrentTrack
+                            ? root.controller.currentTitle
+                            : "从搜索结果中选择歌曲"
+                        color: Theme.textPrimary
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 13
+                        font.weight: Font.DemiBold
+                        horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        visible: root.controller.hasCurrentTrack && !root.compact
+                        text: root.controller.currentArtist
+                        color: Theme.textSecondary
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 11
+                        horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
+                    }
+
+                    Item { Layout.fillHeight: true }
+
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                spacing: 10
 
         RowLayout {
             Layout.fillWidth: true
@@ -107,7 +265,8 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: 34
+            implicitHeight: 0
+            visible: false
             color: Theme.transparent
 
             RowLayout {
@@ -124,12 +283,13 @@ Item {
             }
         }
 
-        ListView {
+        GridView {
             id: resultsList
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            spacing: 2
+            cellWidth: Math.max(178, width / (width >= 410 ? 2 : 1))
+            cellHeight: 250
             model: root.controller.trackModel
 
             ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
@@ -147,24 +307,26 @@ Item {
                 required property string coverUrl
                 required property bool isFavorite
 
-                width: resultsList.width
-                height: 58
+                width: resultsList.cellWidth - 10
+                height: 236
                 color: root.contextTrackIndex === trackRow.index
                     ? Theme.accentDark
-                    : (rowMouse.containsMouse ? Theme.surfaceHover : Theme.transparent)
+                    : (rowMouse.containsMouse ? Theme.surfaceHover : Theme.surface)
                 radius: Theme.radiusMedium
+                border.color: root.contextTrackIndex === trackRow.index
+                    ? Theme.accent
+                    : Theme.border
 
-                RowLayout {
+                ColumnLayout {
                     z: 1
                     anchors.fill: parent
-                    anchors.leftMargin: 8
-                    anchors.rightMargin: 18
-                    spacing: 14
+                    anchors.margins: 10
+                    spacing: 7
 
                     Rectangle {
                         id: coverContainer
-                        Layout.preferredWidth: 42
-                        Layout.preferredHeight: 42
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 132
                         color: trackRow.accent
                         radius: Theme.radiusSmall
                         clip: true
@@ -183,8 +345,8 @@ Item {
                             id: coverImage
                             anchors.fill: parent
                             source: trackRow.coverUrl
-                            sourceSize.width: 96
-                            sourceSize.height: 96
+                            sourceSize.width: 360
+                            sourceSize.height: 264
                             asynchronous: false
                             cache: true
                             fillMode: Image.PreserveAspectCrop
@@ -200,14 +362,28 @@ Item {
                         Text { Layout.fillWidth: true; text: trackRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12; elide: Text.ElideRight }
                     }
 
-                    Text { Layout.preferredWidth: 180; text: trackRow.album; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12; elide: Text.ElideRight }
-                    Text { Layout.preferredWidth: 72; text: trackRow.source; color: Theme.accent; font.family: Theme.fontFamily; font.pixelSize: 11; font.weight: Font.DemiBold }
-                    Text { Layout.preferredWidth: 52; text: trackRow.duration; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12 }
+                    Text { visible: false; text: trackRow.album }
+                    Text { visible: false; text: trackRow.source }
+                    Text { visible: false; text: trackRow.duration }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 6
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: trackRow.source + " · " + trackRow.duration
+                            color: Theme.textSecondary
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 10
+                            elide: Text.ElideRight
+                        }
 
                     Button {
                         id: favoriteButton
                         Layout.preferredWidth: 34
                         Layout.preferredHeight: 34
+                        opacity: rowMouse.containsMouse || trackRow.isFavorite ? 1 : 0
                         onClicked: root.controller.toggleTrackFavorite(trackRow.index)
                         ToolTip.visible: hovered
                         ToolTip.text: trackRow.isFavorite ? "取消收藏" : "收藏"
@@ -232,6 +408,7 @@ Item {
                         id: rowAddButton
                         Layout.preferredWidth: 34
                         Layout.preferredHeight: 34
+                        opacity: rowMouse.containsMouse ? 1 : 0
                         onClicked: {
                             root.pendingTrackIndex = trackRow.index
                             addToPlaylistDialog.open()
@@ -257,6 +434,7 @@ Item {
                         id: rowPlayButton
                         Layout.preferredWidth: 34
                         Layout.preferredHeight: 34
+                        opacity: rowMouse.containsMouse ? 1 : 0
                         onClicked: root.controller.playTrack(trackRow.index)
                         ToolTip.visible: hovered
                         ToolTip.text: "播放"
@@ -273,6 +451,7 @@ Item {
                             border.color: Theme.border
                             radius: 17
                         }
+                    }
                     }
                 }
 
@@ -303,6 +482,8 @@ Item {
                 color: Theme.textSecondary
                 font.family: Theme.fontFamily
                 font.pixelSize: 14
+            }
+        }
             }
         }
     }
