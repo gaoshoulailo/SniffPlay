@@ -85,7 +85,7 @@ Item {
                         radius: Theme.radiusSmall
                         clip: true
                         Text { anchors.centerIn: parent; text: favoriteRow.initials; color: "#101311"; font.family: Theme.fontFamily; font.bold: true; visible: coverImage.status !== Image.Ready }
-                        Image { id: coverImage; anchors.fill: parent; source: favoriteRow.coverUrl; asynchronous: true; fillMode: Image.PreserveAspectCrop; visible: status === Image.Ready }
+                        Image { id: coverImage; anchors.fill: parent; source: favoriteRow.coverUrl; sourceSize.width: 96; sourceSize.height: 96; asynchronous: true; fillMode: Image.PreserveAspectCrop; visible: status === Image.Ready }
                     }
 
                     ColumnLayout {

@@ -6,12 +6,18 @@ import httpx
 import pytest
 
 from sniffplay.models import Track
-from sniffplay.providers.BilibiliDataSource import BilibiliDataSource
+from sniffplay.providers.BilibiliDataSource import BilibiliDataSource, _cover_url
 from sniffplay.providers.base import ProviderError, StreamUnavailableError
 
 
 def _response(request: httpx.Request, payload: dict[str, object]) -> httpx.Response:
     return httpx.Response(200, json=payload, request=request)
+
+
+def test_bilibili_cover_url_requests_high_resolution_square() -> None:
+    assert _cover_url(
+        "//i0.hdslb.com/bfs/archive/example.jpg@128w_128h.jpg?token=old"
+    ) == "https://i0.hdslb.com/bfs/archive/example.jpg@512w_512h_1c.jpg"
 
 
 @pytest.mark.asyncio

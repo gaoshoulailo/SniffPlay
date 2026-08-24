@@ -102,6 +102,8 @@ Item {
                             id: coverImage
                             anchors.fill: parent
                             source: root.controller.currentCoverUrl
+                            sourceSize.width: 512
+                            sourceSize.height: 512
                             asynchronous: true
                             cache: true
                             fillMode: Image.PreserveAspectCrop

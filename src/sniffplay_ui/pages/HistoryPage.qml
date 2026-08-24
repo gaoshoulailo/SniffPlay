@@ -105,6 +105,8 @@ Item {
                             id: historyCover
                             anchors.fill: parent
                             source: historyRow.coverUrl
+                            sourceSize.width: 96
+                            sourceSize.height: 96
                             asynchronous: true
                             fillMode: Image.PreserveAspectCrop
                             visible: status === Image.Ready

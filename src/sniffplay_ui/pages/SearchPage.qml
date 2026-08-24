@@ -183,6 +183,8 @@ Item {
                             id: coverImage
                             anchors.fill: parent
                             source: trackRow.coverUrl
+                            sourceSize.width: 96
+                            sourceSize.height: 96
                             asynchronous: false
                             cache: true
                             fillMode: Image.PreserveAspectCrop

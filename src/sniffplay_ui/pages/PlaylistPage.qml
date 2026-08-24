@@ -244,7 +244,7 @@ Item {
                                 radius: Theme.radiusSmall
                                 clip: true
                                 Text { anchors.centerIn: parent; text: trackRow.initials; color: "#101311"; font.family: Theme.fontFamily; font.bold: true; visible: trackCover.status !== Image.Ready }
-                                Image { id: trackCover; anchors.fill: parent; source: trackRow.coverUrl; fillMode: Image.PreserveAspectCrop; asynchronous: true; visible: status === Image.Ready }
+                                Image { id: trackCover; anchors.fill: parent; source: trackRow.coverUrl; sourceSize.width: 96; sourceSize.height: 96; fillMode: Image.PreserveAspectCrop; asynchronous: true; visible: status === Image.Ready }
                             }
 
                             ColumnLayout {

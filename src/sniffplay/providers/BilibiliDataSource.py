@@ -109,6 +109,7 @@ COVER_DOWNLOAD_CONCURRENCY = 10
 COVER_DOWNLOAD_TIMEOUT = 4.0
 COVER_BATCH_TIMEOUT = 6.0
 MAX_COVER_BYTES = 2 * 1024 * 1024
+COVER_EDGE_PX = 512
 
 
 class BilibiliAPIError(ProviderError):
@@ -184,7 +185,7 @@ def _cover_url(value: Any) -> str | None:
     hostname = urlparse(url).hostname or ""
     if hostname == "hdslb.com" or hostname.endswith(".hdslb.com"):
         original = url.split("?", 1)[0].split("@", 1)[0]
-        return f"{original}@128w_128h_1c.jpg"
+        return f"{original}@{COVER_EDGE_PX}w_{COVER_EDGE_PX}h_1c.jpg"
     return url
 
 
