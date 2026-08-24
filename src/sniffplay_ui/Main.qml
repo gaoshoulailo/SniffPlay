@@ -147,6 +147,19 @@ ApplicationWindow {
                 color: Theme.border
             }
 
+            MouseArea {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                height: 68
+                z: 1
+                acceptedButtons: Qt.LeftButton
+                onPressed: root.startSystemMove()
+                onDoubleClicked: root.visibility === Window.Maximized
+                    ? root.showNormal()
+                    : root.showMaximized()
+            }
+
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 14
