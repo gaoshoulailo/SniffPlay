@@ -19,12 +19,12 @@ Button {
             width: 24
             height: 24
             radius: 6
-            color: control.selected ? Theme.accentDark : Theme.surface
+            color: control.selected ? Theme.accent : Theme.surface
 
             Text {
                 anchors.centerIn: parent
                 text: control.marker
-                color: control.selected ? Theme.accent : Theme.textSecondary
+                color: control.selected ? "#0c1710" : Theme.textSecondary
                 font.family: Theme.fontFamily
                 font.pixelSize: 11
                 font.weight: Font.Bold
@@ -43,9 +43,8 @@ Button {
 
     background: Rectangle {
         color: control.selected
-            ? Theme.surfaceHover
+            ? Theme.accentDark
             : (control.hovered ? Theme.surface : Theme.transparent)
         radius: Theme.radiusMedium
     }
 }
-

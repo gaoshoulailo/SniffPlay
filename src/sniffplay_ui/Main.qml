@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 import QtQuick.Layouts
 import "components"
 import "pages"
@@ -16,20 +17,43 @@ ApplicationWindow {
     minimumHeight: 620
     visible: true
     title: "SniffPlay"
-    color: Theme.window
+    color: "transparent"
     flags: Qt.Window | Qt.FramelessWindowHint
 
     required property var controller
     property int currentPage: 0
+    readonly property int frameMargin: visibility === Window.Maximized ? 0 : 8
+
+    Rectangle {
+        id: windowFrame
+        anchors.fill: parent
+        anchors.margins: root.frameMargin
+        color: Theme.window
+        border.color: Theme.border
+        border.width: 1
+        radius: root.visibility === Window.Maximized ? 0 : 12
+    }
+
+    MultiEffect {
+        anchors.fill: windowFrame
+        source: windowFrame
+        visible: root.visibility !== Window.Maximized
+        shadowEnabled: true
+        shadowColor: "#99000000"
+        shadowBlur: 1
+        shadowVerticalOffset: 4
+        autoPaddingEnabled: true
+    }
 
     Rectangle {
         id: titleBar
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
-        height: 44
+        anchors.left: windowFrame.left
+        anchors.right: windowFrame.right
+        anchors.top: windowFrame.top
+        height: 42
         color: Theme.sidebar
         border.color: Theme.border
+        radius: root.visibility === Window.Maximized ? 0 : 12
 
         MouseArea {
             anchors.fill: parent
@@ -78,13 +102,13 @@ ApplicationWindow {
             height: parent.height
 
             Repeater {
-                model: ["−", "□", "×"]
+                model: ["—", "□", "×"]
 
                 delegate: Button {
                     id: windowButton
                     required property string modelData
                     required property int index
-                    width: 46
+                    width: 44
                     height: titleBar.height
                     onClicked: {
                         if (index === 0)
@@ -96,10 +120,16 @@ ApplicationWindow {
                     }
 
                     ToolTip.visible: hovered
-                    ToolTip.text: index === 0 ? "最小化" : (index === 1 ? "最大化" : "关闭")
+                    ToolTip.text: index === 0
+                        ? "最小化"
+                        : (index === 1
+                            ? (root.visibility === Window.Maximized ? "还原" : "最大化")
+                            : "关闭")
 
                     contentItem: Text {
-                        text: windowButton.modelData
+                        text: windowButton.index === 1 && root.visibility === Window.Maximized
+                            ? "❐"
+                            : windowButton.modelData
                         color: Theme.textPrimary
                         font.family: Theme.fontFamily
                         font.pixelSize: 15
@@ -110,6 +140,7 @@ ApplicationWindow {
                         color: windowButton.hovered
                             ? (windowButton.index === 2 ? Theme.danger : Theme.surfaceHover)
                             : Theme.transparent
+                        radius: windowButton.index === 2 && root.visibility !== Window.Maximized ? 12 : 0
                     }
                 }
             }
@@ -117,14 +148,14 @@ ApplicationWindow {
     }
 
     RowLayout {
-        anchors.left: parent.left
-        anchors.right: parent.right
+        anchors.left: windowFrame.left
+        anchors.right: windowFrame.right
         anchors.top: titleBar.bottom
-        anchors.bottom: parent.bottom
+        anchors.bottom: windowFrame.bottom
         spacing: 0
 
         Rectangle {
-            Layout.preferredWidth: 214
+            Layout.preferredWidth: 204
             Layout.fillHeight: true
             color: Theme.sidebar
             border.color: Theme.border
@@ -155,7 +186,7 @@ ApplicationWindow {
                 NavButton {
                     Layout.fillWidth: true
                     text: "搜索"
-                    marker: "S"
+                    marker: "⌕"
                     selected: root.currentPage === 1
                     onClicked: root.currentPage = 1
                 }
@@ -163,7 +194,7 @@ ApplicationWindow {
                 NavButton {
                     Layout.fillWidth: true
                     text: "我的收藏"
-                    marker: "F"
+                    marker: "♥"
                     selected: root.currentPage === 2
                     onClicked: root.currentPage = 2
                 }
@@ -171,7 +202,7 @@ ApplicationWindow {
                 NavButton {
                     Layout.fillWidth: true
                     text: "我的歌单"
-                    marker: "P"
+                    marker: "≡"
                     selected: root.currentPage === 3
                     onClicked: root.currentPage = 3
                 }
@@ -179,7 +210,7 @@ ApplicationWindow {
                 NavButton {
                     Layout.fillWidth: true
                     text: "播放历史"
-                    marker: "H"
+                    marker: "↶"
                     selected: root.currentPage === 4
                     onClicked: root.currentPage = 4
                 }
@@ -241,12 +272,12 @@ ApplicationWindow {
         }
     }
 
-    MouseArea {
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        width: 12
-        height: 12
-        cursorShape: Qt.SizeFDiagCursor
-        onPressed: root.startSystemResize(Qt.RightEdge | Qt.BottomEdge)
-    }
+    MouseArea { enabled: root.visibility !== Window.Maximized; anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom; width: 5; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.LeftEdge) }
+    MouseArea { enabled: root.visibility !== Window.Maximized; anchors.right: parent.right; anchors.top: parent.top; anchors.bottom: parent.bottom; width: 5; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.RightEdge) }
+    MouseArea { enabled: root.visibility !== Window.Maximized; anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right; height: 5; cursorShape: Qt.SizeVerCursor; onPressed: root.startSystemResize(Qt.TopEdge) }
+    MouseArea { enabled: root.visibility !== Window.Maximized; anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right; height: 5; cursorShape: Qt.SizeVerCursor; onPressed: root.startSystemResize(Qt.BottomEdge) }
+    MouseArea { enabled: root.visibility !== Window.Maximized; anchors.left: parent.left; anchors.top: parent.top; width: 12; height: 12; cursorShape: Qt.SizeFDiagCursor; onPressed: root.startSystemResize(Qt.LeftEdge | Qt.TopEdge) }
+    MouseArea { enabled: root.visibility !== Window.Maximized; anchors.right: parent.right; anchors.top: parent.top; width: 12; height: 12; cursorShape: Qt.SizeBDiagCursor; onPressed: root.startSystemResize(Qt.RightEdge | Qt.TopEdge) }
+    MouseArea { enabled: root.visibility !== Window.Maximized; anchors.left: parent.left; anchors.bottom: parent.bottom; width: 12; height: 12; cursorShape: Qt.SizeBDiagCursor; onPressed: root.startSystemResize(Qt.LeftEdge | Qt.BottomEdge) }
+    MouseArea { enabled: root.visibility !== Window.Maximized; anchors.right: parent.right; anchors.bottom: parent.bottom; width: 12; height: 12; cursorShape: Qt.SizeFDiagCursor; onPressed: root.startSystemResize(Qt.RightEdge | Qt.BottomEdge) }
 }

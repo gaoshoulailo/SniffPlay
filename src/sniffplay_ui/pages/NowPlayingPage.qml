@@ -225,13 +225,57 @@ Item {
                         Item { Layout.fillWidth: true }
                     }
 
-                    Text {
+                    RowLayout {
                         Layout.fillWidth: true
-                        text: root.controller.queueLabel
-                        color: Theme.textSecondary
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 10
-                        horizontalAlignment: Text.AlignHCenter
+
+                        Text {
+                            text: root.controller.queueLabel
+                            color: Theme.textSecondary
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 10
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        Text {
+                            text: "VOL"
+                            color: Theme.textSecondary
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 9
+                        }
+
+                        Slider {
+                            id: volumeSlider
+                            Layout.preferredWidth: 86
+                            Layout.preferredHeight: 20
+                            from: 0
+                            to: 100
+                            value: root.controller.volume
+                            onMoved: root.controller.setVolume(Math.round(value))
+
+                            background: Rectangle {
+                                x: volumeSlider.leftPadding
+                                y: volumeSlider.topPadding + volumeSlider.availableHeight / 2 - height / 2
+                                width: volumeSlider.availableWidth
+                                height: 3
+                                radius: 2
+                                color: Theme.border
+                                Rectangle {
+                                    width: volumeSlider.visualPosition * parent.width
+                                    height: parent.height
+                                    radius: 2
+                                    color: Theme.textSecondary
+                                }
+                            }
+                            handle: Rectangle {
+                                x: volumeSlider.leftPadding + volumeSlider.visualPosition * (volumeSlider.availableWidth - width)
+                                y: volumeSlider.topPadding + volumeSlider.availableHeight / 2 - height / 2
+                                width: 9
+                                height: 9
+                                radius: 5
+                                color: Theme.textPrimary
+                            }
+                        }
                     }
                 }
             }
@@ -304,7 +348,9 @@ Item {
 
                             Text {
                                 Layout.preferredWidth: 24
-                                text: queueRow.index + 1
+                                text: queueRow.isCurrent
+                                    ? (root.controller.playing ? "▶" : "Ⅱ")
+                                    : queueRow.index + 1
                                 color: queueRow.isCurrent ? Theme.accent : Theme.textSecondary
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 11
