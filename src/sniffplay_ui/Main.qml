@@ -22,6 +22,7 @@ ApplicationWindow {
 
     required property var controller
     property int currentPage: 0
+    readonly property int sidebarWidth: 214
     readonly property int frameMargin: visibility === Window.Maximized ? 0 : 8
 
     Rectangle {
@@ -47,7 +48,8 @@ ApplicationWindow {
 
     Rectangle {
         id: titleBar
-        anchors.left: navigationPanel.right
+        anchors.left: windowFrame.left
+        anchors.leftMargin: root.sidebarWidth
         anchors.right: windowFrame.right
         anchors.top: windowFrame.top
         height: 42
@@ -125,7 +127,7 @@ ApplicationWindow {
 
         Rectangle {
             id: navigationPanel
-            Layout.preferredWidth: 214
+            Layout.preferredWidth: root.sidebarWidth
             Layout.fillHeight: true
             color: Theme.sidebar
             border.color: Theme.border
