@@ -150,7 +150,9 @@ Rectangle {
                 contentItem: Text {
                     text: root.controller.currentFavorite ? "♥" : "♡"
                     color: root.controller.currentFavorite ? Theme.danger : (favoriteButton.enabled ? Theme.textPrimary : "#58605b")
+                    font.family: "Segoe UI Symbol"
                     font.pixelSize: 19
+                    font.weight: Font.Normal
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }

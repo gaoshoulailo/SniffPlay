@@ -215,7 +215,9 @@ Item {
                         contentItem: Text {
                             text: trackRow.isFavorite ? "♥" : "♡"
                             color: trackRow.isFavorite ? Theme.danger : Theme.textSecondary
+                            font.family: "Segoe UI Symbol"
                             font.pixelSize: 19
+                            font.weight: Font.Normal
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }

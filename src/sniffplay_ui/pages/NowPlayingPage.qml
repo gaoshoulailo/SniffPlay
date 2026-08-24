@@ -44,14 +44,16 @@ Item {
                 contentItem: Text {
                     text: root.controller.currentFavorite ? "♥" : "♡"
                     color: root.controller.currentFavorite ? Theme.danger : Theme.textSecondary
-                    font.pixelSize: 20
+                    font.family: "Segoe UI Symbol"
+                    font.pixelSize: 19
+                    font.weight: Font.Normal
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
                 background: Rectangle {
-                    color: favoriteButton.hovered ? Theme.surfaceHover : Theme.transparent
-                    border.color: favoriteButton.hovered ? Theme.border : Theme.transparent
-                    radius: Theme.radiusMedium
+                    color: favoriteButton.hovered ? Theme.surfaceHover : Theme.surface
+                    border.color: root.controller.currentFavorite ? Theme.danger : Theme.border
+                    radius: 19
                 }
             }
         }
