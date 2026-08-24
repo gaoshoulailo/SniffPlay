@@ -47,12 +47,13 @@ ApplicationWindow {
 
     Rectangle {
         id: titleBar
-        anchors.left: windowFrame.left
+        anchors.left: navigationPanel.right
         anchors.right: windowFrame.right
         anchors.top: windowFrame.top
         height: 42
-        color: Theme.sidebar
-        border.color: Theme.border
+        z: 2
+        color: Theme.window
+        border.color: Theme.transparent
         radius: root.visibility === Window.Maximized ? 0 : 12
 
         MouseArea {
@@ -62,38 +63,6 @@ ApplicationWindow {
             onDoubleClicked: root.visibility === Window.Maximized
                 ? root.showNormal()
                 : root.showMaximized()
-        }
-
-        Row {
-            anchors.left: parent.left
-            anchors.leftMargin: 16
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 10
-
-            Rectangle {
-                width: 24
-                height: 24
-                radius: 6
-                color: Theme.accent
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "S"
-                    color: "#0c1710"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 13
-                    font.bold: true
-                }
-            }
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: "SniffPlay"
-                color: Theme.textPrimary
-                font.family: Theme.fontFamily
-                font.pixelSize: 13
-                font.weight: Font.DemiBold
-            }
         }
 
         Row {
@@ -150,24 +119,74 @@ ApplicationWindow {
     RowLayout {
         anchors.left: windowFrame.left
         anchors.right: windowFrame.right
-        anchors.top: titleBar.bottom
+        anchors.top: windowFrame.top
         anchors.bottom: windowFrame.bottom
         spacing: 0
 
         Rectangle {
-            Layout.preferredWidth: 204
+            id: navigationPanel
+            Layout.preferredWidth: 214
             Layout.fillHeight: true
             color: Theme.sidebar
             border.color: Theme.border
+            radius: root.visibility === Window.Maximized ? 0 : 12
+
+            Rectangle {
+                anchors.top: parent.top
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                width: 12
+                color: Theme.sidebar
+            }
+
+            Rectangle {
+                anchors.top: parent.top
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                width: 1
+                color: Theme.border
+            }
 
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 14
                 spacing: 5
 
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 8
+                    Layout.topMargin: 10
+                    Layout.bottomMargin: 16
+                    spacing: 10
+
+                    Rectangle {
+                        Layout.preferredWidth: 28
+                        Layout.preferredHeight: 28
+                        color: Theme.accent
+                        radius: Theme.radiusMedium
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "S"
+                            color: "#0c1710"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 14
+                            font.bold: true
+                        }
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: "SniffPlay"
+                        color: Theme.textPrimary
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 18
+                        font.weight: Font.Bold
+                    }
+                }
+
                 Text {
                     Layout.leftMargin: 10
-                    Layout.topMargin: 12
                     Layout.bottomMargin: 8
                     text: "音乐库"
                     color: Theme.textSecondary
@@ -252,6 +271,11 @@ ApplicationWindow {
             Layout.fillHeight: true
             spacing: 0
 
+            Item {
+                Layout.fillWidth: true
+                Layout.preferredHeight: titleBar.height
+            }
+
             StackLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -272,12 +296,12 @@ ApplicationWindow {
         }
     }
 
-    MouseArea { enabled: root.visibility !== Window.Maximized; anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom; width: 5; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.LeftEdge) }
-    MouseArea { enabled: root.visibility !== Window.Maximized; anchors.right: parent.right; anchors.top: parent.top; anchors.bottom: parent.bottom; width: 5; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.RightEdge) }
-    MouseArea { enabled: root.visibility !== Window.Maximized; anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right; height: 5; cursorShape: Qt.SizeVerCursor; onPressed: root.startSystemResize(Qt.TopEdge) }
-    MouseArea { enabled: root.visibility !== Window.Maximized; anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right; height: 5; cursorShape: Qt.SizeVerCursor; onPressed: root.startSystemResize(Qt.BottomEdge) }
-    MouseArea { enabled: root.visibility !== Window.Maximized; anchors.left: parent.left; anchors.top: parent.top; width: 12; height: 12; cursorShape: Qt.SizeFDiagCursor; onPressed: root.startSystemResize(Qt.LeftEdge | Qt.TopEdge) }
-    MouseArea { enabled: root.visibility !== Window.Maximized; anchors.right: parent.right; anchors.top: parent.top; width: 12; height: 12; cursorShape: Qt.SizeBDiagCursor; onPressed: root.startSystemResize(Qt.RightEdge | Qt.TopEdge) }
-    MouseArea { enabled: root.visibility !== Window.Maximized; anchors.left: parent.left; anchors.bottom: parent.bottom; width: 12; height: 12; cursorShape: Qt.SizeBDiagCursor; onPressed: root.startSystemResize(Qt.LeftEdge | Qt.BottomEdge) }
-    MouseArea { enabled: root.visibility !== Window.Maximized; anchors.right: parent.right; anchors.bottom: parent.bottom; width: 12; height: 12; cursorShape: Qt.SizeFDiagCursor; onPressed: root.startSystemResize(Qt.RightEdge | Qt.BottomEdge) }
+    MouseArea { z: 10; enabled: root.visibility !== Window.Maximized; anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom; width: 5; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.LeftEdge) }
+    MouseArea { z: 10; enabled: root.visibility !== Window.Maximized; anchors.right: parent.right; anchors.top: parent.top; anchors.bottom: parent.bottom; width: 5; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.RightEdge) }
+    MouseArea { z: 10; enabled: root.visibility !== Window.Maximized; anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right; height: 5; cursorShape: Qt.SizeVerCursor; onPressed: root.startSystemResize(Qt.TopEdge) }
+    MouseArea { z: 10; enabled: root.visibility !== Window.Maximized; anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right; height: 5; cursorShape: Qt.SizeVerCursor; onPressed: root.startSystemResize(Qt.BottomEdge) }
+    MouseArea { z: 10; enabled: root.visibility !== Window.Maximized; anchors.left: parent.left; anchors.top: parent.top; width: 12; height: 12; cursorShape: Qt.SizeFDiagCursor; onPressed: root.startSystemResize(Qt.LeftEdge | Qt.TopEdge) }
+    MouseArea { z: 10; enabled: root.visibility !== Window.Maximized; anchors.right: parent.right; anchors.top: parent.top; width: 12; height: 12; cursorShape: Qt.SizeBDiagCursor; onPressed: root.startSystemResize(Qt.RightEdge | Qt.TopEdge) }
+    MouseArea { z: 10; enabled: root.visibility !== Window.Maximized; anchors.left: parent.left; anchors.bottom: parent.bottom; width: 12; height: 12; cursorShape: Qt.SizeBDiagCursor; onPressed: root.startSystemResize(Qt.LeftEdge | Qt.BottomEdge) }
+    MouseArea { z: 10; enabled: root.visibility !== Window.Maximized; anchors.right: parent.right; anchors.bottom: parent.bottom; width: 12; height: 12; cursorShape: Qt.SizeFDiagCursor; onPressed: root.startSystemResize(Qt.RightEdge | Qt.BottomEdge) }
 }
