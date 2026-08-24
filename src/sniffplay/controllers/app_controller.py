@@ -506,6 +506,16 @@ class AppController(QObject):
         self._playlist_track_model.set_entries(entries, self._favorite_keys)
         self.playlistSelectionChanged.emit()
 
+    @asyncSlot(int)
+    async def playPlaylist(self, playlist_id: int) -> None:
+        try:
+            entries = self._playlist_repository.list_tracks(playlist_id)
+        except LookupError as error:
+            self._set_status(str(error))
+            return
+        if entries:
+            await self._play_tracks([entry.track for entry in entries], 0)
+
     @Slot()
     def closePlaylist(self) -> None:
         self._clear_selected_playlist()

@@ -16,6 +16,22 @@ Item {
     property bool contextTrackFavorite: false
     property int pendingTrackIndex: -1
     property int pendingPlaylistId: -1
+    property int contextPlaylistId: -1
+    property string contextPlaylistName: ""
+    property int dialogPlaylistId: -1
+    property string dialogPlaylistName: ""
+
+    function openRenameDialog(playlistId, playlistName) {
+        root.dialogPlaylistId = playlistId
+        root.dialogPlaylistName = playlistName
+        renameDialog.open()
+    }
+
+    function openDeleteDialog(playlistId, playlistName) {
+        root.dialogPlaylistId = playlistId
+        root.dialogPlaylistName = playlistName
+        deletePlaylistDialog.open()
+    }
 
     StackLayout {
         anchors.fill: parent
@@ -62,7 +78,9 @@ Item {
 
                         width: playlistView.width
                         height: 62
-                        color: playlistMouse.containsMouse ? Theme.surfaceHover : Theme.transparent
+                        color: root.contextPlaylistId === playlistRow.playlistId
+                            ? Theme.accentDark
+                            : (playlistMouse.containsMouse ? Theme.surfaceHover : Theme.transparent)
                         radius: Theme.radiusMedium
 
                         RowLayout {
@@ -94,7 +112,16 @@ Item {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root.controller.openPlaylist(playlistRow.playlistId)
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            onClicked: function(mouse) {
+                                if (mouse.button === Qt.LeftButton) {
+                                    root.controller.openPlaylist(playlistRow.playlistId)
+                                    return
+                                }
+                                root.contextPlaylistId = playlistRow.playlistId
+                                root.contextPlaylistName = playlistRow.name
+                                playlistContextMenu.popup()
+                            }
                         }
                     }
 
@@ -146,8 +173,20 @@ Item {
                         enabled: playlistTrackView.count > 0
                         onClicked: root.controller.playSelectedPlaylist()
                     }
-                    AppButton { text: "重命名"; onClicked: renameDialog.open() }
-                    AppButton { text: "删除歌单"; onClicked: deletePlaylistDialog.open() }
+                    AppButton {
+                        text: "重命名"
+                        onClicked: root.openRenameDialog(
+                            root.controller.selectedPlaylistId,
+                            root.controller.selectedPlaylistName
+                        )
+                    }
+                    AppButton {
+                        text: "删除歌单"
+                        onClicked: root.openDeleteDialog(
+                            root.controller.selectedPlaylistId,
+                            root.controller.selectedPlaylistName
+                        )
+                    }
                 }
 
                 RowLayout {
@@ -287,6 +326,58 @@ Item {
                     }
                 }
             }
+        }
+    }
+
+    Menu {
+        id: playlistContextMenu
+        implicitWidth: 210
+        modal: true
+        palette.window: Theme.surface
+        palette.windowText: Theme.textPrimary
+
+        onClosed: {
+            root.contextPlaylistId = -1
+            root.contextPlaylistName = ""
+        }
+
+        background: Rectangle {
+            color: Theme.surface
+            border.color: Theme.border
+            radius: Theme.radiusMedium
+        }
+
+        ContextMenuItem {
+            text: "打开歌单"
+            onTriggered: root.controller.openPlaylist(root.contextPlaylistId)
+        }
+
+        ContextMenuItem {
+            text: "播放全部"
+            onTriggered: root.controller.playPlaylist(root.contextPlaylistId)
+        }
+
+        MenuSeparator {
+            contentItem: Rectangle {
+                implicitHeight: 1
+                color: Theme.border
+            }
+        }
+
+        ContextMenuItem {
+            text: "重命名"
+            onTriggered: root.openRenameDialog(
+                root.contextPlaylistId,
+                root.contextPlaylistName
+            )
+        }
+
+        ContextMenuItem {
+            text: "删除歌单"
+            onTriggered: root.openDeleteDialog(
+                root.contextPlaylistId,
+                root.contextPlaylistName
+            )
         }
     }
 
@@ -520,8 +611,8 @@ Item {
         title: "重命名歌单"
         standardButtons: Dialog.Ok | Dialog.Cancel
         width: 380
-        onOpened: { renamedPlaylistName.text = root.controller.selectedPlaylistName; renamedPlaylistName.selectAll(); renamedPlaylistName.forceActiveFocus() }
-        onAccepted: root.controller.renamePlaylist(root.controller.selectedPlaylistId, renamedPlaylistName.text)
+        onOpened: { renamedPlaylistName.text = root.dialogPlaylistName; renamedPlaylistName.selectAll(); renamedPlaylistName.forceActiveFocus() }
+        onAccepted: root.controller.renamePlaylist(root.dialogPlaylistId, renamedPlaylistName.text)
         palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.button: Theme.accent; palette.buttonText: "#0c1710"
         contentItem: TextField {
             id: renamedPlaylistName
@@ -539,9 +630,9 @@ Item {
         modal: true
         title: "删除歌单"
         standardButtons: Dialog.Yes | Dialog.Cancel
-        onAccepted: root.controller.deletePlaylist(root.controller.selectedPlaylistId)
+        onAccepted: root.controller.deletePlaylist(root.dialogPlaylistId)
         palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.button: Theme.accent; palette.buttonText: "#0c1710"
-        contentItem: Text { text: "确定删除“" + root.controller.selectedPlaylistName + "”吗？\n歌曲文件和播放历史不会被删除。"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13 }
+        contentItem: Text { text: "确定删除“" + root.dialogPlaylistName + "”吗？\n歌曲文件和播放历史不会被删除。"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13 }
         background: Rectangle { color: Theme.surface; border.color: Theme.border; radius: Theme.radiusMedium }
     }
 

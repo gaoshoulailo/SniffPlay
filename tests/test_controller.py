@@ -76,6 +76,13 @@ async def test_controller_manages_and_plays_playlist_tracks(tmp_path: Path) -> N
     await controller.search("")
     controller.addSearchTrackToPlaylist(0, playlist.id)
     controller.addSearchTrackToPlaylist(1, playlist.id)
+
+    await controller.playPlaylist(playlist.id)
+    assert not controller.hasSelectedPlaylist
+    assert player.current_track is not None
+    assert player.current_track.title == "夜航"
+    assert controller.queueLabel == "队列 1/2"
+
     controller.openPlaylist(playlist.id)
 
     assert controller.hasSelectedPlaylist
