@@ -14,6 +14,7 @@ from sniffplay.controllers.list_models import (
     HistoryListModel,
     PlaylistListModel,
     PlaylistTrackListModel,
+    QueueListModel,
     TrackListModel,
 )
 from sniffplay.database.repositories import (
@@ -37,6 +38,7 @@ class AppController(QObject):
     currentFavoriteChanged = Signal()
     playlistSelectionChanged = Signal()
     favoritesChanged = Signal()
+    queueChanged = Signal()
 
     def __init__(
         self,
@@ -56,6 +58,7 @@ class AppController(QObject):
         self._favorite_model = FavoriteListModel()
         self._playlist_model = PlaylistListModel()
         self._playlist_track_model = PlaylistTrackListModel()
+        self._queue_model = QueueListModel()
         self._history_model = HistoryListModel()
         self._searching = False
         self._status_message = (
@@ -98,6 +101,14 @@ class AppController(QObject):
     @Property(QObject, constant=True)
     def favoriteModel(self) -> QObject:
         return self._favorite_model
+
+    @Property(QObject, constant=True)
+    def queueModel(self) -> QObject:
+        return self._queue_model
+
+    @Property(int, notify=queueChanged)
+    def queueIndex(self) -> int:
+        return self._queue_index
 
     @Property(int, notify=favoritesChanged)
     def favoriteCount(self) -> int:
@@ -297,6 +308,7 @@ class AppController(QObject):
 
         self._queue = candidate_queue
         self._queue_index = index
+        self._refresh_queue_model()
         self._snapshot = self._player.snapshot()
         self._history_recorded = False
         self._advance_scheduled = False
@@ -317,6 +329,10 @@ class AppController(QObject):
     async def nextTrack(self) -> None:
         if self.canGoNext:
             await self._play_queue_index(self._queue_index + 1)
+
+    @asyncSlot(int)
+    async def playQueueTrack(self, index: int) -> None:
+        await self._play_queue_index(index)
 
     @asyncSlot()
     async def previousTrack(self) -> None:
@@ -680,6 +696,10 @@ class AppController(QObject):
             track.provider_id,
             track.provider_track_id,
         ) in self._favorite_keys
+
+    def _refresh_queue_model(self) -> None:
+        self._queue_model.set_tracks(self._queue, self._queue_index)
+        self.queueChanged.emit()
 
     def _refresh_selected_playlist_if(self, playlist_id: int) -> None:
         if self._selected_playlist_id != playlist_id:

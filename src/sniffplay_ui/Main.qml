@@ -146,34 +146,42 @@ ApplicationWindow {
 
                 NavButton {
                     Layout.fillWidth: true
-                    text: "搜索"
-                    marker: "S"
+                    text: "正在播放"
+                    marker: "▶"
                     selected: root.currentPage === 0
                     onClicked: root.currentPage = 0
                 }
 
                 NavButton {
                     Layout.fillWidth: true
-                    text: "我的收藏"
-                    marker: "F"
+                    text: "搜索"
+                    marker: "S"
                     selected: root.currentPage === 1
                     onClicked: root.currentPage = 1
                 }
 
                 NavButton {
                     Layout.fillWidth: true
-                    text: "我的歌单"
-                    marker: "P"
+                    text: "我的收藏"
+                    marker: "F"
                     selected: root.currentPage === 2
                     onClicked: root.currentPage = 2
                 }
 
                 NavButton {
                     Layout.fillWidth: true
-                    text: "播放历史"
-                    marker: "H"
+                    text: "我的歌单"
+                    marker: "P"
                     selected: root.currentPage === 3
                     onClicked: root.currentPage = 3
+                }
+
+                NavButton {
+                    Layout.fillWidth: true
+                    text: "播放历史"
+                    marker: "H"
+                    selected: root.currentPage === 4
+                    onClicked: root.currentPage = 4
                 }
 
                 Item { Layout.fillHeight: true }
@@ -218,6 +226,7 @@ ApplicationWindow {
                 Layout.fillHeight: true
                 currentIndex: root.currentPage
 
+                NowPlayingPage { controller: root.controller }
                 SearchPage { controller: root.controller }
                 FavoritesPage { controller: root.controller }
                 PlaylistPage { controller: root.controller }
@@ -226,6 +235,7 @@ ApplicationWindow {
 
             PlayerBar {
                 Layout.fillWidth: true
+                visible: root.currentPage !== 0
                 controller: root.controller
             }
         }

@@ -82,6 +82,13 @@ async def test_controller_manages_and_plays_playlist_tracks(tmp_path: Path) -> N
     assert player.current_track is not None
     assert player.current_track.title == "夜航"
     assert controller.queueLabel == "队列 1/2"
+    assert controller._queue_model.rowCount() == 2
+    assert controller._queue_model._items[0]["isCurrent"] is True
+
+    await controller.playQueueTrack(1)
+    assert player.current_track is not None
+    assert player.current_track.title == "迟来的风"
+    assert controller._queue_model._items[1]["isCurrent"] is True
 
     controller.openPlaylist(playlist.id)
 

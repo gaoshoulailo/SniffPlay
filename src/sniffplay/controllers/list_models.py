@@ -88,6 +88,41 @@ class TrackListModel(DictionaryListModel):
         )
 
 
+class QueueListModel(DictionaryListModel):
+    def __init__(self) -> None:
+        super().__init__(
+            (
+                "index",
+                "title",
+                "artist",
+                "duration",
+                "accent",
+                "initials",
+                "coverUrl",
+                "isCurrent",
+            )
+        )
+        self.tracks: list[Track] = []
+
+    def set_tracks(self, tracks: Sequence[Track], current_index: int = -1) -> None:
+        self.tracks = list(tracks)
+        self.replace(
+            [
+                {
+                    "index": index,
+                    "title": track.title,
+                    "artist": track.artist,
+                    "duration": track.duration_text,
+                    "accent": track.accent,
+                    "initials": track.initials,
+                    "coverUrl": track.cover_url or "",
+                    "isCurrent": index == current_index,
+                }
+                for index, track in enumerate(self.tracks)
+            ]
+        )
+
+
 class PlaylistListModel(DictionaryListModel):
     def __init__(self) -> None:
         super().__init__(("playlistId", "name", "itemCount", "countLabel"))
