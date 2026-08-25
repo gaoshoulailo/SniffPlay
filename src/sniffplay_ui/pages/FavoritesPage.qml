@@ -131,6 +131,9 @@ Item {
                         font.pixelSize: 15
                         font.weight: Font.DemiBold
                         horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
+                        maximumLineCount: 1
+                        clip: true
                     }
 
                     Text {
@@ -142,6 +145,9 @@ Item {
                         font.family: Theme.fontFamily
                         font.pixelSize: 11
                         horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
+                        maximumLineCount: 1
+                        clip: true
                     }
 
                     Item { Layout.fillHeight: true }
