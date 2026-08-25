@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*"
   workflow_dispatch:
 
 permissions:
@@ -40,6 +42,16 @@ jobs:
 
       - name: 按锁文件安装依赖
         run: uv sync --locked --extra dev
+
+      - name: 校验发布标签
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        run: |
+          $projectVersion = uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])"
+          $expectedTag = "v$projectVersion"
+          if ($env:GITHUB_REF_NAME -ne $expectedTag) {
+            throw "Release tag must match pyproject.toml: expected $expectedTag, got $env:GITHUB_REF_NAME."
+          }
 
       - name: 下载并校验 libmpv
         shell: pwsh
@@ -151,3 +163,34 @@ jobs:
 
           此 Artifact 用于构建验证。正式公开发布前仍需完成 libmpv 对应源码提供流程，或切换到经过验证的 LGPL 兼容构建。
           '@ >> $env:GITHUB_STEP_SUMMARY
+
+  create-draft-release:
+    name: 创建草稿 Release
+    if: github.ref_type == 'tag'
+    needs: build-windows
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+
+    steps:
+      - name: 下载已验证的 Windows 构建
+        uses: actions/download-artifact@v4
+        with:
+          name: SniffPlay-Windows-x64-${{ github.sha }}
+          path: artifacts
+
+      - name: 创建草稿 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          name: SniffPlay ${{ github.ref_name }}
+          body: |
+            Windows x64 便携版已通过自动测试、打包和启动烟雾测试。
+
+            发布前请确认项目许可证，并为当前 GPL-2.0-or-later libmpv 构建补齐对应源码提供材料；未完成前请勿公开此草稿。
+          files: |
+            artifacts/SniffPlay-Windows-x64.zip
+            artifacts/SniffPlay-Windows-x64.zip.sha256
