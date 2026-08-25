@@ -210,6 +210,18 @@ dist/SniffPlay/
 
 `.github/workflows/test.yml` 会在推送 `main`、提交到 `main` 的 Pull Request 以及手动触发时，在 GitHub 的 Windows 环境中按 `uv.lock` 执行以上检查。此流程只负责测试，不构建或上传发布包。
 
+## GitHub Windows 自动构建
+
+`.github/workflows/build-windows.yml` 会在推送 `main` 或手动触发时执行：
+
+1. 按 `uv.lock` 安装 Python 3.12 依赖。
+2. 下载固定版本的 libmpv，同时校验归档和 DLL 的 SHA-256。
+3. 调用 `scripts/build_windows.ps1` 运行测试、打包和启动烟雾测试。
+4. 补充 GPL-2.0 许可证文本，生成 `SniffPlay-Windows-x64.zip` 和 SHA-256 文件。
+5. 上传保留 14 天的 GitHub Actions Artifact。
+
+普通构建 Artifact 用于验证自动化流程，不会创建 GitHub Release。正式公开发布仍需完成 libmpv 对应源码提供流程，或切换到经过验证的 LGPL 兼容构建；标签触发的 Release 属于下一阶段。
+
 ## 扩展音乐来源
 
 新的音乐来源应实现 `MusicProvider`：
