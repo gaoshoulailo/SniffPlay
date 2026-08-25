@@ -20,6 +20,8 @@ env:
   MPV_ARCHIVE_SHA256: c6aebf40bb722efe79090bfeb61e68625f0837770347e5a8b610aef78900cf12
   MPV_DLL_SHA256: 965efde4c8199f942bf9ed9d3e6fbcb7dd9dc961524d5780a9ca67da53f14d0c
   MPV_DOWNLOAD_URL: https://sourceforge.net/projects/mpv-player-windows/files/libmpv/mpv-dev-x86_64-20260809-git-dd5d17d328.7z/download
+  GPL_LICENSE_URL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+  GPL_LICENSE_SHA256: edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6
 
 jobs:
   build-windows:
@@ -29,10 +31,10 @@ jobs:
 
     steps:
       - name: 检出代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 安装 Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
@@ -107,11 +109,22 @@ jobs:
         shell: pwsh
         run: |
           $licensePath = "dist/SniffPlay/licenses/GPL-2.0.txt"
-          Invoke-WebRequest `
-            -Uri "https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt" `
-            -OutFile $licensePath
-          if ((Get-Item -LiteralPath $licensePath).Length -lt 10000) {
-            throw "Downloaded GPL license text is incomplete."
+          curl.exe `
+            --fail `
+            --location `
+            --retry 5 `
+            --retry-all-errors `
+            --connect-timeout 30 `
+            --max-time 180 `
+            --output $licensePath `
+            $env:GPL_LICENSE_URL
+          if ($LASTEXITCODE -ne 0) {
+            throw "GPL license download failed with exit code $LASTEXITCODE."
+          }
+
+          $licenseHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $licensePath).Hash.ToLowerInvariant()
+          if ($licenseHash -ne $env:GPL_LICENSE_SHA256) {
+            throw "GPL license checksum mismatch: $licenseHash"
           }
 
       - name: 生成 ZIP 和 SHA-256
@@ -140,7 +153,7 @@ jobs:
           "sha256=$zipHash" >> $env:GITHUB_OUTPUT
 
       - name: 上传构建产物
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: SniffPlay-Windows-x64-${{ github.sha }}
           path: |
@@ -175,7 +188,7 @@ jobs:
 
     steps:
       - name: 下载已验证的 Windows 构建
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: SniffPlay-Windows-x64-${{ github.sha }}
           path: artifacts
