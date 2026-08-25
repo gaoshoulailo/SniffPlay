@@ -180,16 +180,16 @@ dist/SniffPlay/
 
 ## 测试
 
-运行当前稳定主线测试：
-
-```powershell
-.\.venv\Scripts\python -m pytest --ignore=tests/test_settings.py
-```
-
-`tests/test_settings.py` 属于尚未完成接线的自定义背景开发分支，目前会在测试收集阶段失败。完成该分支的控制器与应用装配后，应恢复为：
+运行完整测试：
 
 ```powershell
 .\.venv\Scripts\python -m pytest
+```
+
+检查 Python 文件能否正常编译：
+
+```powershell
+.\.venv\Scripts\python -m compileall -q src tests
 ```
 
 检查已接入的 QML 页面：
@@ -197,12 +197,18 @@ dist/SniffPlay/
 ```powershell
 .\.venv\Scripts\pyside6-qmllint.exe -I src\sniffplay_ui `
   src\sniffplay_ui\Main.qml `
+  src\sniffplay_ui\components\AppButton.qml `
+  src\sniffplay_ui\components\ContextMenuItem.qml `
+  src\sniffplay_ui\components\NavButton.qml `
+  src\sniffplay_ui\components\PlayerBar.qml `
   src\sniffplay_ui\pages\SearchPage.qml `
   src\sniffplay_ui\pages\FavoritesPage.qml `
+  src\sniffplay_ui\pages\NowPlayingPage.qml `
   src\sniffplay_ui\pages\PlaylistPage.qml `
-  src\sniffplay_ui\pages\HistoryPage.qml `
-  src\sniffplay_ui\components\PlayerBar.qml
+  src\sniffplay_ui\pages\HistoryPage.qml
 ```
+
+`.github/workflows/test.yml` 会在推送 `main`、提交到 `main` 的 Pull Request 以及手动触发时，在 GitHub 的 Windows 环境中按 `uv.lock` 执行以上检查。此流程只负责测试，不构建或上传发布包。
 
 ## 扩展音乐来源
 
