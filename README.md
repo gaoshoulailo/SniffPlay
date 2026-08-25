@@ -126,7 +126,11 @@ $env:SNIFFPLAY_MPV_DLL = "D:\path\to\mpv-2.dll"
 
 ## 本地数据
 
-数据库、日志和封面缓存默认保存在程序当前运行目录的 `data` 文件夹，不再写入 Windows 用户数据目录：
+数据库、日志和封面缓存默认保存在稳定的便携数据目录，不再依赖启动时的工作目录，也不会写入 Windows 用户数据目录：
+
+- 源码运行：项目根目录下的 `data`
+- 打包运行：`SniffPlay.exe` 所在目录下的 `data`
+- 自定义位置：优先使用 `SNIFFPLAY_DATA_DIR`
 
 ```text
 data/

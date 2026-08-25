@@ -13,6 +13,7 @@ from urllib.parse import urlencode, urlparse
 
 import httpx
 
+from sniffplay.config import application_directory
 from sniffplay.models import StreamInfo, Track
 from sniffplay.providers.base import (
     MusicProvider,
@@ -229,7 +230,7 @@ class BilibiliDataSource(MusicProvider):
         self._page = page
         self._external_client = client
         self._cover_cache_dir = cover_cache_dir or (
-            Path.cwd() / "data" / "cache" / "covers" / self.id
+            application_directory() / "data" / "cache" / "covers" / self.id
         )
         self._keys: WBIKeys | None = None
 

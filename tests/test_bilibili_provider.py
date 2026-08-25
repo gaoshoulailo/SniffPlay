@@ -20,6 +20,22 @@ def test_bilibili_cover_url_requests_high_resolution_square() -> None:
     ) == "https://i0.hdslb.com/bfs/archive/example.jpg@512w_512h_1c.jpg"
 
 
+def test_bilibili_default_cover_cache_uses_application_directory(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        "sniffplay.providers.BilibiliDataSource.application_directory",
+        lambda: tmp_path,
+    )
+
+    provider = BilibiliDataSource()
+
+    assert provider._cover_cache_dir == (  # noqa: SLF001
+        tmp_path / "data" / "cache" / "covers" / "bilibili"
+    )
+
+
 @pytest.mark.asyncio
 async def test_bilibili_search_and_stream_are_normalized(tmp_path: Path) -> None:
     def handler(request: httpx.Request) -> httpx.Response:

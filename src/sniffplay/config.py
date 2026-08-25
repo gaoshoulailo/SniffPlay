@@ -1,8 +1,20 @@
 from __future__ import annotations
 
 import os
+import sys
 from dataclasses import dataclass
 from pathlib import Path
+
+
+def application_directory() -> Path:
+    """Return the stable directory that owns portable application data."""
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+
+    source_root = Path(__file__).resolve().parents[2]
+    if (source_root / "pyproject.toml").is_file():
+        return source_root
+    return Path.cwd().resolve()
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,7 +30,7 @@ class AppSettings:
         data_dir = (
             Path(configured_dir).expanduser().resolve()
             if configured_dir
-            else (Path.cwd() / "data").resolve()
+            else application_directory() / "data"
         )
         return cls(
             data_dir=data_dir,
