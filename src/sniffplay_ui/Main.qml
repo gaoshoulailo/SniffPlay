@@ -29,8 +29,6 @@ ApplicationWindow {
         anchors.fill: parent
         anchors.margins: root.frameMargin
         color: Theme.window
-        border.color: Theme.border
-        border.width: 1
         radius: root.visibility === Window.Maximized ? 0 : 12
     }
 
@@ -118,7 +116,6 @@ ApplicationWindow {
             Layout.preferredWidth: root.sidebarWidth
             Layout.fillHeight: true
             color: Theme.sidebar
-            border.color: Theme.border
             radius: root.visibility === Window.Maximized ? 0 : 12
 
             Rectangle {
@@ -297,6 +294,16 @@ ApplicationWindow {
                 controller: root.controller
             }
         }
+    }
+
+    Rectangle {
+        anchors.fill: windowFrame
+        z: 9
+        color: Theme.transparent
+        border.color: Theme.border
+        border.width: 1
+        radius: windowFrame.radius
+        antialiasing: true
     }
 
     MouseArea { z: 10; enabled: root.visibility !== Window.Maximized; anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom; width: 5; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.LeftEdge) }
