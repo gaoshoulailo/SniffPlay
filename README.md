@@ -1,5 +1,14 @@
 # SniffPlay
 
+<p align="center">
+  <img src="assets/sniffplay-icon.png" width="128" height="128" alt="SniffPlay 图标">
+</p>
+
+<p align="center">
+  <a href="https://github.com/gaoshoulailo/SniffPlay/actions/workflows/test.yml"><img src="https://github.com/gaoshoulailo/SniffPlay/actions/workflows/test.yml/badge.svg" alt="自动测试"></a>
+  <a href="https://github.com/gaoshoulailo/SniffPlay/actions/workflows/build-windows.yml"><img src="https://github.com/gaoshoulailo/SniffPlay/actions/workflows/build-windows.yml/badge.svg" alt="Windows 自动构建"></a>
+</p>
+
 嗅播音乐播放器是一个使用 Python、PySide6 和 QML 构建的轻量 Windows 桌面音乐播放器。它支持搜索 Bilibili 公开音视频资源、播放本地音频，并在本机管理收藏、歌单和播放历史。
 
 ## 当前功能
@@ -9,6 +18,7 @@
 - WBI 请求签名、失败重试和封面本地缓存
 - 本地 MP3、FLAC、WAV、M4A、AAC、OGG、Opus 等音频文件播放
 - 播放、暂停、进度跳转、音量、上一首、下一首和自动续播
+- 顺序播放、单曲循环和随机播放模式
 - 搜索结果、收藏、歌单和播放历史统一播放队列
 - 收藏、取消收藏和收藏列表播放
 - 创建、重命名和删除歌单
@@ -25,7 +35,7 @@
 - Bilibili 搜索当前读取第一页，分 P 视频播放第一个分 P。
 - 临时网络播放地址不会写入数据库，重新播放时会再次解析。
 - 本地文件被移动或删除后，对应歌单、收藏或历史记录会提示文件不存在。
-- 目前没有歌词、下载、均衡器、播放模式切换、安装包和自动更新。
+- 目前没有歌词、下载、均衡器、安装包和自动更新。
 - 当前主题为固定深色主题，尚未提供运行时主题切换。
 
 ## 技术架构
