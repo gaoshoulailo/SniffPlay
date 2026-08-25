@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Effects
 import QtQuick.Layouts
 import "components"
 import "pages"
@@ -33,17 +32,6 @@ ApplicationWindow {
         border.color: Theme.border
         border.width: 1
         radius: root.visibility === Window.Maximized ? 0 : 12
-    }
-
-    MultiEffect {
-        anchors.fill: windowFrame
-        source: windowFrame
-        visible: root.visibility !== Window.Maximized
-        shadowEnabled: true
-        shadowColor: "#99000000"
-        shadowBlur: 1
-        shadowVerticalOffset: 4
-        autoPaddingEnabled: true
     }
 
     Rectangle {
