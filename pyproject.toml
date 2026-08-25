@@ -19,6 +19,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    "pyinstaller>=6.11,<7",
     "pytest>=8.3,<9",
     "pytest-asyncio>=0.24,<1",
 ]

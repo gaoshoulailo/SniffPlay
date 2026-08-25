@@ -157,6 +157,27 @@ $env:SNIFFPLAY_DATA_DIR = "$PWD\data"
 
 旧版本位于 Windows 用户目录的数据不会被自动删除。确认本地 `data` 目录运行正常后，可自行清理旧目录以释放 C 盘空间。
 
+## Windows 本地打包
+
+先确认 `.venv` 已安装开发依赖，并将 64 位 `libmpv-2.dll` 放在 `vendor/mpv`，然后运行：
+
+```powershell
+.\scripts\build_windows.ps1
+```
+
+脚本会先运行测试，再通过 PyInstaller 生成 one-folder 便携目录并执行启动烟雾测试：
+
+```text
+dist/SniffPlay/
+├── SniffPlay.exe
+├── _internal/
+├── data/
+├── licenses/libmpv-README.md
+└── README.md
+```
+
+个人数据库、日志和封面缓存不会进入构建产物。当前本机使用的 libmpv 构建采用 GPL-2.0-or-later，`vendor/mpv/README.md` 记录了版本和校验值；对外发布前仍需完成对应许可证及源码提供流程，或改用经过验证的 LGPL 兼容构建。
+
 ## 测试
 
 运行当前稳定主线测试：
