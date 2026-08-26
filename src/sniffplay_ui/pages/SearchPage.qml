@@ -265,31 +265,35 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: 0
-            visible: false
+            implicitHeight: 30
+            visible: resultsList.count > 0
             color: Theme.transparent
 
             RowLayout {
                 anchors.fill: parent
-                anchors.leftMargin: 58
-                anchors.rightMargin: 18
-                spacing: 14
+                anchors.leftMargin: 10
+                anchors.rightMargin: 12
+                spacing: 12
 
+                Item { Layout.preferredWidth: 28 }
+                Item { Layout.preferredWidth: 48 }
                 Text { Layout.fillWidth: true; text: "歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-                Text { Layout.preferredWidth: 180; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-                Text { Layout.preferredWidth: 72; text: "来源"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-                Text { Layout.preferredWidth: 52; text: "时长"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-                Item { Layout.preferredWidth: 114 }
+                Text { visible: resultsList.showAlbum; Layout.preferredWidth: 130; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
+                Text { visible: resultsList.showSource; Layout.preferredWidth: 58; text: "来源"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
+                Text { Layout.preferredWidth: 44; text: "时长"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
+                Item { Layout.preferredWidth: 126 }
             }
         }
 
-        GridView {
+        ListView {
             id: resultsList
+            readonly property bool showAlbum: width >= 720
+            readonly property bool showSource: width >= 560
+
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            cellWidth: Math.max(178, width / (width >= 410 ? 2 : 1))
-            cellHeight: 250
+            spacing: 4
             model: root.controller.trackModel
 
             ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
@@ -307,26 +311,36 @@ Item {
                 required property string coverUrl
                 required property bool isFavorite
 
-                width: resultsList.cellWidth - 10
-                height: 236
+                width: resultsList.width
+                height: 72
                 color: root.contextTrackIndex === trackRow.index
                     ? Theme.accentDark
-                    : (rowMouse.containsMouse ? Theme.surfaceHover : Theme.surface)
+                    : (rowMouse.containsMouse ? Theme.surfaceHover : Theme.transparent)
                 radius: Theme.radiusMedium
                 border.color: root.contextTrackIndex === trackRow.index
                     ? Theme.accent
-                    : Theme.border
+                    : Theme.transparent
 
-                ColumnLayout {
+                RowLayout {
                     z: 1
                     anchors.fill: parent
-                    anchors.margins: 10
-                    spacing: 7
+                    anchors.leftMargin: 10
+                    anchors.rightMargin: 12
+                    spacing: 12
+
+                    Text {
+                        Layout.preferredWidth: 28
+                        text: trackRow.index + 1
+                        color: Theme.textSecondary
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 11
+                        horizontalAlignment: Text.AlignHCenter
+                    }
 
                     Rectangle {
                         id: coverContainer
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 132
+                        Layout.preferredWidth: 48
+                        Layout.preferredHeight: 48
                         color: trackRow.accent
                         radius: Theme.radiusSmall
                         clip: true
@@ -345,9 +359,9 @@ Item {
                             id: coverImage
                             anchors.fill: parent
                             source: trackRow.coverUrl
-                            sourceSize.width: 360
-                            sourceSize.height: 264
-                            asynchronous: false
+                            sourceSize.width: 160
+                            sourceSize.height: 160
+                            asynchronous: true
                             cache: true
                             fillMode: Image.PreserveAspectCrop
                             visible: status === Image.Ready
@@ -358,26 +372,39 @@ Item {
                         Layout.fillWidth: true
                         spacing: 1
 
-                        Text { Layout.fillWidth: true; text: trackRow.title; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Font.DemiBold; elide: Text.ElideRight }
-                        Text { Layout.fillWidth: true; text: trackRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12; elide: Text.ElideRight }
+                        Text { Layout.fillWidth: true; maximumLineCount: 1; text: trackRow.title; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Font.DemiBold; elide: Text.ElideRight }
+                        Text { Layout.fillWidth: true; maximumLineCount: 1; text: trackRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11; elide: Text.ElideRight }
                     }
 
-                    Text { visible: false; text: trackRow.album }
-                    Text { visible: false; text: trackRow.source }
-                    Text { visible: false; text: trackRow.duration }
+                    Text {
+                        visible: resultsList.showAlbum
+                        Layout.preferredWidth: 130
+                        maximumLineCount: 1
+                        text: trackRow.album
+                        color: Theme.textSecondary
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 11
+                        elide: Text.ElideRight
+                    }
 
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 6
+                    Text {
+                        visible: resultsList.showSource
+                        Layout.preferredWidth: 58
+                        maximumLineCount: 1
+                        text: trackRow.source
+                        color: Theme.textSecondary
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 10
+                        elide: Text.ElideRight
+                    }
 
-                        Text {
-                            Layout.fillWidth: true
-                            text: trackRow.source + " · " + trackRow.duration
-                            color: Theme.textSecondary
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 10
-                            elide: Text.ElideRight
-                        }
+                    Text {
+                        Layout.preferredWidth: 44
+                        text: trackRow.duration
+                        color: Theme.textSecondary
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 10
+                    }
 
                     Button {
                         id: favoriteButton
@@ -451,7 +478,6 @@ Item {
                             border.color: Theme.border
                             radius: 17
                         }
-                    }
                     }
                 }
 
