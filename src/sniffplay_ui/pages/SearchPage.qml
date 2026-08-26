@@ -435,7 +435,7 @@ Item {
                         Layout.preferredWidth: 34
                         Layout.preferredHeight: 34
                         opacity: rowMouse.containsMouse ? 1 : 0
-                        onClicked: root.controller.playTrack(trackRow.index)
+                        onClicked: root.controller.playSearchResult(trackRow.index)
                         ToolTip.visible: hovered
                         ToolTip.text: "播放"
 
@@ -470,7 +470,7 @@ Item {
                     }
                     onDoubleClicked: function(mouse) {
                         if (mouse.button === Qt.LeftButton)
-                            root.controller.playTrack(trackRow.index)
+                            root.controller.playSearchResult(trackRow.index)
                     }
                 }
             }
@@ -505,7 +505,7 @@ Item {
 
         ContextMenuItem {
             text: "播放"
-            onTriggered: root.controller.playTrack(root.contextTrackIndex)
+            onTriggered: root.controller.playSearchResult(root.contextTrackIndex)
         }
 
         ContextMenuItem {

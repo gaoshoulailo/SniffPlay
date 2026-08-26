@@ -273,6 +273,10 @@ class AppController(QObject):
     async def playTrack(self, index: int) -> None:
         await self._play_tracks(self._track_model.tracks, index)
 
+    @asyncSlot(int)
+    async def playSearchResult(self, index: int) -> None:
+        await self._play_tracks(self._track_model.tracks, index)
+
     @asyncSlot(QUrl)
     async def openLocalFile(self, file_url: QUrl) -> None:
         path = Path(file_url.toLocalFile()).resolve()

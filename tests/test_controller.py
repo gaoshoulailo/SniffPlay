@@ -22,6 +22,44 @@ from sniffplay.providers.mock import MockProvider
 from sniffplay.services.search_service import SearchService
 
 
+async def test_search_result_playback_replaces_queue_with_all_results(
+    tmp_path: Path,
+) -> None:
+    class PlayableMockProvider(MockProvider):
+        async def resolve_stream(self, track: Track) -> StreamInfo:
+            return StreamInfo("test.wav")
+
+    app = QCoreApplication.instance() or QCoreApplication([])
+    database = Database(tmp_path / "search-queue-controller.db")
+    database.initialize()
+    player = MockPlayer()
+    registry = ProviderRegistry()
+    registry.register(PlayableMockProvider())
+    controller = AppController(
+        SearchService(registry),
+        player,
+        PlaylistRepository(database),
+        HistoryRepository(database),
+    )
+
+    await controller.search("")
+    await controller.playSearchResult(2)
+
+    assert controller._queue == controller._track_model.tracks
+    assert len(controller._queue) == 5
+    assert controller._queue_index == 2
+    assert controller.queueLabel == "队列 3/5"
+    assert controller._queue_model.rowCount() == 5
+    assert controller._queue_model._items[2]["isCurrent"] is True
+    assert player.current_track == controller._track_model.tracks[2]
+    assert controller.canGoPrevious
+    assert controller.canGoNext
+
+    controller.close()
+    database.close()
+    assert app is not None
+
+
 def test_controller_records_history_only_after_threshold(tmp_path: Path) -> None:
     app = QCoreApplication.instance() or QCoreApplication([])
     database = Database(tmp_path / "controller.db")
