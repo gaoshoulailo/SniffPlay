@@ -15,6 +15,9 @@ Alternatively, set `SNIFFPLAY_MPV_DLL` to the absolute path of `mpv-2.dll`.
 - DLL SHA-256: `965efde4c8199f942bf9ed9d3e6fbcb7dd9dc961524d5780a9ca67da53f14d0c`
 - License: GPL-2.0-or-later
 
+The GPL-2.0 license text is stored in `vendor/mpv/GPL-2.0.txt` and copied
+into Windows packages during the build. Keep it with the pinned GPL libmpv build.
+
 The DLL is installed locally and ignored by Git. Before distributing an installer,
 SniffPlay must include the required GPL notices and corresponding source offer, or
 switch to a verified LGPL-compatible libmpv build.

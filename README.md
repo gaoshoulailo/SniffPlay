@@ -227,7 +227,7 @@ dist/SniffPlay/
 1. 按 `uv.lock` 安装 Python 3.12 依赖。
 2. 下载固定版本的 libmpv，同时校验归档和 DLL 的 SHA-256。
 3. 调用 `scripts/build_windows.ps1` 运行测试、打包和启动烟雾测试。
-4. 补充 GPL-2.0 许可证文本，生成 `SniffPlay-Windows-x64.zip` 和 SHA-256 文件。
+4. 从仓库预置文件复制 GPL-2.0 许可证文本，生成 `SniffPlay-Windows-x64.zip` 和 SHA-256 文件。
 5. 上传保留 14 天的 GitHub Actions Artifact。
 
 普通 `main` 分支构建只生成 Artifact。推送与 `pyproject.toml` 版本一致的标签（例如当前版本 `v0.1.3`）时，工作流会在构建成功后创建草稿 Release，并附上 ZIP、SHA-256 和自动生成的更新说明：

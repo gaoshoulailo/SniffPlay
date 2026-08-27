@@ -20,8 +20,6 @@ env:
   MPV_ARCHIVE_SHA256: c6aebf40bb722efe79090bfeb61e68625f0837770347e5a8b610aef78900cf12
   MPV_DLL_SHA256: 965efde4c8199f942bf9ed9d3e6fbcb7dd9dc961524d5780a9ca67da53f14d0c
   MPV_DOWNLOAD_URL: https://sourceforge.net/projects/mpv-player-windows/files/libmpv/mpv-dev-x86_64-20260809-git-dd5d17d328.7z/download
-  GPL_LICENSE_URL: https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
-  GPL_LICENSE_SHA256: edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6
 
 jobs:
   build-windows:
@@ -105,27 +103,18 @@ jobs:
         shell: pwsh
         run: .\scripts\build_windows.ps1
 
-      - name: 补充 GPL 许可证文本
+      - name: 复制 GPL 许可证文本
         shell: pwsh
         run: |
+          $sourcePath = "vendor/mpv/GPL-2.0.txt"
           $licensePath = "dist/SniffPlay/licenses/GPL-2.0.txt"
-          curl.exe `
-            --fail `
-            --location `
-            --retry 5 `
-            --retry-all-errors `
-            --connect-timeout 30 `
-            --max-time 180 `
-            --output $licensePath `
-            $env:GPL_LICENSE_URL
-          if ($LASTEXITCODE -ne 0) {
-            throw "GPL license download failed with exit code $LASTEXITCODE."
+          if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
+            throw "Bundled GPL license text is missing: $sourcePath"
           }
-
-          $licenseHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $licensePath).Hash.ToLowerInvariant()
-          if ($licenseHash -ne $env:GPL_LICENSE_SHA256) {
-            throw "GPL license checksum mismatch: $licenseHash"
+          if ((Get-Item -LiteralPath $sourcePath).Length -lt 10000) {
+            throw "Bundled GPL license text is incomplete."
           }
+          Copy-Item -LiteralPath $sourcePath -Destination $licensePath -Force
 
       - name: 生成 ZIP 和 SHA-256
         id: package
