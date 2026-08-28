@@ -25,6 +25,7 @@ class TrackRecord(Base):
     artist: Mapped[str] = mapped_column(String(300))
     album: Mapped[str] = mapped_column(String(300), default="")
     duration_ms: Mapped[int] = mapped_column(default=0)
+    cover_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
 
 
 class PlaylistRecord(Base):

@@ -27,7 +27,19 @@ class Database:
 
     def initialize(self) -> None:
         Base.metadata.create_all(self.engine)
+        self._migrate_track_cover_url()
+
+    def _migrate_track_cover_url(self) -> None:
+        """Add columns introduced after the initial SQLite schema."""
+        with self.engine.begin() as connection:
+            columns = {
+                row[1]
+                for row in connection.exec_driver_sql("PRAGMA table_info(tracks)")
+            }
+            if "cover_url" not in columns:
+                connection.exec_driver_sql(
+                    "ALTER TABLE tracks ADD COLUMN cover_url VARCHAR(1000)"
+                )
 
     def close(self) -> None:
         self.engine.dispose()
-

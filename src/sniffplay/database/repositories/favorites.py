@@ -102,6 +102,7 @@ class FavoriteRepository:
                     TrackRecord.artist,
                     TrackRecord.album,
                     TrackRecord.duration_ms,
+                    TrackRecord.cover_url,
                 )
                 .join(TrackRecord, TrackRecord.id == FavoriteRecord.track_id)
                 .order_by(FavoriteRecord.created_at.desc(), FavoriteRecord.id.desc())
@@ -119,6 +120,7 @@ class FavoriteRepository:
                     album=row[6],
                     duration_ms=row[7],
                     playback_uri=row[3] if row[2] == "local" else None,
+                    cover_url=row[8],
                 ),
             )
             for row in rows
@@ -138,6 +140,7 @@ class FavoriteRepository:
             artist=track_record.artist,
             album=track_record.album,
             duration_ms=track_record.duration_ms,
+            cover_url=track_record.cover_url,
             playback_uri=(
                 track_record.provider_track_id
                 if track_record.provider_id == "local"
