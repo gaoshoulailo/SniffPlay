@@ -16,10 +16,10 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  MPV_ARCHIVE: mpv-dev-x86_64-20260809-git-dd5d17d328.7z
-  MPV_ARCHIVE_SHA256: c6aebf40bb722efe79090bfeb61e68625f0837770347e5a8b610aef78900cf12
-  MPV_DLL_SHA256: 965efde4c8199f942bf9ed9d3e6fbcb7dd9dc961524d5780a9ca67da53f14d0c
-  MPV_DOWNLOAD_URL: https://sourceforge.net/projects/mpv-player-windows/files/libmpv/mpv-dev-x86_64-20260809-git-dd5d17d328.7z/download
+  MPV_ARCHIVE: mpv-dev-lgpl-x86_64-20260827-git-182fa6ca49.7z
+  MPV_ARCHIVE_SHA256: 16cd542f7386bf1e68339b90618fe5446171fa555daa0c6d07d59be43bb903ea
+  MPV_DLL_SHA256: 63fed593a9e1b3c7e170bb38fcdf73722fa3d73b7c068f303bf2985eeec75367
+  MPV_DOWNLOAD_URL: https://github.com/zhongfly/mpv-winbuild/releases/download/2026-08-27-182fa6ca49/mpv-dev-lgpl-x86_64-20260827-git-182fa6ca49.7z
 
 jobs:
   build-windows:
@@ -103,18 +103,21 @@ jobs:
         shell: pwsh
         run: .\scripts\build_windows.ps1
 
-      - name: 复制 GPL 许可证文本
+      - name: 复制 libmpv 许可证文本
         shell: pwsh
         run: |
-          $sourcePath = "vendor/mpv/GPL-2.0.txt"
-          $licensePath = "dist/SniffPlay/licenses/GPL-2.0.txt"
-          if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
-            throw "Bundled GPL license text is missing: $sourcePath"
+          $licenseFiles = @("LGPL-2.1.txt", "LGPL-3.0.txt")
+          foreach ($licenseFile in $licenseFiles) {
+            $sourcePath = Join-Path "vendor/mpv" $licenseFile
+            $licensePath = Join-Path "dist/SniffPlay/licenses" $licenseFile
+            if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
+              throw "Bundled libmpv license text is missing: $sourcePath"
+            }
+            if ((Get-Item -LiteralPath $sourcePath).Length -lt 5000) {
+              throw "Bundled libmpv license text is incomplete: $sourcePath"
+            }
+            Copy-Item -LiteralPath $sourcePath -Destination $licensePath -Force
           }
-          if ((Get-Item -LiteralPath $sourcePath).Length -lt 10000) {
-            throw "Bundled GPL license text is incomplete."
-          }
-          Copy-Item -LiteralPath $sourcePath -Destination $licensePath -Force
 
       - name: 生成 ZIP 和 SHA-256
         id: package
@@ -162,9 +165,9 @@ jobs:
           - SHA-256：`${{ steps.package.outputs.sha256 }}`
           - Artifact 保留：14 天
           - SniffPlay：GPL-3.0-or-later
-          - libmpv：固定 GPL-2.0-or-later 开发构建
+          - libmpv：固定 LGPL 兼容构建（二进制按 LGPL-3.0-or-later）
 
-          此 Artifact 用于构建验证。SniffPlay 已采用 GPL-3.0-or-later；正式公开发布前仍需完成 libmpv 对应源码提供流程，或切换到经过验证的 LGPL 兼容构建。
+          libmpv 构建来源、固定版本、依赖裁剪和校验值见 `licenses/libmpv-README.md`。
           '@ >> $env:GITHUB_STEP_SUMMARY
 
   create-draft-release:
@@ -193,7 +196,7 @@ jobs:
           body: |
             Windows x64 便携版已通过自动测试、打包和启动烟雾测试。
 
-            SniffPlay 采用 GPL-3.0-or-later。发布前请为当前 GPL-2.0-or-later libmpv 构建补齐对应源码提供材料；未完成前请勿公开此草稿。
+            SniffPlay 采用 GPL-3.0-or-later，内置经过项目测试的 LGPL 兼容 libmpv 构建。构建来源和校验值随包提供。
           files: |
             artifacts/SniffPlay-Windows-x64.zip
             artifacts/SniffPlay-Windows-x64.zip.sha256

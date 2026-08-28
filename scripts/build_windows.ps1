@@ -43,6 +43,8 @@ try {
     Copy-Item -LiteralPath (Join-Path $projectDirectory "README.md") -Destination $outputDirectory -Force
     Copy-Item -LiteralPath (Join-Path $projectDirectory "LICENSE") -Destination (Join-Path $licenseDirectory "GPL-3.0.txt") -Force
     Copy-Item -LiteralPath (Join-Path $projectDirectory "vendor\mpv\README.md") -Destination (Join-Path $licenseDirectory "libmpv-README.md") -Force
+    Copy-Item -LiteralPath (Join-Path $projectDirectory "vendor\mpv\LGPL-2.1.txt") -Destination $licenseDirectory -Force
+    Copy-Item -LiteralPath (Join-Path $projectDirectory "vendor\mpv\LGPL-3.0.txt") -Destination $licenseDirectory -Force
 
     if (-not $SkipSmokeTest) {
         $smokeRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("sniffplay-build-smoke-" + [guid]::NewGuid().ToString("N"))

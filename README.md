@@ -15,7 +15,7 @@
 
 SniffPlay 由 SniffPlay contributors 以 GNU General Public License v3.0 或更高版本（`GPL-3.0-or-later`）发布，完整条款见 [LICENSE](LICENSE)。
 
-项目依赖的第三方组件和发行包内的第三方二进制文件遵循各自许可证。当前 Windows 发行包包含采用 `GPL-2.0-or-later` 的 libmpv 开发构建，其版本、校验值和分发注意事项见 [`vendor/mpv/README.md`](vendor/mpv/README.md)。
+项目依赖的第三方组件和发行包内的第三方二进制文件遵循各自许可证。当前 Windows 发行包包含经过项目测试的 LGPL 兼容 libmpv 构建；由于其中静态链接 LGPLv3 FFmpeg，该 libmpv 二进制按 `LGPL-3.0-or-later` 条款处理。SniffPlay 本身仍采用 `GPL-3.0-or-later`。版本、校验值和构建证据见 [`vendor/mpv/README.md`](vendor/mpv/README.md)。
 
 ## 当前功能
 
@@ -131,7 +131,7 @@ $env:SNIFFPLAY_MPV_DLL = "D:\path\to\mpv-2.dll"
 .\.venv\Scripts\python scripts\verify_mpv.py
 ```
 
-当前开发机所用构建和校验信息记录在 `vendor/mpv/README.md`。该开发构建使用 GPL 许可证，正式分发前必须补齐许可证与对应源代码提供流程，或更换为经过验证的 LGPL 兼容构建。
+当前开发机所用构建和校验信息记录在 `vendor/mpv/README.md`。该构建已关闭 mpv 和 FFmpeg 的 GPL 功能并排除 x264、x265 等 GPL 依赖，项目已验证 DLL 加载和音频解码播放。
 
 开发机基线数据（静音播放、5 秒采样，仅供比较）：
 
@@ -192,7 +192,7 @@ dist/SniffPlay/
 └── README.md
 ```
 
-个人数据库、日志和封面缓存不会进入构建产物。当前本机使用的 libmpv 构建采用 GPL-2.0-or-later，`vendor/mpv/README.md` 记录了版本和校验值；对外发布前仍需完成对应许可证及源码提供流程，或改用经过验证的 LGPL 兼容构建。
+个人数据库、日志和封面缓存不会进入构建产物。发行目录会包含 SniffPlay 的 GPL-3.0 许可证、libmpv 的 LGPL-2.1/LGPL-3.0 许可证以及记录构建来源和校验值的说明文件。
 
 ## 测试
 
@@ -233,7 +233,7 @@ dist/SniffPlay/
 1. 按 `uv.lock` 安装 Python 3.12 依赖。
 2. 下载固定版本的 libmpv，同时校验归档和 DLL 的 SHA-256。
 3. 调用 `scripts/build_windows.ps1` 运行测试、打包和启动烟雾测试。
-4. 将 SniffPlay 的 GPL-3.0 和 libmpv 的 GPL-2.0 许可证文本加入发行目录，生成 `SniffPlay-Windows-x64.zip` 和 SHA-256 文件。
+4. 将 SniffPlay 的 GPL-3.0 和 libmpv 的 LGPL-2.1/LGPL-3.0 许可证文本加入发行目录，生成 `SniffPlay-Windows-x64.zip` 和 SHA-256 文件。
 5. 上传保留 14 天的 GitHub Actions Artifact。
 
 普通 `main` 分支构建只生成 Artifact。推送与 `pyproject.toml` 版本一致的标签（例如当前版本 `v0.1.3`）时，工作流会在构建成功后创建草稿 Release，并附上 ZIP、SHA-256 和自动生成的更新说明：
@@ -243,7 +243,7 @@ git tag v0.1.3
 git push origin v0.1.3
 ```
 
-草稿 Release 不会直接对外公开。SniffPlay 已采用 `GPL-3.0-or-later`；正式公开前仍须完成 libmpv 对应源码提供流程，或切换到经过验证的 LGPL 兼容构建，检查无误后再到 GitHub Release 页面手动发布草稿。
+草稿 Release 不会直接对外公开。SniffPlay 采用 `GPL-3.0-or-later`，内置 LGPL 兼容 libmpv 构建；检查自动测试、许可证文件和构建来源说明无误后，再到 GitHub Release 页面手动发布草稿。
 
 ## 扩展音乐来源
 

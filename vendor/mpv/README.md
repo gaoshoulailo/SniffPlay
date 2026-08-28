@@ -1,23 +1,24 @@
 # libmpv runtime
 
-Place the 64-bit Windows `mpv-2.dll` or `libmpv-2.dll` file in this directory during development.
-The binary is intentionally excluded from Git and should come from a trusted mpv
-build that is compatible with its license.
+Place the 64-bit Windows `mpv-2.dll` or `libmpv-2.dll` file in this directory during development. The DLL is excluded from Git. Alternatively, set `SNIFFPLAY_MPV_DLL` to its absolute path.
 
-Alternatively, set `SNIFFPLAY_MPV_DLL` to the absolute path of `mpv-2.dll`.
+## Verified LGPL-compatible build
 
-## Current verified development build
+- Build project: `zhongfly/mpv-winbuild`
+- Upstream build tag: `2026-08-27-182fa6ca49`
+- mpv commit: `182fa6ca49f455cadb884858f386e2f00540aeb7`
+- Archive: `mpv-dev-lgpl-x86_64-20260827-git-182fa6ca49.7z`
+- Download: `https://github.com/zhongfly/mpv-winbuild/releases/download/2026-08-27-182fa6ca49/mpv-dev-lgpl-x86_64-20260827-git-182fa6ca49.7z`
+- Build details: `https://github.com/zhongfly/mpv-winbuild/actions/runs/33069943766`
+- LGPL build patch: `https://github.com/zhongfly/mpv-winbuild/blob/2026-08-27-182fa6ca49/compile-lgpl-libmpv.patch`
+- Archive SHA-256: `16cd542f7386bf1e68339b90618fe5446171fa555daa0c6d07d59be43bb903ea`
+- DLL SHA-256: `63fed593a9e1b3c7e170bb38fcdf73722fa3d73b7c068f303bf2985eeec75367`
+- mpv client API: `2.0.5`
 
-- Source project: `shinchiro/mpv-winbuild-cmake`
-- Archive: `mpv-dev-x86_64-20260809-git-dd5d17d328.7z`
-- Download: `https://sourceforge.net/projects/mpv-player-windows/files/libmpv/`
-- Archive SHA-256: `c6aebf40bb722efe79090bfeb61e68625f0837770347e5a8b610aef78900cf12`
-- DLL SHA-256: `965efde4c8199f942bf9ed9d3e6fbcb7dd9dc961524d5780a9ca67da53f14d0c`
-- License: GPL-2.0-or-later
+The upstream LGPL profile builds mpv with `-Dgpl=false`, removes FFmpeg's `--enable-gpl` option, and excludes GPL-only dependencies including x264 and x265. FFmpeg remains built with `--enable-version3`. The mpv code is therefore LGPL-2.1-or-later, while the statically linked binary distribution must comply with LGPL-3.0-or-later.
 
-The GPL-2.0 license text is stored in `vendor/mpv/GPL-2.0.txt` and copied
-into Windows packages during the build. Keep it with the pinned GPL libmpv build.
+`LGPL-2.1.txt` and `LGPL-3.0.txt` are copied into Windows packages. The build scripts and corresponding source revisions are available from the linked build project and workflow run. The upstream maintainer does not provide a legal guarantee and retains releases for a limited period, so preserve this provenance when publishing a release and mirror the archive or reproduce the build if the pinned URL expires.
 
-The DLL is installed locally and ignored by Git. Before distributing an installer,
-SniffPlay must include the required GPL notices and corresponding source offer, or
-switch to a verified LGPL-compatible libmpv build.
+## Verification
+
+The pinned DLL passed SniffPlay's 35 automated tests and `scripts/verify_mpv.py` using decoded WAV playback on Windows x64. This confirms runtime compatibility, not legal advice or support for every media format.
