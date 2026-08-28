@@ -41,6 +41,27 @@ for dll_name in (
     if dll_path.is_file():
         runtime_binaries.append((str(dll_path), "."))
 
+excluded_qt_modules = [
+    "PySide6.QtWebEngineCore",
+    "PySide6.QtWebEngineWidgets",
+    "PySide6.QtWebEngineQuick",
+    "PySide6.QtPdf",
+    "PySide6.QtPdfWidgets",
+    "PySide6.Qt3DCore",
+    "PySide6.Qt3DRender",
+    "PySide6.Qt3DInput",
+    "PySide6.Qt3DLogic",
+    "PySide6.Qt3DExtras",
+    "PySide6.QtQuick3D",
+    "PySide6.QtQuick3DAssetImport",
+    "PySide6.QtQuick3DHelpers",
+    "PySide6.QtQuick3DParticleSystems",
+    "PySide6.QtQuick3DRuntimeRender",
+    "PySide6.QtQuick3DUtils",
+    "PySide6.QtMultimedia",
+    "PySide6.QtMultimediaWidgets",
+]
+
 analysis = Analysis(
     [str(source_root / "sniffplay" / "__main__.py")],
     pathex=[str(source_root)],
@@ -50,11 +71,10 @@ analysis = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=excluded_qt_modules,
     noarchive=False,
     optimize=0,
 )
-
 pyz = PYZ(analysis.pure)
 
 executable = EXE(
