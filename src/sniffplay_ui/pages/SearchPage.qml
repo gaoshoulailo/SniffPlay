@@ -410,7 +410,7 @@ Item {
                         id: favoriteButton
                         Layout.preferredWidth: 34
                         Layout.preferredHeight: 34
-                        opacity: rowMouse.containsMouse || trackRow.isFavorite ? 1 : 0
+                        opacity: rowMouse.containsMouse || favoriteButton.hovered || trackRow.isFavorite ? 1 : 0
                         onClicked: root.controller.toggleTrackFavorite(trackRow.index)
                         ToolTip.visible: hovered
                         ToolTip.text: trackRow.isFavorite ? "取消收藏" : "收藏"
