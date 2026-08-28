@@ -1,0 +1,107 @@
+name: 归档 LGPL libmpv
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/archive-libmpv.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: archive-libmpv-lgpl-20260827
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: libmpv-lgpl-20260827
+  MPV_ARCHIVE: mpv-dev-lgpl-x86_64-20260827-git-182fa6ca49.7z
+  MPV_ARCHIVE_SHA256: 16cd542f7386bf1e68339b90618fe5446171fa555daa0c6d07d59be43bb903ea
+  MPV_DOWNLOAD_URL: https://github.com/zhongfly/mpv-winbuild/releases/download/2026-08-27-182fa6ca49/mpv-dev-lgpl-x86_64-20260827-git-182fa6ca49.7z
+  BUILD_SOURCE_URL: https://github.com/zhongfly/mpv-winbuild/archive/refs/tags/2026-08-27-182fa6ca49.zip
+  MPV_SOURCE_URL: https://github.com/mpv-player/mpv/archive/182fa6ca49f455cadb884858f386e2f00540aeb7.zip
+  LGPL_PATCH_URL: https://raw.githubusercontent.com/zhongfly/mpv-winbuild/2026-08-27-182fa6ca49/compile-lgpl-libmpv.patch
+
+jobs:
+  archive:
+    name: 创建依赖归档
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 检查归档是否存在
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 下载并校验归档材料
+        if: steps.release.outputs.exists != 'true'
+        run: |
+          mkdir -p archive
+          curl --fail --location --retry 5 --retry-all-errors \
+            --output "archive/$MPV_ARCHIVE" "$MPV_DOWNLOAD_URL"
+          echo "$MPV_ARCHIVE_SHA256  $MPV_ARCHIVE" > "archive/$MPV_ARCHIVE.sha256"
+          (cd archive && sha256sum --check "$MPV_ARCHIVE.sha256")
+
+          curl --fail --location --retry 5 --retry-all-errors \
+            --output archive/mpv-winbuild-2026-08-27-182fa6ca49.zip "$BUILD_SOURCE_URL"
+          curl --fail --location --retry 5 --retry-all-errors \
+            --output archive/mpv-182fa6ca49f455cadb884858f386e2f00540aeb7.zip "$MPV_SOURCE_URL"
+          curl --fail --location --retry 5 --retry-all-errors \
+            --output archive/compile-lgpl-libmpv.patch "$LGPL_PATCH_URL"
+
+          (cd archive && sha256sum \
+            mpv-winbuild-2026-08-27-182fa6ca49.zip \
+            mpv-182fa6ca49f455cadb884858f386e2f00540aeb7.zip \
+            compile-lgpl-libmpv.patch > source-materials.sha256)
+
+      - name: 生成来源说明
+        if: steps.release.outputs.exists != 'true'
+        run: |
+          cat > archive/BUILD-PROVENANCE.md <<'EOF'
+          # LGPL libmpv build provenance
+
+          - Build project: `zhongfly/mpv-winbuild`
+          - Build tag: `2026-08-27-182fa6ca49`
+          - mpv commit: `182fa6ca49f455cadb884858f386e2f00540aeb7`
+          - Binary archive SHA-256: `16cd542f7386bf1e68339b90618fe5446171fa555daa0c6d07d59be43bb903ea`
+          - Extracted DLL SHA-256: `63fed593a9e1b3c7e170bb38fcdf73722fa3d73b7c068f303bf2985eeec75367`
+          - Original build run: https://github.com/zhongfly/mpv-winbuild/actions/runs/33069943766
+
+          The upstream LGPL profile builds mpv with `-Dgpl=false`, removes
+          FFmpeg's `--enable-gpl`, and excludes GPL-only dependencies including
+          x264 and x265. FFmpeg uses `--enable-version3`, so this statically
+          linked libmpv binary is handled under LGPL-3.0-or-later terms.
+
+          These files preserve the verified binary and primary build materials.
+          Consult the build repository snapshot for the complete dependency list
+          and corresponding source locations.
+          EOF
+
+      - name: 创建非正式版本依赖 Release
+        if: steps.release.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "LGPL libmpv 2026-08-27" \
+            --notes-file archive/BUILD-PROVENANCE.md \
+            --latest=false \
+            archive/*
+
+      - name: 输出归档结果
+        run: |
+          if [ "${{ steps.release.outputs.exists }}" = "true" ]; then
+            echo "依赖 Release 已存在，无需重复上传。" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "依赖 Release 已创建：$RELEASE_TAG" >> "$GITHUB_STEP_SUMMARY"
+          fi
