@@ -236,12 +236,14 @@ dist/SniffPlay/
 4. 将 SniffPlay 的 GPL-3.0 和 libmpv 的 LGPL-2.1/LGPL-3.0 许可证文本加入发行目录，生成 `SniffPlay-Windows-x64.zip` 和 SHA-256 文件。
 5. 上传保留 14 天的 GitHub Actions Artifact。
 
-普通 `main` 分支构建只生成 Artifact。推送与 `pyproject.toml` 版本一致的标签（例如当前版本 `v0.1.3`）时，工作流会在构建成功后创建草稿 Release，并附上 ZIP、SHA-256 和自动生成的更新说明：
+普通 `main` 分支构建只生成 Artifact。推送与 `pyproject.toml` 版本一致的标签（例如当前版本 `v0.1.4`）时，工作流会在构建成功后创建草稿 Release，并附上 ZIP、SHA-256 和自动生成的更新说明：
 
 ```powershell
-git tag v0.1.3
-git push origin v0.1.3
+git tag v0.1.4
+git push origin v0.1.4
 ```
+
+完整的本地构建、版本发布和常见问题说明见 [`BUILD_WINDOWS_CN.md`](BUILD_WINDOWS_CN.md)。
 
 草稿 Release 不会直接对外公开。SniffPlay 采用 `GPL-3.0-or-later`，内置 LGPL 兼容 libmpv 构建；检查自动测试、许可证文件和构建来源说明无误后，再到 GitHub Release 页面手动发布草稿。
 
