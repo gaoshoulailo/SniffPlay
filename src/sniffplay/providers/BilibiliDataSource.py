@@ -280,7 +280,7 @@ class BilibiliDataSource(MusicProvider):
                 "Referer": f"https://www.bilibili.com/video/{bvid}/",
                 "Origin": "https://www.bilibili.com",
             },
-            cover_url=_cover_url(video.get("pic")),
+            cover_url=_cover_url(video.get("pic")) if isinstance(video, dict) else None,
         )
 
     @asynccontextmanager
