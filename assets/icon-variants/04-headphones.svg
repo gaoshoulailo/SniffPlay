@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <rect x="64" y="64" width="896" height="896" rx="192" fill="#151917"/>
-  <rect x="76" y="76" width="872" height="872" rx="180" fill="none" stroke="#303833" stroke-width="24"/>
-  <path d="M 250 520 C 250 350, 357 238, 512 238 C 667 238, 774 350, 774 520" fill="none" stroke="#55d98b" stroke-width="92" stroke-linecap="round"/>
-  <rect x="205" y="492" width="142" height="274" rx="70" fill="#55d98b"/>
-  <rect x="677" y="492" width="142" height="274" rx="70" fill="#55d98b"/>
-  <path d="M 430 372 L 430 652 L 650 512 Z" fill="#eef3ef"/>
+  <rect x="64" y="64" width="896" height="896" rx="192" fill="#202024"/>
+  <rect x="76" y="76" width="872" height="872" rx="180" fill="none" stroke="#3a3a40" stroke-width="24"/>
+  <path d="M 250 520 C 250 350, 357 238, 512 238 C 667 238, 774 350, 774 520" fill="none" stroke="#0a84ff" stroke-width="92" stroke-linecap="round"/>
+  <rect x="205" y="492" width="142" height="274" rx="70" fill="#0a84ff"/>
+  <rect x="677" y="492" width="142" height="274" rx="70" fill="#0a84ff"/>
+  <path d="M 430 372 L 430 652 L 650 512 Z" fill="#f1f1f3"/>
 </svg>

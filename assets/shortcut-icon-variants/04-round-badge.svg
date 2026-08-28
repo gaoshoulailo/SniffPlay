@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <circle cx="532" cy="492" r="414" fill="#151917" stroke="#303833" stroke-width="24"/>
-  <circle cx="566" cy="458" r="267" fill="#55d98b"/>
-  <path d="M 495 299 L 495 617 L 736 458 Z" fill="#151917"/>
-  <circle cx="757" cy="716" r="85" fill="#eef3ef"/>
-  <path d="M 727 674 L 727 758 L 797 716 Z" fill="#151917"/>
+  <circle cx="532" cy="492" r="414" fill="#202024" stroke="#3a3a40" stroke-width="24"/>
+  <circle cx="566" cy="458" r="267" fill="#0a84ff"/>
+  <path d="M 495 299 L 495 617 L 736 458 Z" fill="#202024"/>
+  <circle cx="757" cy="716" r="85" fill="#f1f1f3"/>
+  <path d="M 727 674 L 727 758 L 797 716 Z" fill="#202024"/>
 </svg>

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 import struct
 from pathlib import Path
 
@@ -12,6 +13,10 @@ ROOT = Path(__file__).resolve().parents[1]
 SVG_PATH = ROOT / "assets" / "sniffplay-icon.svg"
 PNG_PATH = ROOT / "assets" / "sniffplay-icon.png"
 ICO_PATH = ROOT / "assets" / "sniffplay.ico"
+TASKBAR_SVG_PATH = ROOT / "assets" / "sniffplay-taskbar-icon.svg"
+TASKBAR_PNG_PATH = ROOT / "assets" / "sniffplay-taskbar-icon.png"
+TASKBAR_ICO_PATH = ROOT / "assets" / "sniffplay-taskbar.ico"
+UI_ASSETS_DIR = ROOT / "src" / "sniffplay_ui" / "assets"
 VARIANTS_DIR = ROOT / "assets" / "icon-variants"
 ICO_SIZES = (16, 20, 24, 32, 40, 48, 64, 128, 256)
 VARIANTS = (
@@ -132,8 +137,29 @@ def main() -> None:
         [(size, png_bytes(render(primary_renderer, size))) for size in ICO_SIZES],
     )
 
+    taskbar_renderer = QSvgRenderer(str(TASKBAR_SVG_PATH))
+    if not taskbar_renderer.isValid():
+        raise RuntimeError(f"Invalid SVG source: {TASKBAR_SVG_PATH}")
+    taskbar = render(taskbar_renderer, 1024)
+    if not taskbar.save(str(TASKBAR_PNG_PATH), "PNG"):
+        raise RuntimeError(f"Could not write PNG icon: {TASKBAR_PNG_PATH}")
+    write_ico(
+        TASKBAR_ICO_PATH,
+        [(size, png_bytes(render(taskbar_renderer, size))) for size in ICO_SIZES],
+    )
+    UI_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
+    packaged_taskbar_path = UI_ASSETS_DIR / TASKBAR_PNG_PATH.name
+    packaged_taskbar_ico_path = UI_ASSETS_DIR / TASKBAR_ICO_PATH.name
+    if not taskbar.save(str(packaged_taskbar_path), "PNG"):
+        raise RuntimeError(f"Could not write packaged icon: {packaged_taskbar_path}")
+    shutil.copy2(TASKBAR_ICO_PATH, packaged_taskbar_ico_path)
+
     print(PNG_PATH)
     print(ICO_PATH)
+    print(TASKBAR_PNG_PATH)
+    print(TASKBAR_ICO_PATH)
+    print(packaged_taskbar_path)
+    print(packaged_taskbar_ico_path)
     print(write_contact_sheet(icons))
     assert app is not None
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import ctypes
 import logging
 import os
 import sys
@@ -11,7 +12,7 @@ from sniffplay.qt_bootstrap import prepare_qt_runtime
 prepare_qt_runtime()
 
 from PySide6.QtCore import QCoreApplication, Qt, QTimer, QUrl
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 from qasync import QEventLoop
 
@@ -37,6 +38,13 @@ def _ui_directory() -> Path:
     return Path(sniffplay_ui.__file__).resolve().parent
 
 
+def _set_windows_app_id() -> None:
+    if os.name == "nt":
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+            "SniffPlay.SniffPlay"
+        )
+
+
 def _startup_audio_path(arguments: list[str]) -> Path | None:
     for argument in arguments[1:]:
         if argument.startswith("-"):
@@ -54,12 +62,16 @@ def run() -> int:
 
     QCoreApplication.setOrganizationName("SniffPlay")
     QCoreApplication.setApplicationName("SniffPlay")
+    _set_windows_app_id()
     QGuiApplication.setHighDpiScaleFactorRoundingPolicy(
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
     )
     os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Basic")
     startup_audio = _startup_audio_path(sys.argv)
     app = QGuiApplication(sys.argv)
+    app.setWindowIcon(
+        QIcon(str(_ui_directory() / "assets" / "sniffplay-taskbar.ico"))
+    )
     event_loop = QEventLoop(app)
     asyncio.set_event_loop(event_loop)
 

@@ -1,22 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <rect x="64" y="64" width="896" height="896" rx="192" fill="#111827"/>
-  <rect x="76" y="76" width="872" height="872" rx="180" fill="none" stroke="#334155" stroke-width="24"/>
-
+  <rect x="64" y="64" width="896" height="896" rx="208" fill="#202024"/>
+  <rect x="80" y="80" width="864" height="864" rx="192" fill="none" stroke="#3a3a40" stroke-width="24"/>
   <path
-    d="M 724 318
-       C 665 230, 520 208, 405 245
-       C 301 278, 248 356, 270 431
-       C 292 507, 379 535, 500 549
-       C 625 563, 692 588, 699 647
-       C 706 712, 634 765, 527 772
-       C 420 779, 332 742, 288 673"
+    d="M730 300 C654 224 510 220 405 264 C307 305 276 397 347 455 C404 502 513 507 603 535 C702 566 730 641 669 707 C595 786 419 785 326 692"
     fill="none"
-    stroke="#55d98b"
-    stroke-width="104"
+    stroke="#0a84ff"
+    stroke-width="112"
     stroke-linecap="round"
     stroke-linejoin="round"
   />
-
-  <path d="M 452 377 L 452 647 L 662 512 Z" fill="#eef3ef"/>
+  <path d="M486 350 L486 674 L735 512 Z" fill="#f1f1f3"/>
 </svg>

@@ -34,6 +34,8 @@ where = ["src"]
 [tool.setuptools.package-data]
 sniffplay_ui = [
     "*.qml",
+    "assets/*.ico",
+    "assets/*.png",
     "components/*.qml",
     "pages/*.qml",
     "themes/*.qml",

@@ -18,7 +18,14 @@ if not mpv_dll.is_file():
 
 qml_data = collect_data_files(
     "sniffplay_ui",
-    includes=["*.qml", "components/*.qml", "pages/*.qml", "themes/*"],
+    includes=[
+        "*.qml",
+        "assets/*.ico",
+        "assets/*.png",
+        "components/*.qml",
+        "pages/*.qml",
+        "themes/*",
+    ],
 )
 
 runtime_binaries = [(str(mpv_dll), "vendor/mpv")]
