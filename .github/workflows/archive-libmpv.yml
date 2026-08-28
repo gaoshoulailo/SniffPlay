@@ -19,9 +19,9 @@ env:
   RELEASE_TAG: libmpv-lgpl-20260827
   MPV_ARCHIVE: mpv-dev-lgpl-x86_64-20260827-git-182fa6ca49.7z
   MPV_ARCHIVE_SHA256: 16cd542f7386bf1e68339b90618fe5446171fa555daa0c6d07d59be43bb903ea
-  MPV_DOWNLOAD_URL: https://github.com/zhongfly/mpv-winbuild/releases/download/2026-08-27-182fa6ca49/mpv-dev-lgpl-x86_64-20260827-git-182fa6ca49.7z
-  BUILD_SOURCE_URL: https://github.com/zhongfly/mpv-winbuild/archive/refs/tags/2026-08-27-182fa6ca49.zip
-  MPV_SOURCE_URL: https://github.com/mpv-player/mpv/archive/182fa6ca49f455cadb884858f386e2f00540aeb7.zip
+  MPV_ASSET_API_URL: https://api.github.com/repos/zhongfly/mpv-winbuild/releases/assets/532291625
+  BUILD_SOURCE_URL: https://codeload.github.com/zhongfly/mpv-winbuild/zip/refs/tags/2026-08-27-182fa6ca49
+  MPV_SOURCE_URL: https://codeload.github.com/mpv-player/mpv/zip/182fa6ca49f455cadb884858f386e2f00540aeb7
   LGPL_PATCH_URL: https://raw.githubusercontent.com/zhongfly/mpv-winbuild/2026-08-27-182fa6ca49/compile-lgpl-libmpv.patch
 
 jobs:
@@ -46,16 +46,22 @@ jobs:
         if: steps.release.outputs.exists != 'true'
         run: |
           mkdir -p archive
-          curl --fail --location --retry 5 --retry-all-errors \
-            --output "archive/$MPV_ARCHIVE" "$MPV_DOWNLOAD_URL"
+          curl --fail --location --retry 8 --retry-all-errors --retry-delay 3 \
+            --connect-timeout 30 --max-time 1200 \
+            -H "Accept: application/octet-stream" \
+            -H "User-Agent: SniffPlay-libmpv-archive" \
+            --output "archive/$MPV_ARCHIVE" "$MPV_ASSET_API_URL"
           echo "$MPV_ARCHIVE_SHA256  $MPV_ARCHIVE" > "archive/$MPV_ARCHIVE.sha256"
           (cd archive && sha256sum --check "$MPV_ARCHIVE.sha256")
 
-          curl --fail --location --retry 5 --retry-all-errors \
+          curl --fail --location --retry 8 --retry-all-errors --retry-delay 3 \
+            --connect-timeout 30 --max-time 600 \
             --output archive/mpv-winbuild-2026-08-27-182fa6ca49.zip "$BUILD_SOURCE_URL"
-          curl --fail --location --retry 5 --retry-all-errors \
+          curl --fail --location --retry 8 --retry-all-errors --retry-delay 3 \
+            --connect-timeout 30 --max-time 600 \
             --output archive/mpv-182fa6ca49f455cadb884858f386e2f00540aeb7.zip "$MPV_SOURCE_URL"
-          curl --fail --location --retry 5 --retry-all-errors \
+          curl --fail --location --retry 8 --retry-all-errors --retry-delay 3 \
+            --connect-timeout 30 --max-time 300 \
             --output archive/compile-lgpl-libmpv.patch "$LGPL_PATCH_URL"
 
           (cd archive && sha256sum \
