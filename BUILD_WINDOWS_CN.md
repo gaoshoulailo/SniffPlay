@@ -65,6 +65,15 @@ dist/SniffPlay/
 version = "0.1.4"
 ```
 
+版本号修改后必须同步锁文件，并确认锁定安装可以成功：
+
+```powershell
+.\.venv\Scripts\uv.exe lock
+.\.venv\Scripts\uv.exe sync --locked --extra dev
+```
+
+提交时要同时包含 `pyproject.toml` 和 `uv.lock`。否则 GitHub Actions 的 `uv sync --locked` 会因锁文件过期而失败。
+
 版本号必须与 Git 标签一致。例如 `0.1.4` 对应 `v0.1.4`。
 
 ### 2. 提交并推送代码
