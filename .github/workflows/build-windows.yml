@@ -19,7 +19,7 @@ env:
   MPV_ARCHIVE: mpv-dev-lgpl-x86_64-20260827-git-182fa6ca49.7z
   MPV_ARCHIVE_SHA256: 16cd542f7386bf1e68339b90618fe5446171fa555daa0c6d07d59be43bb903ea
   MPV_DLL_SHA256: 63fed593a9e1b3c7e170bb38fcdf73722fa3d73b7c068f303bf2985eeec75367
-  MPV_DOWNLOAD_URL: https://github.com/zhongfly/mpv-winbuild/releases/download/2026-08-27-182fa6ca49/mpv-dev-lgpl-x86_64-20260827-git-182fa6ca49.7z
+  MPV_DOWNLOAD_URL: https://github.com/gaoshoulailo/SniffPlay/releases/download/libmpv-lgpl-20260827/mpv-dev-lgpl-x86_64-20260827-git-182fa6ca49.7z
 
 jobs:
   build-windows:
