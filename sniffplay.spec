@@ -75,6 +75,35 @@ analysis = Analysis(
     noarchive=False,
     optimize=0,
 )
+
+
+def _is_excluded_qt_asset(entry: tuple[str, str, str]) -> bool:
+    """Filter Qt modules/resources that are not used by the QML application."""
+    name, source, _ = entry
+    candidate = f"{name} {source}".replace("\\", "/").casefold()
+    return any(
+        marker in candidate
+        for marker in (
+            "webengine",
+            "qt3d",
+            "qt63d",
+            "quick3d",
+            "qtquick3d",
+            "qt6pdf",
+            "qtquick/pdf",
+            "qt6multimedia",
+            "qtmultimedia",
+        )
+    )
+
+
+analysis.binaries = [
+    entry for entry in analysis.binaries if not _is_excluded_qt_asset(entry)
+]
+analysis.datas = [
+    entry for entry in analysis.datas if not _is_excluded_qt_asset(entry)
+]
+
 pyz = PYZ(analysis.pure)
 
 executable = EXE(
