@@ -329,6 +329,7 @@ class AppController(QObject):
             resolved_cover_url = getattr(stream, "cover_url", None)
             if resolved_cover_url and not track.cover_url:
                 track = replace(track, cover_url=resolved_cover_url, accent="#3d8bff")
+                candidate_queue[index] = track
             if request_id != self._play_request_id:
                 return
             if (
