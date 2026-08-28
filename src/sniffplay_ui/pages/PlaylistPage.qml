@@ -628,6 +628,7 @@ Item {
         id: deletePlaylistDialog
         anchors.centerIn: parent
         modal: true
+        width: 380
         title: "删除歌单"
         standardButtons: Dialog.Yes | Dialog.Cancel
         onAccepted: root.controller.deletePlaylist(root.dialogPlaylistId)
@@ -640,6 +641,7 @@ Item {
         id: removeItemDialog
         anchors.centerIn: parent
         modal: true
+        width: 380
         title: "移除歌曲"
         standardButtons: Dialog.Yes | Dialog.Cancel
         onAccepted: root.controller.removePlaylistItem(root.pendingRemoveItemId)
