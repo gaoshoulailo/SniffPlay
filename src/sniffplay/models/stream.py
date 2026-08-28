@@ -7,4 +7,4 @@ from dataclasses import dataclass, field
 class StreamInfo:
     url: str
     http_headers: dict[str, str] = field(default_factory=dict)
-
+    cover_url: str | None = None

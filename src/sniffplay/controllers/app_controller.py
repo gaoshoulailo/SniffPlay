@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from dataclasses import replace
 import random
 from collections.abc import Sequence
 from pathlib import Path
@@ -323,6 +324,8 @@ class AppController(QObject):
         self._set_status(f"正在解析：{track.title}")
         try:
             stream = await self._search_service.resolve_stream(track)
+            if stream.cover_url and not track.cover_url:
+                track = replace(track, cover_url=stream.cover_url, accent="#3d8bff")
             if request_id != self._play_request_id:
                 return
             if (
