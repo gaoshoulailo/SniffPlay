@@ -435,7 +435,7 @@ Item {
                         id: rowAddButton
                         Layout.preferredWidth: 34
                         Layout.preferredHeight: 34
-                        opacity: rowMouse.containsMouse ? 1 : 0
+                        opacity: rowMouse.containsMouse || rowAddButton.hovered ? 1 : 0
                         onClicked: {
                             root.pendingTrackIndex = trackRow.index
                             addToPlaylistDialog.open()
@@ -461,7 +461,7 @@ Item {
                         id: rowPlayButton
                         Layout.preferredWidth: 34
                         Layout.preferredHeight: 34
-                        opacity: rowMouse.containsMouse ? 1 : 0
+                        opacity: rowMouse.containsMouse || rowPlayButton.hovered ? 1 : 0
                         onClicked: root.controller.playSearchResult(trackRow.index)
                         ToolTip.visible: hovered
                         ToolTip.text: "播放"
