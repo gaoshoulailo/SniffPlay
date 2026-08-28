@@ -11,6 +11,12 @@
 
 嗅播音乐播放器是一个使用 Python、PySide6 和 QML 构建的轻量 Windows 桌面音乐播放器。它支持搜索 Bilibili 公开音视频资源、播放本地音频，并在本机管理收藏、歌单和播放历史。
 
+## 许可证
+
+SniffPlay 由 SniffPlay contributors 以 GNU General Public License v3.0 或更高版本（`GPL-3.0-or-later`）发布，完整条款见 [LICENSE](LICENSE)。
+
+项目依赖的第三方组件和发行包内的第三方二进制文件遵循各自许可证。当前 Windows 发行包包含采用 `GPL-2.0-or-later` 的 libmpv 开发构建，其版本、校验值和分发注意事项见 [`vendor/mpv/README.md`](vendor/mpv/README.md)。
+
 ## 当前功能
 
 - PySide6 + QML 无边框桌面界面
@@ -227,7 +233,7 @@ dist/SniffPlay/
 1. 按 `uv.lock` 安装 Python 3.12 依赖。
 2. 下载固定版本的 libmpv，同时校验归档和 DLL 的 SHA-256。
 3. 调用 `scripts/build_windows.ps1` 运行测试、打包和启动烟雾测试。
-4. 从仓库预置文件复制 GPL-2.0 许可证文本，生成 `SniffPlay-Windows-x64.zip` 和 SHA-256 文件。
+4. 将 SniffPlay 的 GPL-3.0 和 libmpv 的 GPL-2.0 许可证文本加入发行目录，生成 `SniffPlay-Windows-x64.zip` 和 SHA-256 文件。
 5. 上传保留 14 天的 GitHub Actions Artifact。
 
 普通 `main` 分支构建只生成 Artifact。推送与 `pyproject.toml` 版本一致的标签（例如当前版本 `v0.1.3`）时，工作流会在构建成功后创建草稿 Release，并附上 ZIP、SHA-256 和自动生成的更新说明：
@@ -237,7 +243,7 @@ git tag v0.1.3
 git push origin v0.1.3
 ```
 
-草稿 Release 不会直接对外公开。正式公开前必须确认项目许可证，并完成 libmpv 对应源码提供流程，或切换到经过验证的 LGPL 兼容构建；检查无误后再到 GitHub Release 页面手动发布草稿。
+草稿 Release 不会直接对外公开。SniffPlay 已采用 `GPL-3.0-or-later`；正式公开前仍须完成 libmpv 对应源码提供流程，或切换到经过验证的 LGPL 兼容构建，检查无误后再到 GitHub Release 页面手动发布草稿。
 
 ## 扩展音乐来源
 

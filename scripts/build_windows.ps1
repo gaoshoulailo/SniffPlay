@@ -41,6 +41,7 @@ try {
     New-Item -ItemType Directory -Force -Path $dataDirectory | Out-Null
     New-Item -ItemType Directory -Force -Path $licenseDirectory | Out-Null
     Copy-Item -LiteralPath (Join-Path $projectDirectory "README.md") -Destination $outputDirectory -Force
+    Copy-Item -LiteralPath (Join-Path $projectDirectory "LICENSE") -Destination (Join-Path $licenseDirectory "GPL-3.0.txt") -Force
     Copy-Item -LiteralPath (Join-Path $projectDirectory "vendor\mpv\README.md") -Destination (Join-Path $licenseDirectory "libmpv-README.md") -Force
 
     if (-not $SkipSmokeTest) {

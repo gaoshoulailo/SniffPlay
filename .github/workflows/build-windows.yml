@@ -161,9 +161,10 @@ jobs:
           - 文件：`SniffPlay-Windows-x64.zip`
           - SHA-256：`${{ steps.package.outputs.sha256 }}`
           - Artifact 保留：14 天
+          - SniffPlay：GPL-3.0-or-later
           - libmpv：固定 GPL-2.0-or-later 开发构建
 
-          此 Artifact 用于构建验证。正式公开发布前仍需完成 libmpv 对应源码提供流程，或切换到经过验证的 LGPL 兼容构建。
+          此 Artifact 用于构建验证。SniffPlay 已采用 GPL-3.0-or-later；正式公开发布前仍需完成 libmpv 对应源码提供流程，或切换到经过验证的 LGPL 兼容构建。
           '@ >> $env:GITHUB_STEP_SUMMARY
 
   create-draft-release:
@@ -192,7 +193,7 @@ jobs:
           body: |
             Windows x64 便携版已通过自动测试、打包和启动烟雾测试。
 
-            发布前请确认项目许可证，并为当前 GPL-2.0-or-later libmpv 构建补齐对应源码提供材料；未完成前请勿公开此草稿。
+            SniffPlay 采用 GPL-3.0-or-later。发布前请为当前 GPL-2.0-or-later libmpv 构建补齐对应源码提供材料；未完成前请勿公开此草稿。
           files: |
             artifacts/SniffPlay-Windows-x64.zip
             artifacts/SniffPlay-Windows-x64.zip.sha256
