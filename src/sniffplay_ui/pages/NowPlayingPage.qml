@@ -146,7 +146,9 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: width
                         Layout.maximumHeight: Math.min(width, 300)
-                        color: root.controller.currentAccent
+                        color: coverImage.status === Image.Error || coverImage.status === Image.Null
+                            ? "#3d8bff"
+                            : root.controller.currentAccent
                         radius: Theme.radiusMedium
                         clip: true
 

@@ -161,7 +161,9 @@ class AppController(QObject):
     @Property(str, notify=playerChanged)
     def currentAccent(self) -> str:
         track = self._player.current_track
-        return track.accent if track else "#343b37"
+        if track is None:
+            return "#343b37"
+        return track.accent if track.cover_url else "#3d8bff"
 
     @Property(str, notify=playerChanged)
     def currentInitials(self) -> str:
