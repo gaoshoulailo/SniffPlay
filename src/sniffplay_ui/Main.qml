@@ -56,7 +56,7 @@ ApplicationWindow {
         z: 2
         color: Theme.window
         border.color: Theme.transparent
-        radius: root.visibility === Window.Maximized ? 0 : 12
+        radius: 0
 
         MouseArea {
             anchors.fill: parent
