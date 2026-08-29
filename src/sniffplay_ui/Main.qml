@@ -79,8 +79,18 @@ ApplicationWindow {
                 onClicked: root.currentPage = 5
                 ToolTip.visible: hovered
                 ToolTip.text: "设置"
-                contentItem: Text { text: "⚙"; color: Theme.textPrimary; font.pixelSize: 15; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
-                background: Rectangle { color: settingsButton.hovered ? Theme.surfaceHover : Theme.transparent }
+                contentItem: Text {
+                    text: "⚙"
+                    color: Theme.textPrimary
+                    font.family: "Segoe UI Symbol"
+                    font.pixelSize: 15
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                background: Rectangle {
+                    color: settingsButton.hovered ? Theme.surfaceHover : Theme.transparent
+                    radius: 0
+                }
             }
 
             Repeater {
