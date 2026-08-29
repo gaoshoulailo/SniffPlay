@@ -33,7 +33,7 @@ ApplicationWindow {
         id: windowFrame
         anchors.fill: parent
         anchors.margins: root.frameMargin
-        color: Theme.window
+        color: root.controller.backgroundColor
         radius: root.visibility === Window.Maximized ? 0 : 12
     }
 
@@ -263,8 +263,7 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     text: "设置"
                     marker: "⚙"
-                    selected: root.currentPage === 5
-                    onClicked: root.currentPage = 5
+                    visible: false
                 }
 
                 Item { Layout.fillHeight: true }
