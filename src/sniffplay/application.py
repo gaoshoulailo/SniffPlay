@@ -12,7 +12,7 @@ from sniffplay.qt_bootstrap import prepare_qt_runtime
 prepare_qt_runtime()
 
 from PySide6.QtCore import QCoreApplication, Qt, QTimer, QUrl
-from PySide6.QtGui import QGuiApplication, QIcon
+from PySide6.QtGui import QGuiApplication, QIcon, QPalette, QColor
 from PySide6.QtQml import QQmlApplicationEngine
 from qasync import QEventLoop
 
@@ -70,6 +70,16 @@ def run() -> int:
     os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Basic")
     startup_audio = _startup_audio_path(sys.argv)
     app = QGuiApplication(sys.argv)
+    palette = app.palette()
+    palette.setColor(QPalette.ColorRole.Window, QColor("#1b1b1e"))
+    palette.setColor(QPalette.ColorRole.WindowText, QColor("#f1f1f3"))
+    palette.setColor(QPalette.ColorRole.Base, QColor("#242428"))
+    palette.setColor(QPalette.ColorRole.Text, QColor("#f1f1f3"))
+    palette.setColor(QPalette.ColorRole.Button, QColor("#29292f"))
+    palette.setColor(QPalette.ColorRole.ButtonText, QColor("#f1f1f3"))
+    palette.setColor(QPalette.ColorRole.Highlight, QColor("#0a84ff"))
+    palette.setColor(QPalette.ColorRole.HighlightedText, QColor("#ffffff"))
+    app.setPalette(palette)
     app.setWindowIcon(
         QIcon(str(_ui_directory() / "assets" / "sniffplay-taskbar.ico"))
     )
