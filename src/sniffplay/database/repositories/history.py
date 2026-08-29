@@ -69,7 +69,8 @@ class HistoryRepository:
                     album=row[8],
                     duration_ms=row[9],
                     playback_uri=row[5] if row[4] == "local" else None,
-                    cover_url=row[11] or row[10],
+                    # Prefer the cached local cover; the source URL is only a fallback.
+                    cover_url=row[10] or row[11],
                     source_cover_url=row[11],
                 ),
             )

@@ -46,3 +46,26 @@ def test_favorites_restore_local_playback_and_isolate_provider_ids(
     assert favorites.is_favorited(other_provider)
 
     database.close()
+
+
+def test_favorites_prefer_cached_cover_over_source_url(tmp_path: Path) -> None:
+    database = Database(tmp_path / "favorite-covers.db")
+    database.initialize()
+    favorites = FavoriteRepository(database)
+    track = Track(
+        "demo",
+        "cover-track",
+        "歌曲",
+        "歌手",
+        "专辑",
+        120_000,
+        cover_url="file:///cached-cover.jpg",
+        source_cover_url="https://example.test/cover.jpg",
+    )
+
+    favorites.add(track)
+    restored = favorites.list_all()[0].track
+
+    assert restored.cover_url == "file:///cached-cover.jpg"
+    assert restored.source_cover_url == "https://example.test/cover.jpg"
+    database.close()

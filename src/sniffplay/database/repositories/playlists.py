@@ -125,7 +125,8 @@ class PlaylistRepository:
                     album=row[7],
                     duration_ms=row[8],
                     playback_uri=row[4] if row[3] == "local" else None,
-                    cover_url=row[10] or row[9],
+                    # Prefer the cached local cover; the source URL is only a fallback.
+                    cover_url=row[9] or row[10],
                     source_cover_url=row[10],
                 ),
             )

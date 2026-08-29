@@ -121,7 +121,8 @@ class FavoriteRepository:
                     album=row[6],
                     duration_ms=row[7],
                     playback_uri=row[3] if row[2] == "local" else None,
-                    cover_url=row[9] or row[8],
+                    # Prefer the cached local cover; the source URL is only a fallback.
+                    cover_url=row[8] or row[9],
                     source_cover_url=row[9],
                 ),
             )
@@ -142,7 +143,7 @@ class FavoriteRepository:
             artist=track_record.artist,
             album=track_record.album,
             duration_ms=track_record.duration_ms,
-            cover_url=track_record.source_cover_url or track_record.cover_url,
+            cover_url=track_record.cover_url or track_record.source_cover_url,
             source_cover_url=track_record.source_cover_url,
             playback_uri=(
                 track_record.provider_track_id

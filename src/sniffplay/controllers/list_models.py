@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Any
+from urllib.parse import unquote, urlparse
 
 from PySide6.QtCore import QAbstractListModel, QByteArray, QModelIndex, Qt
 
@@ -17,7 +19,22 @@ FALLBACK_COVER_ACCENT = "#3d8bff"
 
 
 def _cover_accent(track: Track) -> str:
-    return track.accent if track.cover_url else FALLBACK_COVER_ACCENT
+    return track.accent if _display_cover_url(track.cover_url) else FALLBACK_COVER_ACCENT
+
+
+def _display_cover_url(url: str | None) -> str:
+    """Only expose local cover URLs while their cache file still exists."""
+    if not url:
+        return ""
+    if url.startswith("file://"):
+        parsed = urlparse(url)
+        local_path = unquote(parsed.path)
+        # file:///C:/... has a leading slash in its URL representation.
+        if len(local_path) >= 3 and local_path[0] == "/" and local_path[2] == ":":
+            local_path = local_path[1:]
+        if not Path(local_path).is_file():
+            return ""
+    return url
 
 
 class DictionaryListModel(QAbstractListModel):
@@ -83,7 +100,7 @@ class TrackListModel(DictionaryListModel):
                     "source": track.provider_id.upper(),
                     "accent": _cover_accent(track),
                     "initials": track.initials,
-                    "coverUrl": track.cover_url or "",
+                    "coverUrl": _display_cover_url(track.cover_url),
                     "isFavorite": (
                         track.provider_id,
                         track.provider_track_id,
@@ -121,7 +138,7 @@ class QueueListModel(DictionaryListModel):
                     "duration": track.duration_text,
                     "accent": _cover_accent(track),
                     "initials": track.initials,
-                    "coverUrl": track.cover_url or "",
+                    "coverUrl": _display_cover_url(track.cover_url),
                     "isCurrent": index == current_index,
                 }
                 for index, track in enumerate(self.tracks)
@@ -178,7 +195,7 @@ class FavoriteListModel(DictionaryListModel):
                     "source": entry.track.provider_id.upper(),
                     "accent": _cover_accent(entry.track),
                     "initials": entry.track.initials,
-                    "coverUrl": entry.track.cover_url or "",
+                    "coverUrl": _display_cover_url(entry.track.cover_url),
                     "favoritedAt": entry.favorited_at.astimezone().strftime(
                         "%m-%d %H:%M"
                     ),
@@ -231,7 +248,7 @@ class PlaylistTrackListModel(DictionaryListModel):
                     "source": entry.track.provider_id.upper(),
                     "accent": _cover_accent(entry.track),
                     "initials": entry.track.initials,
-                    "coverUrl": entry.track.cover_url or "",
+                    "coverUrl": _display_cover_url(entry.track.cover_url),
                     "isFavorite": (
                         entry.track.provider_id,
                         entry.track.provider_track_id,
@@ -283,7 +300,7 @@ class HistoryListModel(DictionaryListModel):
                     "source": entry.track.provider_id.upper(),
                     "accent": _cover_accent(entry.track),
                     "initials": entry.track.initials,
-                    "coverUrl": entry.track.cover_url or "",
+                    "coverUrl": _display_cover_url(entry.track.cover_url),
                     "playedAt": entry.played_at.astimezone().strftime("%m-%d %H:%M"),
                     "listenedText": self._format_duration(entry.listened_ms),
                     "completed": entry.completed,

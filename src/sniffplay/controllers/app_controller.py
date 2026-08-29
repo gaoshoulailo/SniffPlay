@@ -7,6 +7,7 @@ import random
 import shutil
 from collections.abc import Sequence
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 from PySide6.QtCore import Property, QObject, QTimer, QUrl, Signal, Slot
 from PySide6.QtGui import QGuiApplication
@@ -86,6 +87,7 @@ class AppController(QObject):
         self._play_request_id = 0
         self._history_recorded = False
         self._advance_scheduled = False
+        self._play_lock = asyncio.Lock()
         self._selected_playlist_id = -1
         self._selected_playlist_name = ""
         self._favorite_keys: set[tuple[str, str]] = set()
@@ -219,7 +221,16 @@ class AppController(QObject):
     @Property(str, notify=playerChanged)
     def currentCoverUrl(self) -> str:
         track = self._player.current_track
-        return track.cover_url if track and track.cover_url else ""
+        if not track or not track.cover_url:
+            return ""
+        url = track.cover_url
+        if url.startswith("file://"):
+            local_path = unquote(urlparse(url).path)
+            if len(local_path) >= 3 and local_path[0] == "/" and local_path[2] == ":":
+                local_path = local_path[1:]
+            if not Path(local_path).is_file():
+                return ""
+        return url
 
     @Property(bool, notify=playerChanged)
     def hasCurrentTrack(self) -> bool:
@@ -383,7 +394,10 @@ class AppController(QObject):
                 and expected_queue_revision != self._queue_revision
             ):
                 return
-            self._player.play(track, stream)
+            async with self._play_lock:
+                if request_id != self._play_request_id:
+                    return
+                self._player.play(track, stream)
         except (LookupError, OSError, ProviderError, PlayerUnavailableError) as error:
             if request_id != self._play_request_id:
                 return
@@ -909,7 +923,11 @@ class AppController(QObject):
                 self._set_status(f"正在播放：{track.title}")
         elif self._snapshot.state is PlayerState.ERROR:
             self._set_status("播放内核发生错误")
-        elif self._snapshot.state is PlayerState.ENDED and not self._advance_scheduled:
+        elif (
+            self._snapshot.state is PlayerState.ENDED
+            and previous_state in (PlayerState.PLAYING, PlayerState.PAUSED)
+            and not self._advance_scheduled
+        ):
             self._advance_scheduled = True
             asyncio.create_task(self._advance_after_end(self._play_request_id))
 

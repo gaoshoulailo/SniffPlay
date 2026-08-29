@@ -230,6 +230,38 @@ async def test_controller_updates_favorite_roles_and_current_state(
     assert app is not None
 
 
+async def test_controller_plays_restored_favorite(tmp_path: Path) -> None:
+    class PlayableMockProvider(MockProvider):
+        async def resolve_stream(self, track: Track) -> StreamInfo:
+            return StreamInfo(f"{track.provider_track_id}.wav")
+
+    app = QCoreApplication.instance() or QCoreApplication([])
+    database = Database(tmp_path / "favorite-playback-controller.db")
+    database.initialize()
+    favorites = FavoriteRepository(database)
+    track = MockProvider._tracks[0]
+    favorites.add(track)
+    registry = ProviderRegistry()
+    registry.register(PlayableMockProvider())
+    player = MockPlayer()
+    controller = AppController(
+        SearchService(registry),
+        player,
+        PlaylistRepository(database),
+        HistoryRepository(database),
+        favorites,
+    )
+
+    await controller.playFavorite(0)
+
+    assert player.current_track == track
+    assert controller.queueLabel == "队列 1/1"
+
+    controller.close()
+    database.close()
+    assert app is not None
+
+
 async def test_controller_copies_search_track_information(
     tmp_path: Path,
     monkeypatch,
