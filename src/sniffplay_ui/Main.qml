@@ -72,6 +72,17 @@ ApplicationWindow {
             anchors.top: parent.top
             height: parent.height
 
+            Button {
+                id: settingsButton
+                width: 44
+                height: titleBar.height
+                onClicked: root.currentPage = 5
+                ToolTip.visible: hovered
+                ToolTip.text: "设置"
+                contentItem: Text { text: "⚙"; color: Theme.textPrimary; font.pixelSize: 15; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                background: Rectangle { color: settingsButton.hovered ? Theme.surfaceHover : Theme.transparent }
+            }
+
             Repeater {
                 model: ["—", "□", "×"]
 

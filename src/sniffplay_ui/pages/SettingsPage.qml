@@ -18,8 +18,7 @@ Item {
             Layout.fillWidth: true
             Text { text: "背景颜色"; color: Theme.textPrimary; font.pixelSize: 14; Layout.fillWidth: true }
             Rectangle { implicitWidth: 36; implicitHeight: 28; color: root.controller.backgroundColor; border.color: Theme.border; radius: 4 }
-            TextField { id: colorField; Layout.preferredWidth: 130; text: root.controller.backgroundColor; placeholderText: "#242428" }
-            Button { text: "应用颜色"; onClicked: root.controller.setBackgroundColor(colorField.text) }
+            Button { text: "选择颜色"; onClicked: colorDialog.open() }
         }
         RowLayout {
             Layout.fillWidth: true
@@ -40,5 +39,12 @@ Item {
         title: "选择背景图片"
         nameFilters: ["图片 (*.png *.jpg *.jpeg *.bmp *.webp)", "所有文件 (*)"]
         onAccepted: root.controller.setBackgroundImage(selectedFile.toString())
+    }
+
+    ColorDialog {
+        id: colorDialog
+        title: "选择背景颜色"
+        selectedColor: root.controller.backgroundColor
+        onAccepted: root.controller.setBackgroundColor(selectedColor.toString())
     }
 }
