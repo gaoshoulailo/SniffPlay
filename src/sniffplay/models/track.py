@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True, slots=True)
@@ -14,6 +14,7 @@ class Track:
     accent: str = "#55d98b"
     playback_uri: str | None = None
     cover_url: str | None = None
+    source_cover_url: str | None = field(default=None, compare=False)
 
     @property
     def duration_text(self) -> str:

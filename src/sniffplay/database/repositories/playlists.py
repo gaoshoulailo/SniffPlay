@@ -106,6 +106,7 @@ class PlaylistRepository:
                     TrackRecord.album,
                     TrackRecord.duration_ms,
                     TrackRecord.cover_url,
+                    TrackRecord.source_cover_url,
                 )
                 .join(TrackRecord, TrackRecord.id == PlaylistItemRecord.track_id)
                 .where(PlaylistItemRecord.playlist_id == playlist_id)
@@ -124,7 +125,8 @@ class PlaylistRepository:
                     album=row[7],
                     duration_ms=row[8],
                     playback_uri=row[4] if row[3] == "local" else None,
-                    cover_url=row[9],
+                    cover_url=row[10] or row[9],
+                    source_cover_url=row[10],
                 ),
             )
             for row in rows

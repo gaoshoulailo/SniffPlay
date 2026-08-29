@@ -23,9 +23,12 @@ def get_or_create_track(session: Session, track: Track) -> TrackRecord:
             album=track.album,
             duration_ms=track.duration_ms,
             cover_url=track.cover_url,
+            source_cover_url=track.source_cover_url or track.cover_url,
         )
         session.add(record)
         session.flush()
     elif track.cover_url and record.cover_url != track.cover_url:
         record.cover_url = track.cover_url
+    if track.source_cover_url and record.source_cover_url != track.source_cover_url:
+        record.source_cover_url = track.source_cover_url
     return record

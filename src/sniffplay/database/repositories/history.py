@@ -46,6 +46,7 @@ class HistoryRepository:
                     TrackRecord.album,
                     TrackRecord.duration_ms,
                     TrackRecord.cover_url,
+                    TrackRecord.source_cover_url,
                 )
                 .join(TrackRecord, TrackRecord.id == PlayHistoryRecord.track_id)
                 .order_by(
@@ -68,7 +69,8 @@ class HistoryRepository:
                     album=row[8],
                     duration_ms=row[9],
                     playback_uri=row[5] if row[4] == "local" else None,
-                    cover_url=row[10],
+                    cover_url=row[11] or row[10],
+                    source_cover_url=row[11],
                 ),
             )
             for row in rows

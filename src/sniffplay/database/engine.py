@@ -40,6 +40,10 @@ class Database:
                 connection.exec_driver_sql(
                     "ALTER TABLE tracks ADD COLUMN cover_url VARCHAR(1000)"
                 )
+            if "source_cover_url" not in columns:
+                connection.exec_driver_sql(
+                    "ALTER TABLE tracks ADD COLUMN source_cover_url VARCHAR(1000)"
+                )
 
     def close(self) -> None:
         self.engine.dispose()

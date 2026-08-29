@@ -350,7 +350,7 @@ class BilibiliDataSource(MusicProvider):
                 return track
             async with semaphore:
                 local_uri = await self._cache_cover(client, track.cover_url)
-            return replace(track, cover_url=local_uri)
+            return replace(track, cover_url=local_uri, source_cover_url=track.cover_url)
 
         tasks = [asyncio.create_task(cache(track)) for track in tracks]
         done, pending = await asyncio.wait(tasks, timeout=COVER_BATCH_TIMEOUT)
