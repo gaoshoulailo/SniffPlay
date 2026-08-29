@@ -13,6 +13,12 @@ from sniffplay.database.repositories.playlists import (
 )
 from sniffplay.models import Track
 
+FALLBACK_COVER_ACCENT = "#3d8bff"
+
+
+def _cover_accent(track: Track) -> str:
+    return track.accent if track.cover_url else FALLBACK_COVER_ACCENT
+
 
 class DictionaryListModel(QAbstractListModel):
     def __init__(self, role_names: Sequence[str]) -> None:
@@ -75,7 +81,7 @@ class TrackListModel(DictionaryListModel):
                     "album": track.album,
                     "duration": track.duration_text,
                     "source": track.provider_id.upper(),
-                    "accent": track.accent,
+                    "accent": _cover_accent(track),
                     "initials": track.initials,
                     "coverUrl": track.cover_url or "",
                     "isFavorite": (
@@ -113,7 +119,7 @@ class QueueListModel(DictionaryListModel):
                     "title": track.title,
                     "artist": track.artist,
                     "duration": track.duration_text,
-                    "accent": track.accent,
+                    "accent": _cover_accent(track),
                     "initials": track.initials,
                     "coverUrl": track.cover_url or "",
                     "isCurrent": index == current_index,
@@ -170,7 +176,7 @@ class FavoriteListModel(DictionaryListModel):
                     "album": entry.track.album,
                     "duration": entry.track.duration_text,
                     "source": entry.track.provider_id.upper(),
-                    "accent": entry.track.accent,
+                    "accent": _cover_accent(entry.track),
                     "initials": entry.track.initials,
                     "coverUrl": entry.track.cover_url or "",
                     "favoritedAt": entry.favorited_at.astimezone().strftime(
@@ -223,7 +229,7 @@ class PlaylistTrackListModel(DictionaryListModel):
                     "album": entry.track.album,
                     "duration": entry.track.duration_text,
                     "source": entry.track.provider_id.upper(),
-                    "accent": entry.track.accent,
+                    "accent": _cover_accent(entry.track),
                     "initials": entry.track.initials,
                     "coverUrl": entry.track.cover_url or "",
                     "isFavorite": (
@@ -275,7 +281,7 @@ class HistoryListModel(DictionaryListModel):
                     "album": entry.track.album,
                     "duration": entry.track.duration_text,
                     "source": entry.track.provider_id.upper(),
-                    "accent": entry.track.accent,
+                    "accent": _cover_accent(entry.track),
                     "initials": entry.track.initials,
                     "coverUrl": entry.track.cover_url or "",
                     "playedAt": entry.played_at.astimezone().strftime("%m-%d %H:%M"),

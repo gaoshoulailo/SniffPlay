@@ -87,7 +87,7 @@ Item {
                     Rectangle {
                         Layout.preferredWidth: 42
                         Layout.preferredHeight: 42
-                        color: Theme.accent
+                        color: historyCover.status === Image.Ready ? historyRow.accent : "#3d8bff"
                         radius: Theme.radiusSmall
                         clip: true
 

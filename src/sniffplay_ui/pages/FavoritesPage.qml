@@ -86,9 +86,9 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: width
                         Layout.maximumHeight: 310
-                        color: root.controller.hasCurrentTrack
+                        color: root.controller.hasCurrentTrack && favoriteCoverImage.status === Image.Ready
                             ? root.controller.currentAccent
-                            : Theme.surface
+                            : (root.controller.hasCurrentTrack ? "#3d8bff" : Theme.surface)
                         radius: Theme.radiusMedium
                         clip: true
 

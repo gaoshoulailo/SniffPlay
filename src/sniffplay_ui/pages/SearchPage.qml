@@ -341,7 +341,7 @@ Item {
                         id: coverContainer
                         Layout.preferredWidth: 48
                         Layout.preferredHeight: 48
-                        color: trackRow.accent
+                        color: coverImage.status === Image.Ready ? trackRow.accent : "#3d8bff"
                         radius: Theme.radiusSmall
                         clip: true
 

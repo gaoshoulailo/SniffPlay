@@ -240,7 +240,7 @@ Item {
                             Rectangle {
                                 Layout.preferredWidth: 42
                                 Layout.preferredHeight: 42
-                                color: Theme.accent
+                                color: trackCover.status === Image.Ready ? trackRow.accent : "#3d8bff"
                                 radius: Theme.radiusSmall
                                 clip: true
                                 Text { anchors.centerIn: parent; text: trackRow.initials; color: Theme.buttonText; font.family: Theme.fontFamily; font.bold: true; visible: trackCover.status !== Image.Ready }
