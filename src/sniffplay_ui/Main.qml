@@ -24,6 +24,11 @@ ApplicationWindow {
     readonly property int sidebarWidth: 214
     readonly property int frameMargin: visibility === Window.Maximized ? 0 : 8
 
+    onCurrentPageChanged: {
+        pageStack.opacity = 0
+        pageFadeIn.restart()
+    }
+
     Rectangle {
         id: windowFrame
         anchors.fill: parent
@@ -276,16 +281,31 @@ ApplicationWindow {
                 Layout.preferredHeight: titleBar.height
             }
 
-            StackLayout {
+            Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                currentIndex: root.currentPage
 
-                NowPlayingPage { controller: root.controller }
-                SearchPage { controller: root.controller }
-                FavoritesPage { controller: root.controller }
-                PlaylistPage { controller: root.controller }
-                HistoryPage { controller: root.controller }
+                StackLayout {
+                    id: pageStack
+                    anchors.fill: parent
+                    currentIndex: root.currentPage
+
+                    NowPlayingPage { controller: root.controller }
+                    SearchPage { controller: root.controller }
+                    FavoritesPage { controller: root.controller }
+                    PlaylistPage { controller: root.controller }
+                    HistoryPage { controller: root.controller }
+                }
+
+                NumberAnimation {
+                    id: pageFadeIn
+                    target: pageStack
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 180
+                    easing.type: Easing.OutCubic
+                }
             }
 
             PlayerBar {
