@@ -1,7 +1,9 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Layouts
+import "../components"
 import "../themes"
 
 Item {
@@ -12,24 +14,26 @@ Item {
         anchors.fill: parent
         anchors.margins: 32
         spacing: 18
+
         Text { text: "设置"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 25; font.bold: true }
         Text { text: "外观与缓存"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 13 }
+
         RowLayout {
             Layout.fillWidth: true
             Text { text: "背景颜色"; color: Theme.textPrimary; font.pixelSize: 14; Layout.fillWidth: true }
-            Rectangle { implicitWidth: 36; implicitHeight: 28; color: root.controller.backgroundColor; border.color: Theme.border; radius: 4 }
-            Button { text: "选择颜色"; onClicked: colorDialog.open() }
+            Rectangle { implicitWidth: 36; implicitHeight: 28; color: root.controller.backgroundColor; border.color: Theme.buttonBorder; radius: Theme.radiusSmall }
+            AppButton { text: "选择颜色"; onClicked: colorDialog.open() }
         }
         RowLayout {
             Layout.fillWidth: true
             Text { text: "背景图片"; color: Theme.textPrimary; font.pixelSize: 14; Layout.fillWidth: true }
-            Button { text: "选择图片"; onClicked: imageDialog.open() }
-            Button { text: "清除图片"; onClicked: root.controller.setBackgroundColor(root.controller.backgroundColor) }
+            AppButton { text: "选择图片"; onClicked: imageDialog.open() }
+            AppButton { text: "清除图片"; danger: true; onClicked: root.controller.setBackgroundColor(root.controller.backgroundColor) }
         }
         RowLayout {
             Layout.fillWidth: true
             Text { text: "封面缓存"; color: Theme.textPrimary; font.pixelSize: 14; Layout.fillWidth: true }
-            Button { text: "清空缓存"; onClicked: root.controller.clearCoverCache() }
+            AppButton { text: "清空缓存"; danger: true; onClicked: root.controller.clearCoverCache() }
         }
         Item { Layout.fillHeight: true }
     }

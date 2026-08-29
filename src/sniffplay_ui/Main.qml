@@ -76,6 +76,8 @@ ApplicationWindow {
                 id: settingsButton
                 width: 44
                 height: titleBar.height
+                flat: true
+                focusPolicy: Qt.NoFocus
                 onClicked: root.currentPage = 5
                 ToolTip.visible: hovered
                 ToolTip.text: "设置"
