@@ -37,6 +37,15 @@ ApplicationWindow {
         radius: root.visibility === Window.Maximized ? 0 : 12
     }
 
+    Image {
+        anchors.fill: windowFrame
+        z: 0
+        source: root.controller.backgroundImage
+        fillMode: Image.PreserveAspectCrop
+        opacity: 0.35
+        visible: status === Image.Ready
+    }
+
     Rectangle {
         id: titleBar
         anchors.left: windowFrame.left
@@ -239,6 +248,14 @@ ApplicationWindow {
                     onClicked: root.currentPage = 4
                 }
 
+                NavButton {
+                    Layout.fillWidth: true
+                    text: "设置"
+                    marker: "⚙"
+                    selected: root.currentPage === 5
+                    onClicked: root.currentPage = 5
+                }
+
                 Item { Layout.fillHeight: true }
 
                 Rectangle {
@@ -295,6 +312,7 @@ ApplicationWindow {
                     FavoritesPage { controller: root.controller }
                     PlaylistPage { controller: root.controller }
                     HistoryPage { controller: root.controller }
+                    SettingsPage { controller: root.controller }
                 }
 
                 NumberAnimation {

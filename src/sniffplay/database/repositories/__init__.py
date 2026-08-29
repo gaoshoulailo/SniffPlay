@@ -4,6 +4,7 @@ from sniffplay.database.repositories.playlists import (
     PlaylistRepository,
     PlaylistTrackEntry,
 )
+from sniffplay.database.repositories.settings import SettingsRepository
 
 __all__ = [
     "FavoriteEntry",
@@ -11,5 +12,6 @@ __all__ = [
     "HistoryRepository",
     "PlaylistRepository",
     "PlaylistTrackEntry",
+    "SettingsRepository",
 ]
 

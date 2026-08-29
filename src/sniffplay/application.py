@@ -24,6 +24,7 @@ from sniffplay.database.repositories import (
     FavoriteRepository,
     HistoryRepository,
     PlaylistRepository,
+    SettingsRepository,
 )
 from sniffplay.logging_config import configure_logging
 from sniffplay.player import create_player
@@ -88,6 +89,8 @@ def run() -> int:
         playlist_repository=PlaylistRepository(database),
         history_repository=HistoryRepository(database),
         favorite_repository=FavoriteRepository(database),
+        settings_repository=SettingsRepository(database),
+        cover_cache_dir=settings.cover_cache_dir,
     )
 
     engine = QQmlApplicationEngine()

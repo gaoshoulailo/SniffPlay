@@ -4,6 +4,7 @@ import asyncio
 import logging
 from dataclasses import replace
 import random
+import shutil
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -23,6 +24,7 @@ from sniffplay.database.repositories import (
     FavoriteRepository,
     HistoryRepository,
     PlaylistRepository,
+    SettingsRepository,
 )
 from sniffplay.models import Track
 from sniffplay.player import Player, PlayerState, PlayerUnavailableError
@@ -50,6 +52,8 @@ class AppController(QObject):
         playlist_repository: PlaylistRepository,
         history_repository: HistoryRepository,
         favorite_repository: FavoriteRepository | None = None,
+        settings_repository: SettingsRepository | None = None,
+        cover_cache_dir: Path | None = None,
     ) -> None:
         super().__init__()
         self._search_service = search_service
@@ -57,6 +61,10 @@ class AppController(QObject):
         self._playlist_repository = playlist_repository
         self._history_repository = history_repository
         self._favorite_repository = favorite_repository
+        self._settings_repository = settings_repository
+        self._cover_cache_dir = cover_cache_dir
+        self._background_color = (settings_repository.get("background_color", "#242428") if settings_repository else "#242428")
+        self._background_image = (settings_repository.get("background_image", "") if settings_repository else "")
         self._track_model = TrackListModel()
         self._favorite_model = FavoriteListModel()
         self._playlist_model = PlaylistListModel()
@@ -147,6 +155,44 @@ class AppController(QObject):
     @Property(str, constant=True)
     def playerBackend(self) -> str:
         return self._player.backend_name
+
+    backgroundChanged = Signal()
+
+    @Property(str, notify=backgroundChanged)
+    def backgroundColor(self) -> str:
+        return self._background_color
+
+    @Property(str, notify=backgroundChanged)
+    def backgroundImage(self) -> str:
+        return self._background_image
+
+    @Slot(str)
+    def setBackgroundColor(self, color: str) -> None:
+        self._background_color = color.strip() or "#242428"
+        self._background_image = ""
+        if self._settings_repository:
+            self._settings_repository.set("background_color", self._background_color)
+            self._settings_repository.delete("background_image")
+        self.backgroundChanged.emit()
+
+    @Slot(str)
+    def setBackgroundImage(self, path: str) -> None:
+        local_path = QUrl(path).toLocalFile() if path.startswith("file:") else path
+        resolved = Path(local_path).expanduser().resolve()
+        if not resolved.is_file():
+            self._set_status("背景图片不存在")
+            return
+        self._background_image = resolved.as_uri()
+        if self._settings_repository:
+            self._settings_repository.set("background_image", self._background_image)
+        self.backgroundChanged.emit()
+
+    @Slot()
+    def clearCoverCache(self) -> None:
+        if self._cover_cache_dir and self._cover_cache_dir.is_dir():
+            for item in self._cover_cache_dir.iterdir():
+                shutil.rmtree(item) if item.is_dir() else item.unlink()
+        self._set_status("封面缓存已清空")
 
     @Property(str, notify=playerChanged)
     def currentTitle(self) -> str:
