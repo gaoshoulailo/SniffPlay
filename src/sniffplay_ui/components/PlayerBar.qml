@@ -88,7 +88,9 @@ Rectangle {
                 Layout.preferredWidth: 48
                 Layout.preferredHeight: 48
                 radius: Theme.radiusMedium
-                color: currentCoverImage.status === Image.Ready ? root.controller.currentAccent : "#3d8bff"
+                color: currentCoverImage.status === Image.Ready
+                    ? (root.controller ? root.controller.currentAccent : "#3d8bff")
+                    : "#3d8bff"
                 clip: true
 
                 Text {

@@ -926,14 +926,21 @@ class AppController(QObject):
         self._record_history_when_eligible()
         self.playerChanged.emit()
 
+        track = self._player.current_track
+        duration_reached = bool(
+            track
+            and self._snapshot.state in (PlayerState.PLAYING, PlayerState.PAUSED)
+            and self._snapshot.duration_ms > 0
+            and self._snapshot.position_ms >= self._snapshot.duration_ms
+        )
+
         if self._snapshot.state is PlayerState.PLAYING and previous_state is not PlayerState.PLAYING:
-            track = self._player.current_track
             if track:
                 self._set_status(f"正在播放：{track.title}")
         elif self._snapshot.state is PlayerState.ERROR:
             self._set_status("播放内核发生错误")
         elif (
-            self._snapshot.state is PlayerState.ENDED
+            (self._snapshot.state is PlayerState.ENDED or duration_reached)
             and previous_state is not PlayerState.ENDED
             and not self._advance_scheduled
         ):

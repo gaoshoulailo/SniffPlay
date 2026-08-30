@@ -119,6 +119,11 @@ Item {
 
                         Text { Layout.fillWidth: true; text: historyRow.title; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 14; font.weight: Font.DemiBold; elide: Text.ElideRight }
                         Text { Layout.fillWidth: true; text: historyRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12; elide: Text.ElideRight }
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.LeftButton
+                            onDoubleClicked: root.controller.playHistory(historyRow.index)
+                        }
                     }
 
                     Text {
@@ -187,14 +192,6 @@ Item {
                     }
                 }
 
-                TapHandler {
-                    acceptedButtons: Qt.LeftButton
-                    gesturePolicy: TapHandler.DragThreshold
-                    onDoubleTapped: function(_eventPoint, button) {
-                        if (button === Qt.LeftButton)
-                            root.controller.playHistory(historyRow.index)
-                    }
-                }
             }
 
             Column {

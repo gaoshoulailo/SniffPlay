@@ -16,6 +16,8 @@ from sniffplay.player.base import (
 
 logger = logging.getLogger(__name__)
 _dll_directory_handles: list[Any] = []
+_MPV_END_FILE_EOF = 0
+_MPV_END_FILE_ERROR = 4
 
 
 def _candidate_directories() -> tuple[Path, ...]:
@@ -65,14 +67,17 @@ class MpvPlayer(Player):
         self._current_track: Track | None = None
         self._state = PlayerState.IDLE
         self._volume = 80
+        self._paused = False
         self._end_file_seen = False
+        self._awaiting_start_file = False
+
+        @self._client.event_callback("start-file")
+        def _on_start_file(event: object) -> None:
+            self._handle_start_file(event)
 
         @self._client.event_callback("end-file")
-        def _on_end_file(_event: object) -> None:
-            # libmpv delivers this callback from its event thread. Keep the
-            # callback side-effect free; snapshot() consumes the flag on the
-            # Qt thread used by the controller timer.
-            self._end_file_seen = True
+        def _on_end_file(event: object) -> None:
+            self._handle_end_file(event)
 
         self._client.volume = self._volume
 
@@ -92,6 +97,20 @@ class MpvPlayer(Player):
     def current_track(self) -> Track | None:
         return self._current_track
 
+    def _handle_start_file(self, _event: object) -> None:
+        self._awaiting_start_file = False
+        self._end_file_seen = False
+
+    def _handle_end_file(self, event: object) -> None:
+        # Replacing a file emits RESTARTED/ABORTED for the previous item.
+        # Only EOF and playback errors belong to the active track.
+        reason = getattr(getattr(event, "data", None), "reason", None)
+        if not self._awaiting_start_file and reason in (
+            _MPV_END_FILE_EOF,
+            _MPV_END_FILE_ERROR,
+        ):
+            self._end_file_seen = True
+
     def play(self, track: Track, stream: StreamInfo) -> None:
         header_fields = ",".join(
             f"{name}: {value}" for name, value in stream.http_headers.items()
@@ -99,13 +118,20 @@ class MpvPlayer(Player):
         self._client.http_header_fields = header_fields
         self._current_track = track
         self._state = PlayerState.LOADING
+        self._paused = False
         self._end_file_seen = False
+        self._awaiting_start_file = True
         self._client.play(stream.url)
+        self._client.pause = False
 
     def toggle(self) -> None:
         if self._current_track is None:
             return
-        self._client.pause = not bool(self._client.pause)
+        self._paused = not self._paused
+        # Keep the observable state in sync immediately; libmpv property
+        # updates are asynchronous and may lag behind the button click.
+        self._state = PlayerState.PAUSED if self._paused else PlayerState.PLAYING
+        self._client.pause = self._paused
 
     def seek(self, position_ms: int) -> None:
         if self._current_track is not None:
@@ -120,18 +146,31 @@ class MpvPlayer(Player):
             return PlayerSnapshot(PlayerState.IDLE, volume=self._volume)
         position_ms = int(float(self._read_property("time_pos", 0) or 0) * 1000)
         duration_ms = int(float(self._read_property("duration", 0) or 0) * 1000)
+        if getattr(self, "_awaiting_start_file", False):
+            return PlayerSnapshot(
+                PlayerState.LOADING,
+                position_ms,
+                duration_ms,
+                self._volume,
+            )
         reached_duration = (
             duration_ms > 0
             and position_ms >= duration_ms
-            and self._state in (PlayerState.LOADING, PlayerState.PLAYING, PlayerState.PAUSED)
+            and self._state in (PlayerState.PLAYING, PlayerState.PAUSED)
         )
+        # The end-file callback is authoritative. libmpv can retain the
+        # previous file's eof-reached property after a new file is loaded,
+        # which would otherwise make a playing/paused track look ended.
         if (
             getattr(self, "_end_file_seen", False)
-            or bool(self._read_property("eof_reached", False))
             or reached_duration
         ):
             state = PlayerState.ENDED
-        elif bool(self._read_property("pause", False)):
+        elif getattr(
+            self,
+            "_paused",
+            bool(self._read_property("pause", False)),
+        ):
             state = PlayerState.PAUSED
         elif bool(self._read_property("core_idle", True)):
             state = self._state
@@ -149,4 +188,6 @@ class MpvPlayer(Player):
     def close(self) -> None:
         self._client.terminate()
         self._state = PlayerState.IDLE
+        self._paused = False
+        self._awaiting_start_file = False
         self._current_track = None

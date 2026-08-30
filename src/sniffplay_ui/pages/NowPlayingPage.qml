@@ -148,7 +148,7 @@ Item {
                         Layout.maximumHeight: Math.min(width, 300)
                         color: coverImage.status === Image.Error || coverImage.status === Image.Null
                             ? "#3d8bff"
-                            : root.controller.currentAccent
+                            : (root.controller ? root.controller.currentAccent : "#3d8bff")
                         radius: Theme.radiusMedium
                         clip: true
 
@@ -415,7 +415,7 @@ Item {
                             Text {
                                 Layout.preferredWidth: 24
                                 text: queueRow.isCurrent
-                                    ? (root.controller.playing ? "▶" : "Ⅱ")
+                                    ? (root.controller.loading ? "…" : (root.controller.playing ? "Ⅱ" : "▶"))
                                     : queueRow.index + 1
                                 color: queueRow.isCurrent ? Theme.accent : Theme.textSecondary
                                 font.family: Theme.fontFamily
@@ -439,13 +439,26 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: function(mouse) {
                                 if (mouse.button === Qt.LeftButton) {
-                                    root.controller.playQueueTrack(queueRow.index)
+                                    queueClickTimer.restart()
                                     return
                                 }
                                 root.contextQueueIndex = queueRow.index
                                 root.contextQueueCurrent = queueRow.isCurrent
                                 queueContextMenu.popup()
                             }
+                            onDoubleClicked: function(mouse) {
+                                if (mouse.button === Qt.LeftButton) {
+                                    queueClickTimer.stop()
+                                    root.controller.playQueueTrack(queueRow.index)
+                                }
+                            }
+                        }
+
+                        Timer {
+                            id: queueClickTimer
+                            interval: 250
+                            repeat: false
+                            onTriggered: root.controller.playQueueTrack(queueRow.index)
                         }
                     }
 

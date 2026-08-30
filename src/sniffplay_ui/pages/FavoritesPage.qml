@@ -86,9 +86,9 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: width
                         Layout.maximumHeight: 310
-                        color: root.controller.hasCurrentTrack && favoriteCoverImage.status === Image.Ready
+                        color: root.controller && root.controller.hasCurrentTrack && favoriteCoverImage.status === Image.Ready
                             ? root.controller.currentAccent
-                            : (root.controller.hasCurrentTrack ? "#3d8bff" : Theme.surface)
+                            : (root.controller && root.controller.hasCurrentTrack ? "#3d8bff" : Theme.surface)
                         radius: Theme.radiusMedium
                         clip: true
 
@@ -216,6 +216,11 @@ Item {
                         spacing: 1
                         Text { Layout.fillWidth: true; text: favoriteRow.title; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Font.DemiBold; elide: Text.ElideRight }
                         Text { Layout.fillWidth: true; text: favoriteRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11; elide: Text.ElideRight }
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.LeftButton
+                            onDoubleClicked: root.controller.playFavorite(favoriteRow.index)
+                        }
                     }
 
                     Text { visible: false; text: favoriteRow.album }
@@ -224,7 +229,6 @@ Item {
                     Button {
                         id: playButton
                         implicitWidth: 34; implicitHeight: 34
-                        opacity: rowMouse.containsMouse ? 1 : 0
                         onClicked: root.controller.playFavorite(favoriteRow.index)
                         ToolTip.visible: hovered; ToolTip.text: "播放"
                         contentItem: Text { text: "▶"; color: Theme.textPrimary; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
@@ -234,7 +238,6 @@ Item {
                     Button {
                         id: removeButton
                         implicitWidth: 34; implicitHeight: 34
-                        opacity: rowMouse.containsMouse ? 1 : 0
                         onClicked: root.controller.removeFavorite(favoriteRow.favoriteId)
                         ToolTip.visible: hovered; ToolTip.text: "取消收藏"
                         contentItem: Text { text: "♥"; color: Theme.danger; font.pixelSize: 18; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
@@ -257,14 +260,6 @@ Item {
                     }
                 }
 
-                TapHandler {
-                    acceptedButtons: Qt.LeftButton
-                    gesturePolicy: TapHandler.DragThreshold
-                    onDoubleTapped: function(_eventPoint, button) {
-                        if (button === Qt.LeftButton)
-                            root.controller.playFavorite(favoriteRow.index)
-                    }
-                }
             }
 
             Column {

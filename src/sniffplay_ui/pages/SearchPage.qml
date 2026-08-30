@@ -171,7 +171,7 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: root.compact ? 100 : width
                         Layout.maximumHeight: root.compact ? 100 : width
-                        color: root.controller.hasCurrentTrack
+                        color: root.controller && root.controller.hasCurrentTrack
                             ? root.controller.currentAccent
                             : Theme.surface
                         radius: Theme.radiusMedium
@@ -374,6 +374,11 @@ Item {
 
                         Text { Layout.fillWidth: true; maximumLineCount: 1; text: trackRow.title; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Font.DemiBold; elide: Text.ElideRight }
                         Text { Layout.fillWidth: true; maximumLineCount: 1; text: trackRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11; elide: Text.ElideRight }
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.LeftButton
+                            onDoubleClicked: root.controller.playSearchResult(trackRow.index)
+                        }
                     }
 
                     Text {
@@ -496,14 +501,6 @@ Item {
                     }
                 }
 
-                TapHandler {
-                    acceptedButtons: Qt.LeftButton
-                    gesturePolicy: TapHandler.DragThreshold
-                    onDoubleTapped: function(_eventPoint, button) {
-                        if (button === Qt.LeftButton)
-                            root.controller.playSearchResult(trackRow.index)
-                    }
-                }
             }
 
             Text {

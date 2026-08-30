@@ -253,6 +253,11 @@ Item {
                                 spacing: 1
                                 Text { Layout.fillWidth: true; text: trackRow.title; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Font.DemiBold; elide: Text.ElideRight }
                                 Text { Layout.fillWidth: true; text: trackRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11; elide: Text.ElideRight }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    acceptedButtons: Qt.LeftButton
+                                    onDoubleClicked: root.controller.playPlaylistItem(trackRow.index)
+                                }
                             }
 
                             Text { Layout.preferredWidth: 150; text: trackRow.album; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11; elide: Text.ElideRight }
@@ -313,14 +318,6 @@ Item {
                             }
                         }
 
-                        TapHandler {
-                            acceptedButtons: Qt.LeftButton
-                            gesturePolicy: TapHandler.DragThreshold
-                            onDoubleTapped: function(_eventPoint, button) {
-                                if (button === Qt.LeftButton)
-                                    root.controller.playPlaylistItem(trackRow.index)
-                            }
-                        }
                     }
 
                     Column {
