@@ -211,7 +211,16 @@ class AppController(QObject):
         track = self._player.current_track
         if track is None:
             return "#343b37"
-        return track.accent if track.cover_url else "#3d8bff"
+        # Restored playlist entries may retain the source URL after their
+        # local cover cache was removed. Treat those entries as coverless so
+        # the player view uses the blue fallback instead of the default green.
+        if track.cover_url and track.cover_url.startswith("file://"):
+            local_path = unquote(urlparse(track.cover_url).path)
+            if len(local_path) >= 3 and local_path[0] == "/" and local_path[2] == ":":
+                local_path = local_path[1:]
+            if Path(local_path).is_file():
+                return track.accent
+        return "#3d8bff"
 
     @Property(str, notify=playerChanged)
     def currentInitials(self) -> str:
