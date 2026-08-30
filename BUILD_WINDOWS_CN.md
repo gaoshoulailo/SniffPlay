@@ -62,7 +62,7 @@ dist/SniffPlay/
 修改 `pyproject.toml`：
 
 ```toml
-version = "0.1.4"
+version = "0.1.5"
 ```
 
 版本号修改后必须同步锁文件，并确认锁定安装可以成功：
