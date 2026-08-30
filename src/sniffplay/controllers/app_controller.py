@@ -934,7 +934,7 @@ class AppController(QObject):
             self._set_status("播放内核发生错误")
         elif (
             self._snapshot.state is PlayerState.ENDED
-            and previous_state in (PlayerState.PLAYING, PlayerState.PAUSED)
+            and previous_state is not PlayerState.ENDED
             and not self._advance_scheduled
         ):
             self._advance_scheduled = True

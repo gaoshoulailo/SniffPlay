@@ -35,3 +35,20 @@ def test_mpv_snapshot_prefers_pause_over_core_idle() -> None:
     player._volume = 80
 
     assert player.snapshot().state is PlayerState.PAUSED
+
+
+def test_mpv_snapshot_detects_end_when_position_reaches_duration() -> None:
+    class FakeMpvClient:
+        time_pos = 10.0
+        duration = 10.0
+        eof_reached = False
+        pause = False
+        core_idle = True
+
+    player = MpvPlayer.__new__(MpvPlayer)
+    player._client = FakeMpvClient()
+    player._current_track = Track("local", "one", "Test", "Artist", "Album", 10_000)
+    player._state = PlayerState.LOADING
+    player._volume = 80
+
+    assert player.snapshot().state is PlayerState.ENDED

@@ -65,6 +65,15 @@ class MpvPlayer(Player):
         self._current_track: Track | None = None
         self._state = PlayerState.IDLE
         self._volume = 80
+        self._end_file_seen = False
+
+        @self._client.event_callback("end-file")
+        def _on_end_file(_event: object) -> None:
+            # libmpv delivers this callback from its event thread. Keep the
+            # callback side-effect free; snapshot() consumes the flag on the
+            # Qt thread used by the controller timer.
+            self._end_file_seen = True
+
         self._client.volume = self._volume
 
     @property
@@ -90,6 +99,7 @@ class MpvPlayer(Player):
         self._client.http_header_fields = header_fields
         self._current_track = track
         self._state = PlayerState.LOADING
+        self._end_file_seen = False
         self._client.play(stream.url)
 
     def toggle(self) -> None:
@@ -110,7 +120,16 @@ class MpvPlayer(Player):
             return PlayerSnapshot(PlayerState.IDLE, volume=self._volume)
         position_ms = int(float(self._read_property("time_pos", 0) or 0) * 1000)
         duration_ms = int(float(self._read_property("duration", 0) or 0) * 1000)
-        if bool(self._read_property("eof_reached", False)):
+        reached_duration = (
+            duration_ms > 0
+            and position_ms >= duration_ms
+            and self._state in (PlayerState.LOADING, PlayerState.PLAYING, PlayerState.PAUSED)
+        )
+        if (
+            getattr(self, "_end_file_seen", False)
+            or bool(self._read_property("eof_reached", False))
+            or reached_duration
+        ):
             state = PlayerState.ENDED
         elif bool(self._read_property("pause", False)):
             state = PlayerState.PAUSED
