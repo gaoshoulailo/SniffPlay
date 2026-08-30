@@ -494,8 +494,13 @@ Item {
                         root.contextTrackFavorite = trackRow.isFavorite
                         trackContextMenu.popup()
                     }
-                    onDoubleClicked: function(mouse) {
-                        if (mouse.button === Qt.LeftButton)
+                }
+
+                TapHandler {
+                    acceptedButtons: Qt.LeftButton
+                    gesturePolicy: TapHandler.DragThreshold
+                    onDoubleTapped: function(_eventPoint, button) {
+                        if (button === Qt.LeftButton)
                             root.controller.playSearchResult(trackRow.index)
                     }
                 }

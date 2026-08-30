@@ -957,7 +957,7 @@ class AppController(QObject):
             return
         if self._repeat_mode == 2 and 0 <= self._queue_index < len(self._queue):
             await self._play_queue_index(self._queue_index)
-        elif self.canGoNext:
+        elif self._queue and 0 <= self._queue_index < len(self._queue):
             next_index = self._queue_index + 1
             if next_index >= len(self._queue):
                 next_index = 0

@@ -185,8 +185,13 @@ Item {
                         root.contextHistoryFavorite = historyRow.isFavorite
                         historyContextMenu.popup()
                     }
-                    onDoubleClicked: function(mouse) {
-                        if (mouse.button === Qt.LeftButton)
+                }
+
+                TapHandler {
+                    acceptedButtons: Qt.LeftButton
+                    gesturePolicy: TapHandler.DragThreshold
+                    onDoubleTapped: function(_eventPoint, button) {
+                        if (button === Qt.LeftButton)
                             root.controller.playHistory(historyRow.index)
                     }
                 }

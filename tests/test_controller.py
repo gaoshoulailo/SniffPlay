@@ -606,3 +606,35 @@ async def test_controller_cycles_repeat_modes_and_wraps_queue(tmp_path: Path) ->
     controller.close()
     database.close()
     assert app is not None
+
+
+async def test_controller_wraps_queue_after_last_track(tmp_path: Path) -> None:
+    class PlayableSearchService:
+        async def resolve_stream(self, track: Track) -> StreamInfo:
+            return StreamInfo(f"{track.provider_track_id}.wav")
+
+    app = QCoreApplication.instance() or QCoreApplication([])
+    database = Database(tmp_path / "queue-wrap-controller.db")
+    database.initialize()
+    player = MockPlayer()
+    controller = AppController(
+        PlayableSearchService(),  # type: ignore[arg-type]
+        player,
+        PlaylistRepository(database),
+        HistoryRepository(database),
+    )
+    tracks = [
+        Track("demo", "one", "first", "artist", "album", 60_000),
+        Track("demo", "two", "second", "artist", "album", 60_000),
+    ]
+
+    await controller._play_tracks(tracks, 0)
+    await controller._play_queue_index(1)
+    await controller._advance_after_end(controller._play_request_id)
+
+    assert player.current_track == tracks[0]
+    assert controller._queue_index == 0
+
+    controller.close()
+    database.close()
+    assert app is not None
