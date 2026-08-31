@@ -11,6 +11,8 @@ $specPath = Join-Path $projectDirectory "sniffplay.spec"
 $mpvPath = Join-Path $projectDirectory "vendor\mpv\libmpv-2.dll"
 $iconPath = Join-Path $projectDirectory "assets\sniffplay.ico"
 $outputDirectory = Join-Path $projectDirectory "dist\SniffPlay"
+$existingDataDirectory = Join-Path $outputDirectory "data"
+$dataBackupDirectory = Join-Path ([System.IO.Path]::GetTempPath()) ("sniffplay-build-data-" + [guid]::NewGuid().ToString("N"))
 
 foreach ($requiredPath in @($pythonPath, $specPath, $mpvPath, $iconPath)) {
     if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
@@ -27,6 +29,14 @@ try {
         }
     }
 
+    # PyInstaller recreates dist\SniffPlay. Preserve the portable database
+    # so rebuilding does not remove playlists, favorites, or settings.
+    $hasExistingData = Test-Path -LiteralPath $existingDataDirectory -PathType Container
+    if ($hasExistingData) {
+        New-Item -ItemType Directory -Force -Path $dataBackupDirectory | Out-Null
+        Copy-Item -Path (Join-Path $existingDataDirectory "*") -Destination $dataBackupDirectory -Recurse -Force
+    }
+
     & $pythonPath -m PyInstaller --noconfirm --clean $specPath
     if ($LASTEXITCODE -ne 0) {
         throw "PyInstaller build failed."
@@ -37,6 +47,10 @@ try {
     }
 
     $dataDirectory = Join-Path $outputDirectory "data"
+    if ($hasExistingData -and (Test-Path -LiteralPath $dataBackupDirectory -PathType Container)) {
+        New-Item -ItemType Directory -Force -Path $dataDirectory | Out-Null
+        Copy-Item -Path (Join-Path $dataBackupDirectory "*") -Destination $dataDirectory -Recurse -Force
+    }
     $licenseDirectory = Join-Path $outputDirectory "licenses"
     New-Item -ItemType Directory -Force -Path $dataDirectory | Out-Null
     New-Item -ItemType Directory -Force -Path $licenseDirectory | Out-Null
@@ -48,24 +62,25 @@ try {
 
     if (-not $SkipSmokeTest) {
         $smokeRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("sniffplay-build-smoke-" + [guid]::NewGuid().ToString("N"))
-        $databasePath = Join-Path $dataDirectory "sniffplay.db"
         New-Item -ItemType Directory -Force -Path $smokeRoot | Out-Null
         $previousDataDirectory = $env:SNIFFPLAY_DATA_DIR
         $process = $null
         try {
-            Remove-Item Env:SNIFFPLAY_DATA_DIR -ErrorAction SilentlyContinue
+            $smokeDataDirectory = Join-Path $smokeRoot "data"
+            $env:SNIFFPLAY_DATA_DIR = $smokeDataDirectory
             $process = Start-Process -FilePath (Join-Path $outputDirectory "SniffPlay.exe") -WorkingDirectory $smokeRoot -WindowStyle Hidden -PassThru
             $deadline = [DateTime]::UtcNow.AddSeconds(30)
             while ([DateTime]::UtcNow -lt $deadline) {
                 if ($process.HasExited) {
                     throw "Packaged application exited during smoke testing with code $($process.ExitCode)."
                 }
-                if (Test-Path -LiteralPath $databasePath -PathType Leaf) {
+                $smokeDatabasePath = Join-Path $smokeDataDirectory "sniffplay.db"
+                if (Test-Path -LiteralPath $smokeDatabasePath -PathType Leaf) {
                     break
                 }
                 Start-Sleep -Milliseconds 500
             }
-            if (-not (Test-Path -LiteralPath $databasePath -PathType Leaf)) {
+            if (-not (Test-Path -LiteralPath $smokeDatabasePath -PathType Leaf)) {
                 throw "Packaged application did not initialize its data directory."
             }
         }
@@ -75,7 +90,6 @@ try {
                 $process.WaitForExit()
             }
             $env:SNIFFPLAY_DATA_DIR = $previousDataDirectory
-            Get-ChildItem -LiteralPath $dataDirectory -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
             if (Test-Path -LiteralPath $smokeRoot) {
                 Remove-Item -LiteralPath $smokeRoot -Recurse -Force
             }
@@ -85,5 +99,8 @@ try {
     Write-Output "Windows build created: $outputDirectory"
 }
 finally {
+    if (Test-Path -LiteralPath $dataBackupDirectory) {
+        Remove-Item -LiteralPath $dataBackupDirectory -Recurse -Force -ErrorAction SilentlyContinue
+    }
     Pop-Location
 }

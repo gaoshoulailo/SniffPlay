@@ -110,6 +110,26 @@ class TrackListModel(DictionaryListModel):
             ]
         )
 
+    def set_favorite_keys(self, favorite_keys: set[tuple[str, str]]) -> None:
+        """Update only favorite roles so views keep their scroll position."""
+        favorite_role = next(
+            role
+            for role, name in self._roles.items()
+            if bytes(name).decode("utf-8") == "isFavorite"
+        )
+        changed_rows: list[int] = []
+        for index, track in enumerate(self.tracks):
+            value = (
+                track.provider_id,
+                track.provider_track_id,
+            ) in favorite_keys
+            if self._items[index].get("isFavorite") != value:
+                self._items[index]["isFavorite"] = value
+                changed_rows.append(index)
+        for index in changed_rows:
+            model_index = self.index(index, 0)
+            self.dataChanged.emit(model_index, model_index, [favorite_role])
+
 
 class QueueListModel(DictionaryListModel):
     def __init__(self) -> None:

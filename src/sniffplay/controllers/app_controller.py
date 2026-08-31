@@ -863,7 +863,7 @@ class AppController(QObject):
                 (entry.track.provider_id, entry.track.provider_track_id)
                 for entry in entries
             }
-        self._track_model.set_tracks(self._track_model.tracks, self._favorite_keys)
+        self._track_model.set_favorite_keys(self._favorite_keys)
         self._playlist_track_model.set_entries(
             self._playlist_track_model.entries,
             self._favorite_keys,
