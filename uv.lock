@@ -336,7 +336,7 @@ wheels = [
 
 [[package]]
 name = "sniffplay"
-version = "0.1.6"
+version = "1.0"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
