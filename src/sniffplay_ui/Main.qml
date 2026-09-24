@@ -38,6 +38,7 @@ ApplicationWindow {
     }
 
     Image {
+        id: backgroundImage
         anchors.fill: windowFrame
         z: 0
         source: root.controller.backgroundImage
@@ -350,8 +351,12 @@ ApplicationWindow {
 
             PlayerBar {
                 Layout.fillWidth: true
+                Layout.leftMargin: 14
+                Layout.rightMargin: 14
+                Layout.bottomMargin: 17
                 visible: root.currentPage !== 0
                 controller: root.controller
+                backdropSource: backgroundImage
             }
         }
     }

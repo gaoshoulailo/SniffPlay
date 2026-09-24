@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 import QtQuick.Layouts
 import "../themes"
 
@@ -7,11 +8,62 @@ Rectangle {
     id: root
 
     required property var controller
+    property Item backdropSource: null
+    readonly property point backdropOrigin: backdropSource
+        ? root.mapToItem(backdropSource, 0, 0)
+        : Qt.point(0, 0)
 
     implicitHeight: 106
-    color: Theme.sidebar
-    border.color: Theme.border
+    color: Qt.rgba(0.125, 0.125, 0.141, 0.88)
+    border.color: Qt.rgba(1, 1, 1, 0.12)
     border.width: 1
+    radius: Theme.radiusMedium
+    antialiasing: true
+    clip: true
+
+    layer.enabled: true
+    layer.effect: MultiEffect {
+        shadowEnabled: true
+        shadowColor: "#000000"
+        shadowOpacity: 0.44
+        shadowBlur: 0.7
+        shadowVerticalOffset: 8
+    }
+
+    ShaderEffectSource {
+        id: backdropTexture
+        anchors.fill: parent
+        sourceItem: root.backdropSource
+        sourceRect: Qt.rect(
+            root.backdropOrigin.x,
+            root.backdropOrigin.y,
+            root.width,
+            root.height
+        )
+        live: true
+        hideSource: false
+        visible: false
+    }
+
+    MultiEffect {
+        anchors.fill: parent
+        source: backdropTexture
+        visible: root.backdropSource && root.backdropSource.visible
+        opacity: 0.34
+        blurEnabled: true
+        blur: 0.75
+        blurMax: 32
+    }
+
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.leftMargin: root.radius
+        anchors.rightMargin: root.radius
+        height: 1
+        color: Qt.rgba(1, 1, 1, 0.09)
+    }
 
     ColumnLayout {
         anchors.fill: parent
