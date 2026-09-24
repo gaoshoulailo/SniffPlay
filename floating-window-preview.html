@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SniffPlay - 封面悬浮窗预览</title>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --window: #242428;
+      --sidebar: #202024;
+      --surface: #1b1b1e;
+      --surface-hover: #303036;
+      --border: #3a3a40;
+      --text: #f1f1f3;
+      --muted: #929299;
+      --accent: #0a84ff;
+      --accent-hover: #2997ff;
+      --accent-dark: #1f3f61;
+      --danger: #ff6572;
+      --cover: url("https://images.unsplash.com/photo-1614149162883-504ce4d13909?auto=format&fit=crop&w=1000&q=90");
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      color: var(--text);
+      background: #111114;
+      font-family: "Microsoft YaHei UI", "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+
+    .desktop {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: #141418;
+    }
+
+    .app-window {
+      width: min(1180px, calc(100vw - 36px));
+      height: min(760px, calc(100vh - 36px));
+      min-height: 620px;
+      display: grid;
+      grid-template-columns: 214px minmax(0, 1fr);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--window);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .48);
+    }
+
+    .sidebar {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding: 24px 14px 14px;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+    }
+
+    .brand {
+      height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 8px;
+      margin-bottom: 16px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 7px;
+      color: #fff;
+      background: var(--accent);
+      font-size: 14px;
+    }
+
+    .section-label {
+      margin: 0 10px 8px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .nav {
+      display: grid;
+      gap: 5px;
+    }
+
+    .nav-button {
+      width: 100%;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 7px;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .nav-button svg { width: 17px; height: 17px; }
+    .nav-button:hover { color: var(--text); background: var(--surface-hover); }
+    .nav-button.active { color: var(--text); background: var(--surface); }
+    .nav-button.active svg { color: var(--accent); fill: currentColor; }
+
+    .source-card {
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: var(--surface);
+    }
+
+    .source-card strong,
+    .source-card span { display: block; }
+    .source-card strong { font-size: 11px; }
+    .source-card span { margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .online-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+
+    .shell {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: 42px minmax(0, 1fr);
+    }
+
+    .titlebar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      background: var(--window);
+      user-select: none;
+    }
+
+    .window-actions { height: 42px; display: flex; }
+
+    .title-button {
+      width: 44px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .title-button svg { width: 16px; height: 16px; }
+    .title-button:hover, .title-button.active { background: var(--surface-hover); }
+    .title-button.active { color: var(--accent); }
+    .title-button.close:hover { color: #fff; background: var(--danger); }
+
+    .page {
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 30px 30px;
+    }
+
+    .page-header {
+      height: 48px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    h1 { margin: 0; font-size: 26px; line-height: 38px; }
+    .spacer { flex: 1; }
+
+    .round-button {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      color: var(--muted);
+      background: var(--surface);
+      cursor: pointer;
+    }
+
+    .round-button svg { width: 18px; height: 18px; }
+    .round-button:hover { color: var(--text); background: var(--surface-hover); }
+    .round-button.favorite:hover, .round-button.favorite.active { color: var(--danger); }
+
+    .content-grid {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(300px, 330px) minmax(300px, 1fr);
+      gap: 32px;
+    }
+
+    .now-card {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: var(--sidebar);
+    }
+
+    .cover-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      max-height: 300px;
+      overflow: hidden;
+      border-radius: 7px;
+      background: #3d8bff;
+    }
+
+    .cover-art {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      transition: transform 220ms ease;
+    }
+
+    .cover-wrap:hover .cover-art { transform: scale(1.025); }
+
+    .cover-float-button {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 50%;
+      color: #fff;
+      background: rgba(18,18,21,.82);
+      box-shadow: 0 8px 24px rgba(0,0,0,.32);
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 160ms ease, transform 160ms ease, background 160ms ease;
+      cursor: pointer;
+    }
+
+    .cover-wrap:hover .cover-float-button,
+    .cover-float-button:focus-visible { opacity: 1; transform: translateY(0); }
+    .cover-float-button:hover { background: var(--accent); }
+    .cover-float-button svg { width: 17px; height: 17px; }
+
+    .track-copy { min-width: 0; }
+    .track-copy h2 { margin: 0; overflow: hidden; font-size: 20px; text-overflow: ellipsis; white-space: nowrap; }
+    .track-copy p { margin: 3px 0 0; overflow: hidden; color: var(--muted); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+
+    .range {
+      width: 100%;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .time-row { display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; }
+
+    .transport {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      margin-top: 2px;
+    }
+
+    .transport-button {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      color: var(--text);
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .transport-button svg { width: 18px; height: 18px; fill: currentColor; }
+    .transport-button:hover { background: var(--surface-hover); }
+    .transport-button.primary { width: 54px; height: 54px; color: #fff; background: var(--accent); }
+    .transport-button.primary:hover { background: var(--accent-hover); }
+
+    .volume-row { display: flex; align-items: center; gap: 9px; margin-top: auto; }
+    .queue-label { margin-right: auto; color: var(--muted); font-size: 10px; }
+    .volume-label { color: var(--muted); font-size: 9px; }
+    .volume-row .range { width: 86px; }
+
+    .queue-panel { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+    .queue-head { height: 34px; display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 12px; font-weight: 600; }
+    .queue-count { margin-left: auto; font-size: 11px; font-weight: 400; }
+    .clear-button { width: 30px; height: 30px; border: 0; border-radius: 4px; color: var(--muted); background: transparent; cursor: pointer; }
+    .clear-button:hover { color: var(--text); background: var(--surface-hover); }
+
+    .queue-list { min-height: 0; overflow-y: auto; display: grid; align-content: start; gap: 3px; padding-right: 4px; }
+    .queue-list::-webkit-scrollbar { width: 8px; }
+    .queue-list::-webkit-scrollbar-thumb { border: 2px solid var(--window); border-radius: 8px; background: var(--border); }
+
+    .queue-row {
+      height: 56px;
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr) 42px;
+      align-items: center;
+      gap: 12px;
+      padding: 0 12px 0 10px;
+      border: 0;
+      border-radius: 7px;
+      color: inherit;
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .queue-row:hover { background: var(--surface-hover); }
+    .queue-row.active { background: var(--accent-dark); }
+    .row-index { color: var(--muted); font-size: 11px; text-align: center; }
+    .queue-row.active .row-index { color: var(--accent); }
+    .row-copy { min-width: 0; }
+    .row-title, .row-artist { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row-title { font-size: 13px; font-weight: 600; }
+    .row-artist, .row-time { color: var(--muted); font-size: 11px; }
+    .row-artist { margin-top: 2px; }
+    .row-time { text-align: right; }
+
+    .floating-player {
+      position: fixed;
+      right: 28px;
+      bottom: 28px;
+      z-index: 20;
+      width: 318px;
+      height: 410px;
+      overflow: hidden;
+      border: 1px solid #4a4a52;
+      border-radius: 12px;
+      background: #17171a;
+      box-shadow: 0 24px 70px rgba(0,0,0,.68), 0 0 0 1px rgba(255,255,255,.035) inset;
+      transform-origin: right bottom;
+      transition: opacity 180ms ease, transform 180ms ease;
+      touch-action: none;
+    }
+
+    .floating-player.hidden { pointer-events: none; opacity: 0; transform: translateY(18px) scale(.96); }
+
+    .float-dragbar {
+      position: absolute;
+      inset: 0 0 auto;
+      z-index: 3;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px 0 13px;
+      color: rgba(255,255,255,.82);
+      background: rgba(17,17,20,.78);
+      backdrop-filter: blur(14px);
+      cursor: grab;
+      user-select: none;
+    }
+
+    .float-dragbar:active { cursor: grabbing; }
+    .float-brand { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; }
+    .float-brand svg { width: 14px; height: 14px; color: var(--accent); }
+    .float-close { margin-left: auto; width: 28px; height: 28px; border: 0; border-radius: 50%; color: #fff; background: transparent; cursor: pointer; }
+    .float-close:hover { background: rgba(255,255,255,.14); }
+
+    .float-cover {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .float-shade {
+      position: absolute;
+      inset: 28% 0 0;
+      background: linear-gradient(to bottom, transparent, rgba(12,12,14,.74) 34%, rgba(12,12,14,.98) 78%);
+    }
+
+    .float-content {
+      position: absolute;
+      inset: auto 20px 18px;
+      z-index: 2;
+    }
+
+    .float-content h3 { margin: 0; font-size: 19px; }
+    .float-content p { margin: 4px 0 14px; color: rgba(255,255,255,.7); font-size: 12px; }
+    .float-progress { height: 3px; overflow: hidden; border-radius: 2px; background: rgba(255,255,255,.22); }
+    .float-progress span { display: block; width: 32%; height: 100%; border-radius: inherit; background: var(--accent); }
+    .float-time { display: flex; justify-content: space-between; margin-top: 6px; color: rgba(255,255,255,.62); font-size: 9px; }
+    .float-controls { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 12px; }
+    .float-controls .transport-button { color: #fff; }
+    .float-controls .primary { width: 46px; height: 46px; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 28px;
+      z-index: 30;
+      padding: 9px 14px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      background: rgba(27,27,30,.94);
+      box-shadow: 0 10px 30px rgba(0,0,0,.38);
+      opacity: 0;
+      transform: translate(-50%, 8px);
+      transition: opacity 160ms ease, transform 160ms ease;
+      pointer-events: none;
+      font-size: 12px;
+    }
+
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-width: 940px) {
+      body { overflow: auto; }
+      .desktop { min-height: 100vh; padding: 0; place-items: stretch; }
+      .app-window { width: 100%; height: auto; min-height: 100vh; grid-template-columns: 76px minmax(0,1fr); border: 0; border-radius: 0; }
+      .sidebar { padding: 18px 10px 12px; }
+      .brand { justify-content: center; padding: 0; }
+      .brand-name, .section-label, .nav-button span, .source-card { display: none; }
+      .nav-button { justify-content: center; padding: 0; }
+      .shell { min-height: 100vh; }
+      .page { padding: 22px 20px; }
+      .content-grid { grid-template-columns: minmax(260px, 330px) minmax(260px, 1fr); gap: 20px; }
+    }
+
+    @media (max-width: 700px) {
+      html, body { max-width: 100%; overflow-x: hidden; }
+      .app-window { grid-template-columns: 1fr; }
+      .sidebar { position: sticky; top: 0; z-index: 10; height: 58px; flex-direction: row; align-items: center; padding: 8px 12px; border: 0; border-bottom: 1px solid var(--border); }
+      .brand { height: 40px; margin: 0 auto 0 0; }
+      .brand-name { display: inline; font-size: 16px; }
+      .nav { display: flex; }
+      .nav-button { width: 38px; height: 38px; }
+      .nav-button:nth-child(n+4) { display: none; }
+      .shell { min-height: calc(100vh - 58px); grid-template-rows: 42px auto; }
+      .page { max-width: 100vw; overflow: hidden; padding: 18px 16px 24px; }
+      .content-grid { width: 100%; grid-template-columns: minmax(0, 1fr); }
+      .now-card { width: 100%; max-width: 390px; min-width: 0; margin: 0 auto; }
+      .queue-panel { min-height: 310px; }
+      .floating-player { width: min(318px, calc(100vw - 24px)); height: min(410px, calc(100vh - 24px)); right: 12px; bottom: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="desktop">
+    <section class="app-window" aria-label="SniffPlay 播放器">
+      <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">S</span><span class="brand-name">SniffPlay</span></div>
+        <div class="section-label">音乐库</div>
+        <nav class="nav" aria-label="主导航">
+          <button class="nav-button active" type="button" title="正在播放"><i data-lucide="circle-play"></i><span>正在播放</span></button>
+          <button class="nav-button" type="button" title="搜索"><i data-lucide="search"></i><span>搜索</span></button>
+          <button class="nav-button" type="button" title="我的收藏"><i data-lucide="heart"></i><span>我的收藏</span></button>
+          <button class="nav-button" type="button" title="我的歌单"><i data-lucide="list-music"></i><span>我的歌单</span></button>
+          <button class="nav-button" type="button" title="播放历史"><i data-lucide="history"></i><span>播放历史</span></button>
+        </nav>
+        <div class="source-card">
+          <div><strong>Bilibili 数据源</strong><span>模拟搜索数据</span></div>
+          <i class="online-dot"></i>
+        </div>
+      </aside>
+
+      <div class="shell">
+        <header class="titlebar">
+          <div class="window-actions">
+            <button id="floatToggle" class="title-button active" type="button" title="显示封面悬浮窗" aria-pressed="true"><i data-lucide="picture-in-picture-2"></i></button>
+            <button class="title-button" type="button" title="设置"><i data-lucide="settings"></i></button>
+            <button class="title-button" type="button" title="最小化"><i data-lucide="minus"></i></button>
+            <button class="title-button" type="button" title="最大化"><i data-lucide="square"></i></button>
+            <button class="title-button close" type="button" title="关闭"><i data-lucide="x"></i></button>
+          </div>
+        </header>
+
+        <main class="page">
+          <header class="page-header">
+            <h1>正在播放</h1>
+            <span class="spacer"></span>
+            <button class="round-button" type="button" title="随机播放"><i data-lucide="shuffle"></i></button>
+            <button class="round-button" type="button" title="列表循环"><i data-lucide="repeat-2"></i></button>
+            <button id="favorite" class="round-button favorite" type="button" title="收藏"><i data-lucide="heart"></i></button>
+          </header>
+
+          <div class="content-grid">
+            <article class="now-card">
+              <div class="cover-wrap">
+                <img class="cover-art" src="https://images.unsplash.com/photo-1614149162883-504ce4d13909?auto=format&fit=crop&w=1000&q=90" alt="夜航专辑封面">
+                <button id="coverFloat" class="cover-float-button" type="button" title="打开封面悬浮窗"><i data-lucide="picture-in-picture-2"></i></button>
+              </div>
+              <div class="track-copy"><h2>夜航</h2><p>城市回声</p></div>
+              <input id="progress" class="range" type="range" min="0" max="225" value="72" aria-label="播放进度">
+              <div class="time-row"><span id="currentTime">1:12</span><span>3:45</span></div>
+              <div class="transport">
+                <button class="transport-button" type="button" title="上一首"><i data-lucide="skip-back"></i></button>
+                <button class="transport-button primary play-toggle" type="button" title="暂停"><i data-lucide="pause"></i></button>
+                <button class="transport-button" type="button" title="下一首"><i data-lucide="skip-forward"></i></button>
+              </div>
+              <div class="volume-row">
+                <span class="queue-label">队列 2 / 6</span><span class="volume-label">VOL</span>
+                <input class="range" type="range" min="0" max="100" value="72" aria-label="音量">
+              </div>
+            </article>
+
+            <section class="queue-panel" aria-label="播放队列">
+              <div class="queue-head"><span>播放队列</span><span class="queue-count">6 首</span><button class="clear-button" type="button" title="清除其他歌曲">×</button></div>
+              <div class="queue-list">
+                <button class="queue-row" type="button"><span class="row-index">1</span><span class="row-copy"><span class="row-title">晨雾</span><span class="row-artist">玻璃海</span></span><span class="row-time">3:28</span></button>
+                <button class="queue-row active" type="button"><span class="row-index">Ⅱ</span><span class="row-copy"><span class="row-title">夜航</span><span class="row-artist">城市回声</span></span><span class="row-time">3:45</span></button>
+                <button class="queue-row" type="button"><span class="row-index">3</span><span class="row-copy"><span class="row-title">慢速列车</span><span class="row-artist">远岸</span></span><span class="row-time">4:10</span></button>
+                <button class="queue-row" type="button"><span class="row-index">4</span><span class="row-copy"><span class="row-title">未完待续</span><span class="row-artist">白噪音计划</span></span><span class="row-time">2:56</span></button>
+                <button class="queue-row" type="button"><span class="row-index">5</span><span class="row-copy"><span class="row-title">回到海边</span><span class="row-artist">南方放映室</span></span><span class="row-time">3:32</span></button>
+                <button class="queue-row" type="button"><span class="row-index">6</span><span class="row-copy"><span class="row-title">凌晨四点的电台</span><span class="row-artist">静默频道</span></span><span class="row-time">4:22</span></button>
+              </div>
+            </section>
+          </div>
+        </main>
+      </div>
+    </section>
+  </div>
+
+  <aside id="floatingPlayer" class="floating-player" aria-label="封面悬浮播放器">
+    <img class="float-cover" src="https://images.unsplash.com/photo-1614149162883-504ce4d13909?auto=format&fit=crop&w=800&q=90" alt="夜航专辑封面">
+    <div class="float-shade"></div>
+    <div id="dragbar" class="float-dragbar">
+      <span class="float-brand"><i data-lucide="audio-lines"></i>SniffPlay mini</span>
+      <button id="floatClose" class="float-close" type="button" title="关闭悬浮窗"><i data-lucide="x"></i></button>
+    </div>
+    <div class="float-content">
+      <h3>夜航</h3>
+      <p>城市回声</p>
+      <div class="float-progress"><span id="floatProgress"></span></div>
+      <div class="float-time"><span id="floatTime">1:12</span><span>3:45</span></div>
+      <div class="float-controls">
+        <button class="transport-button" type="button" title="上一首"><i data-lucide="skip-back"></i></button>
+        <button class="transport-button primary play-toggle" type="button" title="暂停"><i data-lucide="pause"></i></button>
+        <button class="transport-button" type="button" title="下一首"><i data-lucide="skip-forward"></i></button>
+      </div>
+    </div>
+  </aside>
+
+  <div id="toast" class="toast" role="status">封面悬浮窗已打开</div>
+
+  <script>
+    lucide.createIcons({ attrs: { "stroke-width": 1.8 } });
+
+    const floatingPlayer = document.querySelector("#floatingPlayer");
+    const floatToggle = document.querySelector("#floatToggle");
+    const coverFloat = document.querySelector("#coverFloat");
+    const floatClose = document.querySelector("#floatClose");
+    const toast = document.querySelector("#toast");
+    const progress = document.querySelector("#progress");
+    const floatProgress = document.querySelector("#floatProgress");
+    const currentTime = document.querySelector("#currentTime");
+    const floatTime = document.querySelector("#floatTime");
+    let toastTimer;
+    let playing = true;
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 1300);
+    }
+
+    function setFloating(open) {
+      floatingPlayer.classList.toggle("hidden", !open);
+      floatToggle.classList.toggle("active", open);
+      floatToggle.setAttribute("aria-pressed", String(open));
+      showToast(open ? "封面悬浮窗已打开" : "封面悬浮窗已关闭");
+    }
+
+    floatToggle.addEventListener("click", () => setFloating(floatingPlayer.classList.contains("hidden")));
+    coverFloat.addEventListener("click", () => setFloating(true));
+    floatClose.addEventListener("click", () => setFloating(false));
+
+    document.querySelector("#favorite").addEventListener("click", event => {
+      event.currentTarget.classList.toggle("active");
+    });
+
+    function syncPlayButtons() {
+      document.querySelectorAll(".play-toggle").forEach(button => {
+        button.innerHTML = `<i data-lucide="${playing ? "pause" : "play"}"></i>`;
+        button.title = playing ? "暂停" : "播放";
+      });
+      document.querySelector(".queue-row.active .row-index").textContent = playing ? "Ⅱ" : "▶";
+      lucide.createIcons({ attrs: { "stroke-width": 1.8 } });
+    }
+
+    document.addEventListener("click", event => {
+      if (!event.target.closest(".play-toggle")) return;
+      playing = !playing;
+      syncPlayButtons();
+    });
+
+    function formatTime(total) {
+      const minutes = Math.floor(total / 60);
+      const seconds = String(total % 60).padStart(2, "0");
+      return `${minutes}:${seconds}`;
+    }
+
+    progress.addEventListener("input", () => {
+      const percent = Number(progress.value) / Number(progress.max) * 100;
+      currentTime.textContent = formatTime(Number(progress.value));
+      floatTime.textContent = currentTime.textContent;
+      floatProgress.style.width = `${percent}%`;
+    });
+
+    const dragbar = document.querySelector("#dragbar");
+    let dragState = null;
+
+    dragbar.addEventListener("pointerdown", event => {
+      if (event.target.closest("button")) return;
+      const rect = floatingPlayer.getBoundingClientRect();
+      dragState = { offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top };
+      floatingPlayer.style.right = "auto";
+      floatingPlayer.style.bottom = "auto";
+      dragbar.setPointerCapture(event.pointerId);
+    });
+
+    dragbar.addEventListener("pointermove", event => {
+      if (!dragState) return;
+      const maxX = window.innerWidth - floatingPlayer.offsetWidth;
+      const maxY = window.innerHeight - floatingPlayer.offsetHeight;
+      floatingPlayer.style.left = `${Math.max(0, Math.min(maxX, event.clientX - dragState.offsetX))}px`;
+      floatingPlayer.style.top = `${Math.max(0, Math.min(maxY, event.clientY - dragState.offsetY))}px`;
+    });
+
+    dragbar.addEventListener("pointerup", event => {
+      dragState = null;
+      dragbar.releasePointerCapture(event.pointerId);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SniffPlay 美术效果探索</title>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111216;
+      --window: #242428;
+      --sidebar: #1d1d21;
+      --surface: #1b1b1f;
+      --surface-2: #292a30;
+      --border: #3b3b43;
+      --text: #f1f1f3;
+      --muted: #97979f;
+      --accent: #0a84ff;
+      --accent-soft: #173a5b;
+      --danger: #ff6572;
+      --cover: url("https://images.unsplash.com/photo-1614149162883-504ce4d13909?auto=format&fit=crop&w=1000&q=90");
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; color: var(--text); background: radial-gradient(circle at 30% 0%, #242b36, var(--bg) 47%); font: 14px/1.4 "Microsoft YaHei UI", "Segoe UI", sans-serif; letter-spacing: 0; }
+    button { font: inherit; color: inherit; }
+    .layout { width: min(1420px, calc(100vw - 36px)); min-height: min(880px, calc(100vh - 36px)); margin: 18px auto; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; }
+    .demo-window { min-width: 0; min-height: 640px; overflow: hidden; display: grid; grid-template-columns: 198px minmax(0, 1fr); border: 1px solid var(--border); border-radius: 14px; background: var(--window); box-shadow: 0 24px 70px rgba(0,0,0,.45); }
+    .sidebar { display: flex; flex-direction: column; padding: 23px 12px 14px; background: var(--sidebar); border-right: 1px solid var(--border); }
+    .brand { display: flex; align-items: center; gap: 9px; padding: 0 9px; margin-bottom: 28px; font-weight: 700; font-size: 18px; }
+    .mark { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 7px; background: var(--accent); }
+    .eyebrow { margin: 0 10px 9px; color: var(--muted); font-size: 11px; }
+    .nav { display: grid; gap: 5px; }
+    .nav button { position: relative; width: 100%; height: 40px; display: flex; align-items: center; gap: 11px; padding: 0 12px; border: 0; border-radius: 7px; color: var(--muted); background: transparent; cursor: pointer; text-align: left; transition: color .18s, background .18s, transform .18s; }
+    .nav button:hover { color: var(--text); background: var(--surface-2); transform: translateX(2px); }
+    .nav button.active { color: #fff; background: linear-gradient(100deg, var(--accent-soft), rgba(23,58,91,.32)); box-shadow: inset 3px 0 var(--accent), 0 7px 24px rgba(10,132,255,.10); }
+    .nav svg { width: 17px; height: 17px; }
+    .source { margin-top: auto; padding: 12px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); }
+    .source strong, .source span { display: block; }
+    .source strong { font-size: 11px; }
+    .source span { margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .main { min-width: 0; display: flex; flex-direction: column; padding: 22px 28px 18px; }
+    .titlebar { height: 30px; display: flex; justify-content: flex-end; color: var(--muted); }
+    .titlebar button { width: 33px; height: 30px; border: 0; background: transparent; cursor: pointer; }
+    .titlebar button:hover { color: var(--text); background: var(--surface-2); }
+    .heading { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    h1 { margin: 0; font-size: 26px; }
+    .spacer { flex: 1; }
+    .icon { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 50%; color: var(--muted); background: var(--surface); cursor: pointer; }
+    .icon:hover, .icon.active { color: var(--accent); border-color: var(--accent); box-shadow: 0 0 18px rgba(10,132,255,.15); }
+    .content { min-height: 0; flex: 1; display: grid; grid-template-columns: minmax(290px, 340px) minmax(0, 1fr); gap: 28px; }
+    .now-card { position: relative; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 21px; border: 1px solid var(--border); border-radius: 8px; background: var(--sidebar); box-shadow: 0 15px 32px rgba(0,0,0,.28); }
+    .cover-shell { position: relative; z-index: 0; aspect-ratio: 1; overflow: visible; border-radius: 8px; }
+    .cover-shell::before { content: ""; position: absolute; inset: 7% -5% -8%; z-index: -1; border-radius: 18px; background: var(--cover) center/cover; filter: blur(24px) saturate(1.35); opacity: .07; transform: scale(.88); transition: opacity .25s, transform .25s; }
+    .cover-shell:hover::before { opacity: .45; transform: scale(1); }
+    .cover { width: 100%; height: 100%; display: block; object-fit: cover; border-radius: inherit; box-shadow: 0 10px 22px rgba(0,0,0,.28); transition: transform .2s, box-shadow .2s; }
+    .cover-shell:hover .cover { transform: translateY(-3px) scale(1.015); box-shadow: 0 18px 34px rgba(0,0,0,.46); }
+    .cover-badge { position: absolute; left: 12px; top: 12px; padding: 4px 7px; border: 1px solid rgba(255,255,255,.2); border-radius: 5px; color: rgba(255,255,255,.86); background: rgba(10,12,18,.62); backdrop-filter: blur(8px); font-size: 10px; opacity: 0; transform: translateY(-4px); transition: opacity .2s, transform .2s; }
+    .cover-shell:hover .cover-badge { opacity: 1; transform: translateY(0); }
+    .track h2 { margin: 0; font-size: 20px; }
+    .track p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .progress { height: 5px; overflow: hidden; margin-top: 5px; border-radius: 9px; background: #3c3d44; cursor: pointer; }
+    .progress span { display: block; width: 34%; height: 100%; border-radius: inherit; background: var(--accent); box-shadow: 0 0 12px rgba(10,132,255,.88); transition: width .2s; }
+    .time { display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; }
+    .controls { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 4px; }
+    .controls button { width: 38px; height: 38px; display: grid; place-items: center; border: 0; border-radius: 50%; color: var(--muted); background: transparent; cursor: pointer; }
+    .controls button:hover { color: var(--text); background: var(--surface-2); transform: translateY(-2px); }
+    .controls .primary { width: 54px; height: 54px; color: #fff; background: var(--accent); box-shadow: 0 8px 24px rgba(10,132,255,.30); }
+    .controls .primary:hover { background: #2997ff; }
+    .queue { min-width: 0; display: flex; flex-direction: column; }
+    .queue-head { display: flex; align-items: center; height: 35px; color: var(--muted); font-size: 12px; font-weight: 600; }
+    .queue-head span:last-child { margin-left: auto; font-size: 11px; font-weight: 400; }
+    .rows { display: grid; gap: 3px; overflow: auto; }
+    .row { position: relative; min-height: 58px; display: grid; grid-template-columns: 26px minmax(0,1fr) auto auto; align-items: center; gap: 11px; padding: 0 10px; border-radius: 7px; color: inherit; background: transparent; cursor: pointer; transition: background .16s, transform .16s; }
+    .row:hover { background: var(--surface-2); transform: translateX(3px); }
+    .row.active { background: var(--accent-soft); }
+    .num { color: var(--muted); font-size: 11px; text-align: center; }
+    .row-title, .row-artist { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row-title { font-size: 13px; font-weight: 600; }
+    .row-artist, .duration { color: var(--muted); font-size: 11px; }
+    .row-actions { display: flex; gap: 4px; opacity: 0; transform: translateX(5px); transition: opacity .16s, transform .16s; }
+    .row:hover .row-actions { opacity: 1; transform: translateX(0); }
+    .row-action { width: 27px; height: 27px; display: grid; place-items: center; padding: 0; border: 1px solid var(--border); border-radius: 50%; color: var(--muted); background: var(--surface); cursor: pointer; }
+    .row-action:hover { color: var(--text); border-color: var(--accent); }
+    .row-action svg { width: 13px; height: 13px; }
+    .player-bar { display: flex; align-items: center; gap: 12px; height: 68px; margin-top: 18px; padding: 10px 14px; border: 1px solid rgba(255,255,255,.08); border-radius: 9px; background: rgba(27,27,31,.84); box-shadow: 0 12px 30px rgba(0,0,0,.25); backdrop-filter: blur(12px); }
+    .mini-cover { width: 45px; height: 45px; flex: 0 0 auto; object-fit: cover; border-radius: 6px; }
+    .mini-copy { min-width: 112px; }
+    .mini-copy strong, .mini-copy span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mini-copy strong { font-size: 12px; }
+    .mini-copy span { margin-top: 2px; color: var(--muted); font-size: 10px; }
+    .mini-progress { flex: 1; min-width: 40px; height: 4px; border-radius: 5px; background: #3c3d44; }
+    .mini-progress span { display: block; width: 34%; height: 100%; border-radius: inherit; background: var(--accent); box-shadow: 0 0 10px rgba(10,132,255,.7); }
+    .mini-play { width: 38px; height: 38px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: #fff; background: var(--accent); cursor: pointer; }
+    .notes { align-self: start; padding: 20px; border: 1px solid var(--border); border-radius: 10px; background: rgba(27,27,31,.92); }
+    .notes h2 { margin: 0 0 5px; font-size: 17px; }
+    .notes > p { margin: 0 0 17px; color: var(--muted); font-size: 12px; }
+    .effect-list { display: grid; gap: 8px; }
+    .effect { padding: 12px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); cursor: pointer; transition: border-color .16s, background .16s, transform .16s; }
+    .effect:hover, .effect.selected { border-color: var(--accent); background: linear-gradient(100deg, rgba(10,132,255,.14), var(--surface)); transform: translateX(-3px); }
+    .effect strong { display: flex; align-items: center; gap: 7px; font-size: 12px; }
+    .effect strong svg { width: 15px; height: 15px; color: var(--accent); }
+    .effect span { display: block; margin-top: 6px; color: var(--muted); font-size: 11px; }
+    .hint { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--muted); font-size: 11px; }
+    .toast { position: fixed; left: 50%; bottom: 22px; padding: 9px 14px; border: 1px solid var(--border); border-radius: 7px; background: rgba(27,27,31,.94); box-shadow: 0 10px 28px rgba(0,0,0,.4); opacity: 0; transform: translate(-50%, 8px); transition: opacity .16s, transform .16s; pointer-events: none; font-size: 12px; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .plain-mode .cover-shell::before { opacity: 0; }
+    .plain-mode .cover-shell:hover::before { opacity: 0; }
+    .plain-mode .cover-shell:hover .cover { transform: none; box-shadow: 0 10px 22px rgba(0,0,0,.28); }
+    .plain-mode .row:hover { transform: none; background: var(--surface-2); }
+    .plain-mode .row-actions { display: none; }
+    .plain-mode .player-bar { backdrop-filter: none; box-shadow: none; }
+    @media (max-width: 1060px) { .layout { grid-template-columns: 1fr; } .notes { order: -1; } .effect-list { grid-template-columns: repeat(5, minmax(0,1fr)); } .effect span { display: none; } }
+    @media (max-width: 760px) { body { background: var(--bg); } .layout { width: 100%; margin: 0; } .demo-window { min-height: 100vh; grid-template-columns: 72px minmax(0,1fr); border: 0; border-radius: 0; } .sidebar { padding: 17px 9px; } .brand { justify-content: center; padding: 0; } .brand-name, .eyebrow, .nav span, .source { display: none; } .nav button { justify-content: center; padding: 0; } .main { padding: 16px 14px; } .content { grid-template-columns: 1fr; } .now-card { width: min(100%, 390px); margin: 0 auto; } .queue { min-height: 270px; } .player-bar { margin-top: 12px; } .mini-copy { min-width: 70px; } .effect-list { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+  <div id="page" class="layout">
+    <section class="demo-window" aria-label="SniffPlay 美术效果展示">
+      <aside class="sidebar">
+        <div class="brand"><span class="mark">S</span><span class="brand-name">SniffPlay</span></div>
+        <div class="eyebrow">音乐库</div>
+        <nav class="nav">
+          <button class="active" type="button"><i data-lucide="circle-play"></i><span>正在播放</span></button>
+          <button type="button"><i data-lucide="search"></i><span>搜索</span></button>
+          <button type="button"><i data-lucide="heart"></i><span>我的收藏</span></button>
+          <button type="button"><i data-lucide="list-music"></i><span>我的歌单</span></button>
+          <button type="button"><i data-lucide="history"></i><span>播放历史</span></button>
+        </nav>
+        <div class="source"><strong>Bilibili 数据源</strong><span>模拟搜索数据</span></div>
+      </aside>
+      <main class="main">
+        <div class="titlebar"><button title="设置"><i data-lucide="settings"></i></button><button title="最小化"><i data-lucide="minus"></i></button><button title="关闭"><i data-lucide="x"></i></button></div>
+        <header class="heading"><h1>正在播放</h1><span class="spacer"></span><button class="icon" title="随机播放"><i data-lucide="shuffle"></i></button><button class="icon" title="循环播放"><i data-lucide="repeat-2"></i></button><button class="icon" title="收藏"><i data-lucide="heart"></i></button></header>
+        <div class="content">
+          <article class="now-card">
+            <div class="cover-shell"><img class="cover" src="https://images.unsplash.com/photo-1614149162883-504ce4d13909?auto=format&fit=crop&w=1000&q=90" alt="夜航封面"><span class="cover-badge">正在播放 · Bilibili</span></div>
+            <div class="track"><h2>夜航</h2><p>城市回声</p></div>
+            <div class="progress" title="点击调整进度"><span id="progressFill"></span></div><div class="time"><span>1:12</span><span>3:45</span></div>
+            <div class="controls"><button type="button" title="上一首"><i data-lucide="skip-back"></i></button><button id="playButton" class="primary" type="button" title="播放 / 暂停"><i data-lucide="pause"></i></button><button type="button" title="下一首"><i data-lucide="skip-forward"></i></button></div>
+          </article>
+          <section class="queue"><div class="queue-head"><span>播放队列</span><span>6 首</span></div><div class="rows">
+            <div class="row"><span class="num">1</span><span><span class="row-title">晨雾</span><span class="row-artist">玻璃海</span></span><span class="duration">3:28</span><span class="row-actions"><button class="row-action" title="收藏"><i data-lucide="heart"></i></button><button class="row-action" title="播放"><i data-lucide="play"></i></button></span></div>
+            <div class="row active"><span class="num">Ⅱ</span><span><span class="row-title">夜航</span><span class="row-artist">城市回声</span></span><span class="duration">3:45</span><span class="row-actions"><button class="row-action" title="收藏"><i data-lucide="heart"></i></button><button class="row-action" title="播放"><i data-lucide="play"></i></button></span></div>
+            <div class="row"><span class="num">3</span><span><span class="row-title">慢速列车</span><span class="row-artist">远岸</span></span><span class="duration">4:10</span><span class="row-actions"><button class="row-action" title="收藏"><i data-lucide="heart"></i></button><button class="row-action" title="播放"><i data-lucide="play"></i></button></span></div>
+            <div class="row"><span class="num">4</span><span><span class="row-title">未完待续</span><span class="row-artist">白噪音计划</span></span><span class="duration">2:56</span><span class="row-actions"><button class="row-action" title="收藏"><i data-lucide="heart"></i></button><button class="row-action" title="播放"><i data-lucide="play"></i></button></span></div>
+            <div class="row"><span class="num">5</span><span><span class="row-title">回到海边</span><span class="row-artist">南方放映室</span></span><span class="duration">3:32</span><span class="row-actions"><button class="row-action" title="收藏"><i data-lucide="heart"></i></button><button class="row-action" title="播放"><i data-lucide="play"></i></button></span></div>
+          </div></section>
+        </div>
+        <footer class="player-bar"><img class="mini-cover" src="https://images.unsplash.com/photo-1614149162883-504ce4d13909?auto=format&fit=crop&w=300&q=90" alt="夜航封面"><div class="mini-copy"><strong>夜航</strong><span>城市回声</span></div><div class="mini-progress"><span></span></div><button id="miniPlay" class="mini-play" type="button" title="暂停"><i data-lucide="pause"></i></button></footer>
+      </main>
+    </section>
+    <aside class="notes"><h2>可加入项目的效果</h2><p>点击右侧项目，或直接把鼠标移到界面上体验。</p><div class="effect-list">
+      <div class="effect selected"><strong><i data-lucide="panel-left"></i>导航滑动高亮</strong><span>选中项增加蓝色内衬和轻微位移，强化当前页面。</span></div>
+      <div class="effect"><strong><i data-lucide="sun-medium"></i>封面环境光</strong><span>从封面提取色彩，在封面背后生成柔和光晕。</span></div>
+      <div class="effect"><strong><i data-lucide="list-plus"></i>行操作渐显</strong><span>列表项悬停后显示收藏和播放，减少常驻噪音。</span></div>
+      <div class="effect"><strong><i data-lucide="scan-line"></i>进度发光</strong><span>拖动进度时增强蓝色轨道和手柄的反馈。</span></div>
+      <div class="effect"><strong><i data-lucide="layers-3"></i>底栏悬浮层</strong><span>播放器底栏使用半透明和模糊，区分主内容层。</span></div>
+    </div><div class="hint">“关闭增强效果”可用于和当前版本的基础样式对比。</div><button id="modeToggle" class="icon" type="button" title="切换基础样式" style="width:100%;height:38px;margin-top:14px;border-radius:7px;">关闭增强效果</button></aside>
+  </div>
+  <div id="toast" class="toast">已切换到基础样式</div>
+  <script>
+    lucide.createIcons({ attrs: { "stroke-width": 1.8 } });
+    const page = document.querySelector("#page");
+    const toast = document.querySelector("#toast");
+    const modeToggle = document.querySelector("#modeToggle");
+    let timer;
+    function notify(text) { toast.textContent = text; toast.classList.add("show"); clearTimeout(timer); timer = setTimeout(() => toast.classList.remove("show"), 1200); }
+    modeToggle.addEventListener("click", () => { const plain = page.classList.toggle("plain-mode"); modeToggle.textContent = plain ? "开启增强效果" : "关闭增强效果"; notify(plain ? "已切换到基础样式" : "已开启美术增强效果"); });
+    document.querySelectorAll(".nav button").forEach(button => button.addEventListener("click", () => { document.querySelector(".nav button.active").classList.remove("active"); button.classList.add("active"); notify(`已切换：${button.textContent.trim()}`); }));
+    document.querySelectorAll(".effect").forEach(effect => effect.addEventListener("click", () => { document.querySelector(".effect.selected")?.classList.remove("selected"); effect.classList.add("selected"); notify(`效果预览：${effect.querySelector("strong").textContent.trim()}`); }));
+    let playing = true;
+    function syncPlay(button) { button.innerHTML = `<i data-lucide="${playing ? "pause" : "play"}"></i>`; lucide.createIcons({ attrs: { "stroke-width": 1.8 } }); }
+    document.querySelectorAll("#playButton, #miniPlay").forEach(button => button.addEventListener("click", () => { playing = !playing; syncPlay(document.querySelector("#playButton")); syncPlay(document.querySelector("#miniPlay")); notify(playing ? "正在播放" : "已暂停"); }));
+    document.querySelector(".progress").addEventListener("click", event => { const box = event.currentTarget.getBoundingClientRect(); document.querySelector("#progressFill").style.width = `${Math.round((event.clientX - box.left) / box.width * 100)}%`; });
+  </script>
+</body>
+</html>
