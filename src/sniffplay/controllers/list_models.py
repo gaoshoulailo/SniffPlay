@@ -143,12 +143,19 @@ class QueueListModel(DictionaryListModel):
                 "initials",
                 "coverUrl",
                 "isCurrent",
+                "isFavorite",
             )
         )
         self.tracks: list[Track] = []
 
-    def set_tracks(self, tracks: Sequence[Track], current_index: int = -1) -> None:
+    def set_tracks(
+        self,
+        tracks: Sequence[Track],
+        current_index: int = -1,
+        favorite_keys: set[tuple[str, str]] | None = None,
+    ) -> None:
         self.tracks = list(tracks)
+        favorite_keys = favorite_keys or set()
         self.replace(
             [
                 {
@@ -160,6 +167,10 @@ class QueueListModel(DictionaryListModel):
                     "initials": track.initials,
                     "coverUrl": _display_cover_url(track.cover_url),
                     "isCurrent": index == current_index,
+                    "isFavorite": (
+                        track.provider_id,
+                        track.provider_track_id,
+                    ) in favorite_keys,
                 }
                 for index, track in enumerate(self.tracks)
             ]

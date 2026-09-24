@@ -504,6 +504,20 @@ class AppController(QObject):
             self._queue_index -= 1
         self._commit_queue_edit(f"已从队列移除：{track.title}")
 
+    @Slot(int)
+    def toggleQueueTrackFavorite(self, index: int) -> None:
+        if self._favorite_repository is None:
+            self._set_status("收藏功能尚未初始化")
+            return
+        if not 0 <= index < len(self._queue):
+            return
+        track = self._queue[index]
+        is_favorite = self._favorite_repository.toggle(track)
+        self._refresh_favorites()
+        self._set_status(
+            f"已收藏：{track.title}" if is_favorite else f"已取消收藏：{track.title}"
+        )
+
     @Slot()
     def clearQueueExceptCurrent(self) -> None:
         if not 0 <= self._queue_index < len(self._queue) or len(self._queue) <= 1:
@@ -872,6 +886,7 @@ class AppController(QObject):
             self._history_model.entries,
             self._favorite_keys,
         )
+        self._refresh_queue_model()
         self.favoritesChanged.emit()
         self.currentFavoriteChanged.emit()
 
@@ -882,7 +897,11 @@ class AppController(QObject):
         ) in self._favorite_keys
 
     def _refresh_queue_model(self) -> None:
-        self._queue_model.set_tracks(self._queue, self._queue_index)
+        self._queue_model.set_tracks(
+            self._queue,
+            self._queue_index,
+            self._favorite_keys,
+        )
         self.queueChanged.emit()
 
     def _commit_queue_edit(self, status_message: str) -> None:

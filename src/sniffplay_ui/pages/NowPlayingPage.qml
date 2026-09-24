@@ -432,13 +432,15 @@ Item {
                         required property string artist
                         required property string duration
                         required property bool isCurrent
+                        required property bool isFavorite
 
                         width: queueView.width
                         height: 56
-                        color: queueRow.isCurrent ? Theme.accentDark : (queueMouse.containsMouse ? Theme.surfaceHover : Theme.transparent)
+                        color: queueRow.isCurrent ? Theme.accentDark : (queueHover.hovered ? Theme.surfaceHover : Theme.transparent)
                         radius: Theme.radiusMedium
 
                         RowLayout {
+                            z: 1
                             anchors.fill: parent
                             anchors.leftMargin: 10
                             anchors.rightMargin: 12
@@ -461,10 +463,71 @@ Item {
                                 Text { Layout.fillWidth: true; text: queueRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11; elide: Text.ElideRight }
                             }
                             Text { text: queueRow.duration; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
+
+                            Row {
+                                Layout.preferredWidth: 72
+                                Layout.preferredHeight: 32
+                                spacing: 4
+                                opacity: queueHover.hovered ? 1 : 0
+                                enabled: queueHover.hovered
+
+                                Behavior on opacity {
+                                    NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+                                }
+
+                                Button {
+                                    id: queueFavoriteButton
+                                    width: 32
+                                    height: 32
+                                    onClicked: root.controller.toggleQueueTrackFavorite(queueRow.index)
+                                    ToolTip.visible: hovered
+                                    ToolTip.text: queueRow.isFavorite ? "取消收藏" : "收藏"
+                                    contentItem: Text {
+                                        text: queueRow.isFavorite ? "♥" : "♡"
+                                        color: queueRow.isFavorite ? Theme.danger : Theme.textSecondary
+                                        font.family: "Segoe UI Symbol"
+                                        font.pixelSize: 17
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+                                    background: Rectangle {
+                                        color: queueFavoriteButton.hovered ? Theme.surfaceHover : Theme.surface
+                                        border.color: queueRow.isFavorite ? Theme.danger : Theme.border
+                                        radius: 16
+                                    }
+                                }
+
+                                Button {
+                                    id: queuePlayButton
+                                    width: 32
+                                    height: 32
+                                    onClicked: queueRow.isCurrent
+                                        ? root.controller.togglePlayback()
+                                        : root.controller.playQueueTrack(queueRow.index)
+                                    ToolTip.visible: hovered
+                                    ToolTip.text: queueRow.isCurrent && root.controller.playing ? "暂停" : "播放"
+                                    contentItem: Text {
+                                        text: queueRow.isCurrent && root.controller.playing ? "Ⅱ" : "▶"
+                                        color: Theme.textPrimary
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: 11
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+                                    background: Rectangle {
+                                        color: queuePlayButton.hovered ? Theme.accentDark : Theme.surface
+                                        border.color: Theme.border
+                                        radius: 16
+                                    }
+                                }
+                            }
                         }
+
+                        HoverHandler { id: queueHover }
 
                         MouseArea {
                             id: queueMouse
+                            z: 0
                             anchors.fill: parent
                             hoverEnabled: true
                             acceptedButtons: Qt.LeftButton | Qt.RightButton

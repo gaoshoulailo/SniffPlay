@@ -128,6 +128,9 @@ async def test_controller_manages_and_plays_playlist_tracks(tmp_path: Path) -> N
     assert player.current_track.title == "迟来的风"
     assert controller._queue_model._items[1]["isCurrent"] is True
 
+    controller.toggleQueueTrackFavorite(0)
+    assert controller._queue_model._items[0]["isFavorite"] is True
+
     controller.playQueueTrackNext(0)
     assert [track.title for track in controller._queue] == ["迟来的风", "夜航"]
     assert controller._queue_index == 0
