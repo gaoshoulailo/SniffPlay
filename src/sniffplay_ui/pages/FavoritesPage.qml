@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 import QtQuick.Layouts
 import "../components"
 import "../themes"
@@ -76,6 +77,15 @@ Item {
                 border.color: Theme.border
                 radius: Theme.radiusMedium
 
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    shadowEnabled: true
+                    shadowColor: "#000000"
+                    shadowOpacity: 0.42
+                    shadowBlur: 0.65
+                    shadowVerticalOffset: 10
+                }
+
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 24
@@ -91,6 +101,26 @@ Item {
                             : (root.controller && root.controller.hasCurrentTrack ? "#3d8bff" : Theme.surface)
                         radius: Theme.radiusMedium
                         clip: true
+                        scale: favoriteCoverHover.hovered ? 1.018 : 1.0
+
+                        Behavior on scale {
+                            NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+                        }
+
+                        layer.enabled: true
+                        layer.effect: MultiEffect {
+                            shadowEnabled: true
+                            shadowColor: "#000000"
+                            shadowOpacity: favoriteCoverHover.hovered ? 0.38 : 0.0
+                            shadowBlur: 0.5
+                            shadowVerticalOffset: 7
+
+                            Behavior on shadowOpacity {
+                                NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+                            }
+                        }
+
+                        HoverHandler { id: favoriteCoverHover }
 
                         Text {
                             anchors.centerIn: parent

@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 import QtQuick.Layouts
 import "../components"
 import "../themes"
@@ -126,6 +127,7 @@ Item {
             rowSpacing: 22
 
             Rectangle {
+                id: nowPlayingCard
                 Layout.fillWidth: root.compact
                 Layout.preferredWidth: root.compact ? -1 : 330
                 Layout.maximumWidth: root.compact ? 430 : 350
@@ -135,6 +137,16 @@ Item {
                 color: Theme.sidebar
                 border.color: Theme.border
                 radius: Theme.radiusMedium
+
+                // Keep the card in the page flow while visually lifting it above the background.
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    shadowEnabled: true
+                    shadowColor: "#000000"
+                    shadowOpacity: 0.42
+                    shadowBlur: 0.65
+                    shadowVerticalOffset: 10
+                }
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -151,6 +163,26 @@ Item {
                             : (root.controller ? root.controller.currentAccent : "#3d8bff")
                         radius: Theme.radiusMedium
                         clip: true
+                        scale: coverHover.hovered ? 1.018 : 1.0
+
+                        Behavior on scale {
+                            NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+                        }
+
+                        layer.enabled: true
+                        layer.effect: MultiEffect {
+                            shadowEnabled: true
+                            shadowColor: "#000000"
+                            shadowOpacity: coverHover.hovered ? 0.38 : 0.0
+                            shadowBlur: 0.5
+                            shadowVerticalOffset: 7
+
+                            Behavior on shadowOpacity {
+                                NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+                            }
+                        }
+
+                        HoverHandler { id: coverHover }
 
                         Text {
                             anchors.centerIn: parent
