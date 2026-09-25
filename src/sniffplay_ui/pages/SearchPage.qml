@@ -586,28 +586,20 @@ Item {
         }
     }
 
-    Menu {
+    AppMenu {
         id: trackContextMenu
-        implicitWidth: 210
-        modal: true
-        palette.window: Theme.surface
-        palette.windowText: Theme.textPrimary
 
         onClosed: root.contextTrackIndex = -1
 
-        background: Rectangle {
-            color: Theme.surface
-            border.color: Theme.border
-            radius: Theme.radiusMedium
-        }
-
         ContextMenuItem {
             text: "播放"
+            iconName: "play"
             onTriggered: root.controller.playSearchResult(root.contextTrackIndex)
         }
 
         ContextMenuItem {
             text: root.contextTrackFavorite ? "取消收藏" : "收藏"
+            iconName: root.contextTrackFavorite ? "favorite-filled" : "favorite"
             onTriggered: {
                 root.controller.toggleTrackFavorite(root.contextTrackIndex)
                 root.contextTrackFavorite = !root.contextTrackFavorite
@@ -623,6 +615,7 @@ Item {
 
         ContextMenuItem {
             text: "添加到歌单..."
+            iconName: "add"
             onTriggered: {
                 root.pendingTrackIndex = root.contextTrackIndex
                 addToPlaylistDialog.open()
@@ -631,6 +624,7 @@ Item {
 
         ContextMenuItem {
             text: "复制歌曲信息"
+            iconName: "copy"
             onTriggered: root.controller.copySearchTrackInfo(root.contextTrackIndex)
         }
     }
@@ -794,46 +788,17 @@ Item {
         }
     }
 
-    Dialog {
+    PlaylistNameDialog {
         id: newPlaylistWithTrackDialog
         anchors.centerIn: parent
-        width: 380
-        modal: true
-        title: "新建歌单"
-        standardButtons: Dialog.Ok | Dialog.Cancel
-        onOpened: {
-            newPlaylistName.text = ""
-            newPlaylistName.forceActiveFocus()
-        }
-        onAccepted: {
+        description: "创建歌单并将当前歌曲添加进去"
+        placeholderText: "输入歌单名称"
+        onSubmitted: function(name) {
             root.controller.createPlaylistWithTrack(
-                newPlaylistName.text,
+                name,
                 root.pendingTrackIndex
             )
             addToPlaylistDialog.close()
-        }
-        palette.window: Theme.surface
-        palette.windowText: Theme.textPrimary
-        palette.button: Theme.accent
-        palette.buttonText: Theme.buttonText
-
-        contentItem: TextField {
-            id: newPlaylistName
-            implicitHeight: 40
-            color: Theme.textPrimary
-            placeholderText: "歌单名称"
-            placeholderTextColor: Theme.placeholderText
-            font.family: Theme.fontFamily
-            background: Rectangle {
-                color: Theme.window
-                border.color: newPlaylistName.activeFocus ? Theme.accent : Theme.border
-                radius: Theme.radiusMedium
-            }
-        }
-        background: Rectangle {
-            color: Theme.surface
-            border.color: Theme.border
-            radius: Theme.radiusMedium
         }
     }
 

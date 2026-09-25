@@ -207,31 +207,23 @@ Item {
         }
     }
 
-    Menu {
+    AppMenu {
         id: historyContextMenu
-        implicitWidth: 210
-        modal: true
-        palette.window: Theme.surface
-        palette.windowText: Theme.textPrimary
 
         onClosed: {
             root.contextHistoryIndex = -1
             root.contextHistoryId = -1
         }
 
-        background: Rectangle {
-            color: Theme.surface
-            border.color: Theme.border
-            radius: Theme.radiusMedium
-        }
-
         ContextMenuItem {
             text: "播放"
+            iconName: "play"
             onTriggered: root.controller.playHistory(root.contextHistoryIndex)
         }
 
         ContextMenuItem {
             text: root.contextHistoryFavorite ? "取消收藏" : "收藏"
+            iconName: root.contextHistoryFavorite ? "favorite-filled" : "favorite"
             onTriggered: {
                 root.controller.toggleHistoryTrackFavorite(root.contextHistoryIndex)
                 root.contextHistoryFavorite = !root.contextHistoryFavorite
@@ -240,6 +232,7 @@ Item {
 
         ContextMenuItem {
             text: "添加到歌单..."
+            iconName: "add"
             onTriggered: {
                 root.pendingHistoryIndex = root.contextHistoryIndex
                 addHistoryToPlaylistDialog.open()
@@ -255,6 +248,8 @@ Item {
 
         ContextMenuItem {
             text: "从播放历史删除"
+            iconName: "delete"
+            danger: true
             onTriggered: root.controller.removeHistory(root.contextHistoryId)
         }
     }
@@ -371,47 +366,17 @@ Item {
         }
     }
 
-    Dialog {
+    PlaylistNameDialog {
         id: newPlaylistWithHistoryDialog
         anchors.centerIn: parent
-        width: 380
-        modal: true
-        title: "新建歌单"
-        standardButtons: Dialog.Ok | Dialog.Cancel
-        onOpened: {
-            newHistoryPlaylistName.text = ""
-            newHistoryPlaylistName.forceActiveFocus()
-        }
-        onAccepted: {
+        description: "创建歌单并将这首历史歌曲添加进去"
+        placeholderText: "输入歌单名称"
+        onSubmitted: function(name) {
             root.controller.createPlaylistWithHistoryTrack(
-                newHistoryPlaylistName.text,
+                name,
                 root.pendingHistoryIndex
             )
             addHistoryToPlaylistDialog.close()
-        }
-        palette.window: Theme.surface
-        palette.windowText: Theme.textPrimary
-        palette.button: Theme.accent
-        palette.buttonText: Theme.buttonText
-
-        contentItem: TextField {
-            id: newHistoryPlaylistName
-            implicitHeight: 40
-            color: Theme.textPrimary
-            placeholderText: "歌单名称"
-            placeholderTextColor: Theme.placeholderText
-            font.family: Theme.fontFamily
-            background: Rectangle {
-                color: Theme.window
-                border.color: newHistoryPlaylistName.activeFocus ? Theme.accent : Theme.border
-                radius: Theme.radiusMedium
-            }
-        }
-
-        background: Rectangle {
-            color: Theme.surface
-            border.color: Theme.border
-            radius: Theme.radiusMedium
         }
     }
 }

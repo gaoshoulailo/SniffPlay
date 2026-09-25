@@ -21,6 +21,7 @@ Item {
             "copy": "\uE8C8",
             "delete": "\uE74D",
             "down": "\uE74B",
+            "edit": "\uE70F",
             "favorite": "\uE734",
             "favorite-filled": "\uEB52",
             "folder-open": "\uE838",
@@ -30,6 +31,7 @@ Item {
             "list": "\uE8FD",
             "maximize": "\uE922",
             "minimize": "\uE921",
+            "more": "\uE712",
             "music": "\uE8D6",
             "next": "\uE893",
             "pause": "\uE769",
@@ -43,7 +45,8 @@ Item {
             "settings": "\uE713",
             "shuffle": "\uE8B1",
             "storage": "\uEDA2",
-            "up": "\uE74A"
+            "up": "\uE74A",
+            "volume": "\uE767"
         }
         return icons[iconName] || ""
     }

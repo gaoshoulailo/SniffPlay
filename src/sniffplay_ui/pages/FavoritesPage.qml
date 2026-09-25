@@ -303,31 +303,23 @@ Item {
         }
     }
 
-    Menu {
+    AppMenu {
         id: favoriteContextMenu
-        implicitWidth: 210
-        modal: true
-        palette.window: Theme.surface
-        palette.windowText: Theme.textPrimary
 
         onClosed: {
             root.contextFavoriteIndex = -1
             root.contextFavoriteId = -1
         }
 
-        background: Rectangle {
-            color: Theme.surface
-            border.color: Theme.border
-            radius: Theme.radiusMedium
-        }
-
         ContextMenuItem {
             text: "播放"
+            iconName: "play"
             onTriggered: root.controller.playFavorite(root.contextFavoriteIndex)
         }
 
         ContextMenuItem {
             text: "添加到歌单..."
+            iconName: "add"
             onTriggered: {
                 root.pendingFavoriteIndex = root.contextFavoriteIndex
                 addFavoriteToPlaylistDialog.open()
@@ -343,6 +335,8 @@ Item {
 
         ContextMenuItem {
             text: "取消收藏"
+            iconName: "remove"
+            danger: true
             onTriggered: root.controller.removeFavorite(root.contextFavoriteId)
         }
     }
@@ -461,47 +455,17 @@ Item {
         }
     }
 
-    Dialog {
+    PlaylistNameDialog {
         id: newPlaylistWithFavoriteDialog
         anchors.centerIn: parent
-        width: 380
-        modal: true
-        title: "新建歌单"
-        standardButtons: Dialog.Ok | Dialog.Cancel
-        onOpened: {
-            newFavoritePlaylistName.text = ""
-            newFavoritePlaylistName.forceActiveFocus()
-        }
-        onAccepted: {
+        description: "创建歌单并将当前收藏添加进去"
+        placeholderText: "输入歌单名称"
+        onSubmitted: function(name) {
             root.controller.createPlaylistWithFavorite(
-                newFavoritePlaylistName.text,
+                name,
                 root.pendingFavoriteIndex
             )
             addFavoriteToPlaylistDialog.close()
-        }
-        palette.window: Theme.surface
-        palette.windowText: Theme.textPrimary
-        palette.button: Theme.accent
-        palette.buttonText: Theme.buttonText
-
-        contentItem: TextField {
-            id: newFavoritePlaylistName
-            implicitHeight: 40
-            color: Theme.textPrimary
-            placeholderText: "歌单名称"
-            placeholderTextColor: Theme.placeholderText
-            font.family: Theme.fontFamily
-            background: Rectangle {
-                color: Theme.window
-                border.color: newFavoritePlaylistName.activeFocus ? Theme.accent : Theme.border
-                radius: Theme.radiusMedium
-            }
-        }
-
-        background: Rectangle {
-            color: Theme.surface
-            border.color: Theme.border
-            radius: Theme.radiusMedium
         }
     }
 }
