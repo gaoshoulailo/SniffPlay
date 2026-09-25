@@ -520,13 +520,16 @@ Item {
 
             }
 
-            Text {
+            EmptyState {
                 anchors.centerIn: parent
                 visible: resultsList.count === 0 && !root.controller.searching
-                text: "没有找到匹配的歌曲"
-                color: Theme.textSecondary
-                font.family: Theme.fontFamily
-                font.pixelSize: 14
+                width: Math.min(360, resultsList.width)
+                iconName: "search"
+                title: "没有找到匹配的歌曲"
+                description: "换一个歌名、歌手或专辑关键词试试"
+                actionText: "重新输入"
+                actionIcon: "search"
+                onActionTriggered: searchField.forceActiveFocus()
             }
         }
             }

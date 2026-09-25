@@ -11,6 +11,7 @@ Item {
     id: root
 
     required property var controller
+    signal browseRequested()
     readonly property bool compact: width < 650
     property int contextQueueIndex: -1
     property bool contextQueueCurrent: false
@@ -547,12 +548,16 @@ Item {
                         }
                     }
 
-                    Column {
+                    EmptyState {
                         anchors.centerIn: parent
                         visible: queueView.count === 0
-                        spacing: 7
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "播放队列为空"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 15; font.weight: Font.DemiBold }
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "从搜索、收藏或歌单中选择歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12 }
+                        width: Math.min(340, queueView.width)
+                        iconName: "music"
+                        title: "播放队列为空"
+                        description: "从搜索、收藏或歌单中选择歌曲"
+                        actionText: "去搜索歌曲"
+                        actionIcon: "search"
+                        onActionTriggered: root.browseRequested()
                     }
                 }
             }

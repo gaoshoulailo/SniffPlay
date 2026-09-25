@@ -10,6 +10,7 @@ Item {
     id: root
 
     required property var controller
+    signal browseRequested()
     property int pendingRemoveItemId: -1
     property int contextTrackIndex: -1
     property int contextTrackItemId: -1
@@ -127,12 +128,16 @@ Item {
 
                     }
 
-                    Column {
+                    EmptyState {
                         anchors.centerIn: parent
                         visible: playlistView.count === 0
-                        spacing: 10
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "还没有歌单"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 16; font.weight: Font.DemiBold }
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "创建歌单后，可从搜索结果添加歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 13 }
+                        width: Math.min(360, playlistView.width)
+                        iconName: "list"
+                        title: "还没有歌单"
+                        description: "创建歌单后，可从搜索结果添加歌曲"
+                        actionText: "新建歌单"
+                        actionIcon: "add"
+                        onActionTriggered: createDialog.open()
                     }
                 }
             }
@@ -323,12 +328,16 @@ Item {
 
                     }
 
-                    Column {
+                    EmptyState {
                         anchors.centerIn: parent
                         visible: playlistTrackView.count === 0
-                        spacing: 8
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "歌单还是空的"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 16; font.weight: Font.DemiBold }
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "从搜索结果中添加歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12 }
+                        width: Math.min(360, playlistTrackView.width)
+                        iconName: "music"
+                        title: "歌单还是空的"
+                        description: "从搜索结果中添加歌曲"
+                        actionText: "去搜索歌曲"
+                        actionIcon: "search"
+                        onActionTriggered: root.browseRequested()
                     }
                 }
             }

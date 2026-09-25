@@ -11,6 +11,7 @@ Item {
     id: root
 
     required property var controller
+    signal browseRequested()
     property int contextFavoriteIndex: -1
     property int contextFavoriteId: -1
     property int pendingPlaylistId: -1
@@ -286,12 +287,16 @@ Item {
 
             }
 
-            Column {
+            EmptyState {
                 anchors.centerIn: parent
                 visible: favoriteView.count === 0
-                spacing: 8
-                Text { anchors.horizontalCenter: parent.horizontalCenter; text: "还没有收藏"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 16; font.weight: Font.DemiBold }
-                Text { anchors.horizontalCenter: parent.horizontalCenter; text: "在搜索结果或播放器中点击爱心收藏歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12 }
+                width: Math.min(360, favoriteView.width)
+                iconName: "favorite"
+                title: "还没有收藏"
+                description: "在搜索结果或播放器中点击爱心收藏歌曲"
+                actionText: "去搜索歌曲"
+                actionIcon: "search"
+                onActionTriggered: root.browseRequested()
             }
         }
             }

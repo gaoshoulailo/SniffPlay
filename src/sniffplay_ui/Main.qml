@@ -324,11 +324,23 @@ ApplicationWindow {
                     anchors.fill: parent
                     currentIndex: root.currentPage
 
-                    NowPlayingPage { controller: root.controller }
+                    NowPlayingPage {
+                        controller: root.controller
+                        onBrowseRequested: root.currentPage = 1
+                    }
                     SearchPage { controller: root.controller }
-                    FavoritesPage { controller: root.controller }
-                    PlaylistPage { controller: root.controller }
-                    HistoryPage { controller: root.controller }
+                    FavoritesPage {
+                        controller: root.controller
+                        onBrowseRequested: root.currentPage = 1
+                    }
+                    PlaylistPage {
+                        controller: root.controller
+                        onBrowseRequested: root.currentPage = 1
+                    }
+                    HistoryPage {
+                        controller: root.controller
+                        onBrowseRequested: root.currentPage = 1
+                    }
                     SettingsPage { controller: root.controller }
                 }
 

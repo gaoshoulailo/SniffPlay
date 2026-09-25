@@ -10,6 +10,7 @@ Item {
     id: root
 
     required property var controller
+    signal browseRequested()
     property int contextHistoryIndex: -1
     property int contextHistoryId: -1
     property bool contextHistoryFavorite: false
@@ -192,13 +193,16 @@ Item {
 
             }
 
-            Column {
+            EmptyState {
                 anchors.centerIn: parent
                 visible: historyView.count === 0
-                spacing: 10
-
-                Text { anchors.horizontalCenter: parent.horizontalCenter; text: "暂无播放记录"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 16; font.weight: Font.DemiBold }
-                Text { anchors.horizontalCenter: parent.horizontalCenter; text: "播放歌曲后会显示在这里"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 13 }
+                width: Math.min(360, historyView.width)
+                iconName: "history"
+                title: "暂无播放记录"
+                description: "播放歌曲后会显示在这里"
+                actionText: "去搜索歌曲"
+                actionIcon: "search"
+                onActionTriggered: root.browseRequested()
             }
         }
     }
