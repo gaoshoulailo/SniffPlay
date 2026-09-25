@@ -39,6 +39,7 @@ logger = logging.getLogger(__name__)
 class AppController(QObject):
     searchingChanged = Signal()
     statusMessageChanged = Signal()
+    toastRequested = Signal(str)
     playerChanged = Signal()
     currentFavoriteChanged = Signal()
     playlistSelectionChanged = Signal()
@@ -318,15 +319,17 @@ class AppController(QObject):
             self._searching = value
             self.searchingChanged.emit()
 
-    def _set_status(self, message: str) -> None:
+    def _set_status(self, message: str, *, toast: bool = True) -> None:
         if self._status_message != message:
             self._status_message = message
             self.statusMessageChanged.emit()
+        if toast:
+            self.toastRequested.emit(message)
 
     @asyncSlot(str)
     async def search(self, query: str) -> None:
         self._set_searching(True)
-        self._set_status("正在搜索...")
+        self._set_status("正在搜索...", toast=False)
         try:
             tracks = await self._search_service.search(query)
             self._track_model.set_tracks(tracks, self._favorite_keys)
@@ -389,7 +392,7 @@ class AppController(QObject):
         self._play_request_id += 1
         request_id = self._play_request_id
         track = candidate_queue[index]
-        self._set_status(f"正在解析：{track.title}")
+        self._set_status(f"正在解析：{track.title}", toast=False)
         try:
             stream = await self._search_service.resolve_stream(track)
             resolved_cover_url = getattr(stream, "cover_url", None)
@@ -435,7 +438,7 @@ class AppController(QObject):
         self._advance_scheduled = False
         self.playerChanged.emit()
         self.currentFavoriteChanged.emit()
-        self._set_status(f"正在播放：{track.title}")
+        self._set_status(f"正在播放：{track.title}", toast=False)
 
     @Slot()
     def togglePlayback(self) -> None:
@@ -964,7 +967,7 @@ class AppController(QObject):
 
         if self._snapshot.state is PlayerState.PLAYING and previous_state is not PlayerState.PLAYING:
             if track:
-                self._set_status(f"正在播放：{track.title}")
+                self._set_status(f"正在播放：{track.title}", toast=False)
         elif self._snapshot.state is PlayerState.ERROR:
             self._set_status("播放内核发生错误")
         elif (

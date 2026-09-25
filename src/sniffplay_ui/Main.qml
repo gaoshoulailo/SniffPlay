@@ -365,6 +365,22 @@ ApplicationWindow {
         antialiasing: true
     }
 
+    Toast {
+        id: operationToast
+        z: 20
+        width: Math.min(implicitWidth, windowFrame.width - 40)
+        anchors.horizontalCenter: windowFrame.horizontalCenter
+        anchors.bottom: windowFrame.bottom
+        anchors.bottomMargin: root.currentPage === 0 ? 26 : 138
+    }
+
+    Connections {
+        target: root.controller
+        function onToastRequested(message) {
+            operationToast.show(message)
+        }
+    }
+
     MouseArea { z: 10; enabled: root.visibility !== Window.Maximized; anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom; width: 5; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.LeftEdge) }
     MouseArea { z: 10; enabled: root.visibility !== Window.Maximized; anchors.right: parent.right; anchors.top: parent.top; anchors.bottom: parent.bottom; width: 5; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.RightEdge) }
     MouseArea { z: 10; enabled: root.visibility !== Window.Maximized; anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right; height: 5; cursorShape: Qt.SizeVerCursor; onPressed: root.startSystemResize(Qt.TopEdge) }
