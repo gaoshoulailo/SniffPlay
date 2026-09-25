@@ -9,11 +9,12 @@ Rectangle {
 
     required property var controller
     property Item backdropSource: null
+    readonly property bool compact: width < 760
     readonly property point backdropOrigin: backdropSource
         ? root.mapToItem(backdropSource, 0, 0)
         : Qt.point(0, 0)
 
-    implicitHeight: 106
+    implicitHeight: 92
     color: Qt.rgba(0.125, 0.125, 0.141, 0.88)
     border.color: Qt.rgba(1, 1, 1, 0.12)
     border.width: 1
@@ -67,18 +68,18 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.leftMargin: 22
-        anchors.rightMargin: 22
-        anchors.topMargin: 7
-        anchors.bottomMargin: 10
-        spacing: 5
+        anchors.leftMargin: 16
+        anchors.rightMargin: 16
+        anchors.topMargin: 5
+        anchors.bottomMargin: 7
+        spacing: 3
 
         RowLayout {
             Layout.fillWidth: true
             spacing: 9
 
             Text {
-                Layout.preferredWidth: 38
+                Layout.preferredWidth: 34
                 text: root.controller.positionText
                 color: Theme.textSecondary
                 font.family: Theme.fontFamily
@@ -123,7 +124,7 @@ Rectangle {
             }
 
             Text {
-                Layout.preferredWidth: 38
+                Layout.preferredWidth: 34
                 text: root.controller.durationText
                 color: Theme.textSecondary
                 font.family: Theme.fontFamily
@@ -137,8 +138,8 @@ Rectangle {
 
             Rectangle {
                 id: currentCover
-                Layout.preferredWidth: 48
-                Layout.preferredHeight: 48
+                Layout.preferredWidth: 44
+                Layout.preferredHeight: 44
                 radius: Theme.radiusMedium
                 color: currentCoverImage.status === Image.Ready
                     ? (root.controller ? root.controller.currentAccent : "#3d8bff")
@@ -167,8 +168,8 @@ Rectangle {
             }
 
             ColumnLayout {
-                Layout.preferredWidth: 220
-                Layout.maximumWidth: 280
+                Layout.preferredWidth: 190
+                Layout.maximumWidth: 240
                 spacing: 2
 
                 Text {
@@ -195,6 +196,7 @@ Rectangle {
 
             Button {
                 id: favoriteButton
+                visible: !root.compact
                 Layout.preferredWidth: 34
                 Layout.preferredHeight: 34
                 enabled: root.controller.hasCurrentTrack
@@ -208,6 +210,30 @@ Rectangle {
                 }
                 background: Rectangle {
                     color: favoriteButton.hovered ? Theme.surfaceHover : Theme.transparent
+                    radius: 17
+                }
+            }
+
+            Button {
+                id: shuffleButton
+                Layout.preferredWidth: 34
+                Layout.preferredHeight: 34
+                onClicked: root.controller.toggleShuffle()
+                ToolTip.visible: hovered
+                ToolTip.text: root.controller.shuffleEnabled
+                    ? "关闭随机播放"
+                    : "开启随机播放"
+                contentItem: AppIcon {
+                    name: "shuffle"
+                    color: root.controller.shuffleEnabled
+                        ? Theme.accent
+                        : Theme.textSecondary
+                    iconSize: 17
+                }
+                background: Rectangle {
+                    color: root.controller.shuffleEnabled
+                        ? Theme.accentDark
+                        : (shuffleButton.hovered ? Theme.surfaceHover : Theme.transparent)
                     radius: 17
                 }
             }
@@ -321,40 +347,15 @@ Rectangle {
 
             Item { Layout.fillWidth: true }
 
-            ColumnLayout {
-                Layout.preferredWidth: 175
-                spacing: 1
-
-                Text {
-                    Layout.fillWidth: true
-                    text: root.controller.statusMessage
-                    color: Theme.textSecondary
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 10
-                    horizontalAlignment: Text.AlignRight
-                    elide: Text.ElideRight
-                }
-
-                Text {
-                    Layout.fillWidth: true
-                    text: root.controller.queueLabel
-                    color: Theme.textSecondary
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 10
-                    horizontalAlignment: Text.AlignRight
-                }
-            }
-
-            Text {
-                text: "VOL"
+            AppIcon {
+                name: "volume"
                 color: Theme.textSecondary
-                font.family: Theme.fontFamily
-                font.pixelSize: 9
+                iconSize: 15
             }
 
             Slider {
                 id: volumeSlider
-                Layout.preferredWidth: 92
+                Layout.preferredWidth: 82
                 Layout.preferredHeight: 22
                 from: 0
                 to: 100

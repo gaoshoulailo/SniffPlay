@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Effects
 import QtQuick.Layouts
 import "../components"
 import "../themes"
@@ -15,27 +14,42 @@ Item {
     readonly property bool compact: width < 650
     property int contextQueueIndex: -1
     property bool contextQueueCurrent: false
+    property int detailTab: 0
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: root.compact ? 20 : 30
-        spacing: 20
+        anchors.margins: root.compact ? 18 : 26
+        spacing: 16
 
         RowLayout {
             Layout.fillWidth: true
 
-            Text {
-                text: "正在播放"
-                color: Theme.textPrimary
-                font.family: Theme.fontFamily
-                font.pixelSize: 26
-                font.weight: Font.Bold
+            ColumnLayout {
+                spacing: 3
+
+                Text {
+                    text: "正在播放"
+                    color: Theme.textPrimary
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 24
+                    font.weight: Font.Bold
+                }
+
+                Text {
+                    text: root.controller.hasCurrentTrack
+                        ? "来自当前播放队列"
+                        : "选择一首歌曲开始播放"
+                    color: Theme.textSecondary
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 11
+                }
             }
 
             Item { Layout.fillWidth: true }
 
             Button {
                 id: shuffleButton
+                visible: false
                 implicitWidth: 38
                 implicitHeight: 38
                 onClicked: root.controller.toggleShuffle()
@@ -56,6 +70,7 @@ Item {
 
             Button {
                 id: repeatButton
+                visible: false
                 implicitWidth: 38
                 implicitHeight: 38
                 onClicked: root.controller.cycleRepeatMode()
@@ -110,13 +125,31 @@ Item {
                     radius: 19
                 }
             }
+
+            Button {
+                id: moreButton
+                implicitWidth: 38
+                implicitHeight: 38
+                ToolTip.visible: hovered
+                ToolTip.text: "更多操作"
+                onClicked: nowPlayingMenu.popup()
+                contentItem: AppIcon {
+                    name: "more"
+                    color: Theme.textSecondary
+                    iconSize: 17
+                }
+                background: Rectangle {
+                    color: moreButton.hovered ? Theme.surfaceHover : Theme.transparent
+                    radius: 19
+                }
+            }
         }
 
         GridLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            columns: root.compact ? 1 : 2
-            columnSpacing: 32
+            columns: root.compact ? 1 : 3
+            columnSpacing: root.compact ? 0 : 24
             rowSpacing: 22
 
             Rectangle {
@@ -127,24 +160,15 @@ Item {
                 Layout.fillHeight: !root.compact
                 Layout.preferredHeight: root.compact ? 430 : -1
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
-                color: Theme.sidebar
-                border.color: Theme.border
+                color: Theme.transparent
+                border.color: Theme.transparent
                 radius: Theme.radiusMedium
-
-                // Keep the card in the page flow while visually lifting it above the background.
-                layer.enabled: true
-                layer.effect: MultiEffect {
-                    shadowEnabled: true
-                    shadowColor: "#000000"
-                    shadowOpacity: 0.42
-                    shadowBlur: 0.65
-                    shadowVerticalOffset: 10
-                }
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 22
-                    spacing: 12
+                    anchors.leftMargin: root.compact ? 16 : 24
+                    anchors.rightMargin: root.compact ? 16 : 24
+                    spacing: 10
 
                     Rectangle {
                         id: cover
@@ -160,19 +184,6 @@ Item {
 
                         Behavior on scale {
                             NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
-                        }
-
-                        layer.enabled: true
-                        layer.effect: MultiEffect {
-                            shadowEnabled: true
-                            shadowColor: "#000000"
-                            shadowOpacity: coverHover.hovered ? 0.38 : 0.0
-                            shadowBlur: 0.5
-                            shadowVerticalOffset: 7
-
-                            Behavior on shadowOpacity {
-                                NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
-                            }
                         }
 
                         HoverHandler { id: coverHover }
@@ -198,19 +209,53 @@ Item {
                             fillMode: Image.PreserveAspectCrop
                             visible: status === Image.Ready
                         }
+
+                        Rectangle {
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            anchors.margins: 10
+                            width: playbackStateRow.implicitWidth + 18
+                            height: 28
+                            radius: Theme.radiusSmall
+                            color: Qt.rgba(0.07, 0.07, 0.08, 0.82)
+                            border.color: Qt.rgba(1, 1, 1, 0.14)
+
+                            Row {
+                                id: playbackStateRow
+                                anchors.centerIn: parent
+                                spacing: 6
+
+                                Rectangle {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 6
+                                    height: 6
+                                    radius: 3
+                                    color: root.controller.playing ? Theme.accent : Theme.textSecondary
+                                }
+
+                                Text {
+                                    text: root.controller.playing ? "正在播放" : "已暂停"
+                                    color: Theme.textPrimary
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 10
+                                    font.weight: Font.DemiBold
+                                }
+                            }
+                        }
                     }
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 2
+                        spacing: 3
 
                         Text {
                             Layout.fillWidth: true
                             text: root.controller.currentTitle
                             color: Theme.textPrimary
                             font.family: Theme.fontFamily
-                            font.pixelSize: 20
+                            font.pixelSize: 22
                             font.weight: Font.Bold
+                            horizontalAlignment: Text.AlignHCenter
                             elide: Text.ElideRight
                         }
                         Text {
@@ -219,7 +264,57 @@ Item {
                             color: Theme.textSecondary
                             font.family: Theme.fontFamily
                             font.pixelSize: 13
+                            horizontalAlignment: Text.AlignHCenter
                             elide: Text.ElideRight
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: root.controller.currentAlbum
+                            color: Theme.disabledText
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 11
+                            horizontalAlignment: Text.AlignHCenter
+                            elide: Text.ElideRight
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.topMargin: 2
+                        spacing: 8
+
+                        Rectangle {
+                            Layout.preferredWidth: sourceLabel.implicitWidth + 14
+                            Layout.preferredHeight: 24
+                            color: Theme.accentDark
+                            radius: Theme.radiusSmall
+
+                            Text {
+                                id: sourceLabel
+                                anchors.centerIn: parent
+                                text: root.controller.currentSource
+                                color: Theme.accent
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 9
+                                font.weight: Font.DemiBold
+                            }
+                        }
+
+                        Text {
+                            text: root.controller.queueLabel
+                            color: Theme.textSecondary
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 10
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        Text {
+                            text: root.controller.durationText
+                            color: Theme.textSecondary
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 10
                         }
                     }
 
@@ -271,6 +366,23 @@ Item {
                         Item { Layout.fillWidth: true }
 
                         Button {
+                            id: mainShuffleButton
+                            implicitWidth: 38; implicitHeight: 38
+                            onClicked: root.controller.toggleShuffle()
+                            ToolTip.visible: hovered
+                            ToolTip.text: root.controller.shuffleEnabled ? "关闭随机播放" : "开启随机播放"
+                            contentItem: AppIcon {
+                                name: "shuffle"
+                                color: root.controller.shuffleEnabled ? Theme.accent : Theme.textSecondary
+                                iconSize: 17
+                            }
+                            background: Rectangle {
+                                color: mainShuffleButton.hovered ? Theme.surfaceHover : Theme.transparent
+                                radius: 19
+                            }
+                        }
+
+                        Button {
                             id: previousButton
                             implicitWidth: 38; implicitHeight: 38
                             enabled: root.controller.canGoPrevious
@@ -308,10 +420,42 @@ Item {
                             background: Rectangle { color: nextButton.hovered ? Theme.surfaceHover : Theme.transparent; radius: 19 }
                         }
 
+                        Button {
+                            id: mainRepeatButton
+                            implicitWidth: 38; implicitHeight: 38
+                            onClicked: root.controller.cycleRepeatMode()
+                            ToolTip.visible: hovered
+                            ToolTip.text: root.controller.repeatMode === 0 ? "开启列表循环"
+                                : (root.controller.repeatMode === 1 ? "切换为单曲循环" : "关闭循环播放")
+                            contentItem: Item {
+                                AppIcon {
+                                    anchors.centerIn: parent
+                                    name: "repeat"
+                                    color: root.controller.repeatMode > 0 ? Theme.accent : Theme.textSecondary
+                                    iconSize: 17
+                                }
+                                Text {
+                                    anchors.right: parent.right
+                                    anchors.bottom: parent.bottom
+                                    visible: root.controller.repeatMode === 2
+                                    text: "1"
+                                    color: Theme.accent
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 8
+                                    font.bold: true
+                                }
+                            }
+                            background: Rectangle {
+                                color: mainRepeatButton.hovered ? Theme.surfaceHover : Theme.transparent
+                                radius: 19
+                            }
+                        }
+
                         Item { Layout.fillWidth: true }
                     }
 
                     RowLayout {
+                        visible: false
                         Layout.fillWidth: true
 
                         Text {
@@ -366,15 +510,84 @@ Item {
                 }
             }
 
+            Rectangle {
+                visible: !root.compact
+                Layout.preferredWidth: 1
+                Layout.fillHeight: true
+                Layout.topMargin: 2
+                Layout.bottomMargin: 2
+                color: Theme.border
+                opacity: 0.55
+            }
+
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.minimumHeight: root.compact ? 250 : 0
                 spacing: 10
 
+                Rectangle {
+                    Layout.preferredWidth: 158
+                    Layout.preferredHeight: 38
+                    color: Theme.surface
+                    border.color: Theme.border
+                    radius: Theme.radiusMedium
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 3
+                        spacing: 3
+
+                        Button {
+                            id: queueTabButton
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            onClicked: root.detailTab = 0
+                            contentItem: Text {
+                                text: "播放队列"
+                                color: root.detailTab === 0 ? Theme.textPrimary : Theme.textSecondary
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                                font.weight: root.detailTab === 0 ? Font.DemiBold : Font.Normal
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            background: Rectangle {
+                                color: root.detailTab === 0
+                                    ? Theme.surfaceHover
+                                    : (queueTabButton.hovered ? Theme.buttonSurface : Theme.transparent)
+                                radius: Theme.radiusSmall
+                            }
+                        }
+
+                        Button {
+                            id: lyricsTabButton
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            onClicked: root.detailTab = 1
+                            contentItem: Text {
+                                text: "歌词"
+                                color: root.detailTab === 1 ? Theme.textPrimary : Theme.textSecondary
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                                font.weight: root.detailTab === 1 ? Font.DemiBold : Font.Normal
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            background: Rectangle {
+                                color: root.detailTab === 1
+                                    ? Theme.surfaceHover
+                                    : (lyricsTabButton.hovered ? Theme.buttonSurface : Theme.transparent)
+                                radius: Theme.radiusSmall
+                            }
+                        }
+                    }
+                }
+
                 RowLayout {
+                    visible: root.detailTab === 0
                     Layout.fillWidth: true
-                    Text { text: "播放队列"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12; font.weight: Font.DemiBold }
+                    Text { text: "接下来播放"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 12; font.weight: Font.DemiBold }
                     Item { Layout.fillWidth: true }
                     Text { text: queueView.count + " 首"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
                     Button {
@@ -399,6 +612,7 @@ Item {
 
                 ListView {
                     id: queueView
+                    visible: root.detailTab === 0
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     clip: true
@@ -417,6 +631,9 @@ Item {
                         required property string title
                         required property string artist
                         required property string duration
+                        required property string accent
+                        required property string initials
+                        required property string coverUrl
                         required property bool isCurrent
                         required property bool isFavorite
 
@@ -451,6 +668,37 @@ Item {
                                     color: queueRow.isCurrent ? Theme.accent : Theme.textSecondary
                                     font.family: Theme.fontFamily
                                     font.pixelSize: 11
+                                }
+                            }
+
+                            Rectangle {
+                                Layout.preferredWidth: 40
+                                Layout.preferredHeight: 40
+                                color: queueCover.status === Image.Ready
+                                    ? queueRow.accent
+                                    : "#3d8bff"
+                                radius: Theme.radiusSmall
+                                clip: true
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: queueRow.initials
+                                    color: Theme.buttonText
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 12
+                                    font.bold: true
+                                    visible: queueCover.status !== Image.Ready
+                                }
+
+                                Image {
+                                    id: queueCover
+                                    anchors.fill: parent
+                                    source: queueRow.coverUrl
+                                    sourceSize.width: 96
+                                    sourceSize.height: 96
+                                    asynchronous: true
+                                    fillMode: Image.PreserveAspectCrop
+                                    visible: status === Image.Ready
                                 }
                             }
                             ColumnLayout {
@@ -560,34 +808,65 @@ Item {
                         onActionTriggered: root.browseRequested()
                     }
                 }
+
+                EmptyState {
+                    visible: root.detailTab === 1
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    iconName: "music"
+                    title: "暂无歌词"
+                    description: "当前歌曲没有可用的歌词数据"
+                }
             }
         }
     }
 
-    Menu {
+    AppMenu {
+        id: nowPlayingMenu
+        implicitWidth: 190
+
+        ContextMenuItem {
+            text: root.controller.currentFavorite ? "取消收藏" : "收藏"
+            iconName: root.controller.currentFavorite ? "favorite-filled" : "favorite"
+            enabled: root.controller.hasCurrentTrack
+            onTriggered: root.controller.toggleCurrentFavorite()
+        }
+
+        ContextMenuItem {
+            text: "清除其他歌曲"
+            iconName: "close"
+            enabled: queueView.count > 1
+            onTriggered: root.controller.clearQueueExceptCurrent()
+        }
+
+        MenuSeparator {
+            contentItem: Rectangle { implicitHeight: 1; color: Theme.border }
+        }
+
+        ContextMenuItem {
+            text: "搜索更多歌曲"
+            iconName: "search"
+            onTriggered: root.browseRequested()
+        }
+    }
+
+    AppMenu {
         id: queueContextMenu
         implicitWidth: 190
-        modal: true
-        palette.window: Theme.surface
-        palette.windowText: Theme.textPrimary
         onClosed: {
             root.contextQueueIndex = -1
             root.contextQueueCurrent = false
         }
 
-        background: Rectangle {
-            color: Theme.surface
-            border.color: Theme.border
-            radius: Theme.radiusMedium
-        }
-
         ContextMenuItem {
             text: "播放"
+            iconName: "play"
             onTriggered: root.controller.playQueueTrack(root.contextQueueIndex)
         }
 
         ContextMenuItem {
             text: "下一首播放"
+            iconName: "next"
             enabled: !root.contextQueueCurrent
             onTriggered: root.controller.playQueueTrackNext(root.contextQueueIndex)
         }
@@ -598,6 +877,8 @@ Item {
 
         ContextMenuItem {
             text: "从队列移除"
+            iconName: "remove"
+            danger: true
             enabled: !root.contextQueueCurrent
             onTriggered: root.controller.removeQueueTrack(root.contextQueueIndex)
         }
