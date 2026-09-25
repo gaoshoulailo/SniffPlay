@@ -82,13 +82,10 @@ ApplicationWindow {
                 onClicked: root.currentPage = 5
                 ToolTip.visible: hovered
                 ToolTip.text: "设置"
-                contentItem: Text {
-                    text: "⚙"
+                contentItem: AppIcon {
+                    name: "settings"
                     color: Theme.textPrimary
-                    font.family: "Segoe UI Symbol"
-                    font.pixelSize: 15
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    iconSize: 16
                 }
                 background: Rectangle {
                     color: settingsButton.hovered ? Theme.surfaceHover : Theme.transparent
@@ -97,7 +94,7 @@ ApplicationWindow {
             }
 
             Repeater {
-                model: ["—", "□", "×"]
+                model: ["minimize", "maximize", "close"]
 
                 delegate: Button {
                     id: windowButton
@@ -121,15 +118,12 @@ ApplicationWindow {
                             ? (root.visibility === Window.Maximized ? "还原" : "最大化")
                             : "关闭")
 
-                    contentItem: Text {
-                        text: windowButton.index === 1 && root.visibility === Window.Maximized
-                            ? "❐"
+                    contentItem: AppIcon {
+                        name: windowButton.index === 1 && root.visibility === Window.Maximized
+                            ? "restore"
                             : windowButton.modelData
                         color: Theme.textPrimary
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 15
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
+                        iconSize: 13
                     }
                     background: Rectangle {
                         color: windowButton.hovered
@@ -235,7 +229,7 @@ ApplicationWindow {
                 NavButton {
                     Layout.fillWidth: true
                     text: "正在播放"
-                    marker: "▶"
+                    iconName: "play"
                     selected: root.currentPage === 0
                     onClicked: root.currentPage = 0
                 }
@@ -243,7 +237,7 @@ ApplicationWindow {
                 NavButton {
                     Layout.fillWidth: true
                     text: "搜索"
-                    marker: "⌕"
+                    iconName: "search"
                     selected: root.currentPage === 1
                     onClicked: root.currentPage = 1
                 }
@@ -251,7 +245,7 @@ ApplicationWindow {
                 NavButton {
                     Layout.fillWidth: true
                     text: "我的收藏"
-                    marker: "♥"
+                    iconName: "favorite"
                     selected: root.currentPage === 2
                     onClicked: root.currentPage = 2
                 }
@@ -259,7 +253,7 @@ ApplicationWindow {
                 NavButton {
                     Layout.fillWidth: true
                     text: "我的歌单"
-                    marker: "≡"
+                    iconName: "list"
                     selected: root.currentPage === 3
                     onClicked: root.currentPage = 3
                 }
@@ -267,7 +261,7 @@ ApplicationWindow {
                 NavButton {
                     Layout.fillWidth: true
                     text: "播放历史"
-                    marker: "↶"
+                    iconName: "history"
                     selected: root.currentPage === 4
                     onClicked: root.currentPage = 4
                 }
@@ -275,7 +269,7 @@ ApplicationWindow {
                 NavButton {
                     Layout.fillWidth: true
                     text: "设置"
-                    marker: "⚙"
+                    iconName: "settings"
                     visible: false
                 }
 

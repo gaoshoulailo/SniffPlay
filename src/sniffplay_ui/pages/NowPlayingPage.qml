@@ -41,13 +41,10 @@ Item {
                 ToolTip.visible: hovered
                 ToolTip.text: root.controller.shuffleEnabled ? "关闭随机播放" : "开启随机播放"
 
-                contentItem: Text {
-                    text: "⤨"
+                contentItem: AppIcon {
+                    name: "shuffle"
                     color: root.controller.shuffleEnabled ? Theme.accent : Theme.textSecondary
-                    font.family: "Segoe UI Symbol"
-                    font.pixelSize: 19
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    iconSize: 18
                 }
                 background: Rectangle {
                     color: root.controller.shuffleEnabled ? Theme.accentDark : (shuffleButton.hovered ? Theme.surfaceHover : Theme.surface)
@@ -66,12 +63,11 @@ Item {
                     : (root.controller.repeatMode === 1 ? "切换为单曲循环" : "关闭循环播放")
 
                 contentItem: Item {
-                    Text {
+                    AppIcon {
                         anchors.centerIn: parent
-                        text: "↻"
+                        name: "repeat"
                         color: root.controller.repeatMode > 0 ? Theme.accent : Theme.textSecondary
-                        font.family: "Segoe UI Symbol"
-                        font.pixelSize: 20
+                        iconSize: 18
                     }
                     Text {
                         anchors.right: parent.right
@@ -102,14 +98,10 @@ Item {
                 ToolTip.visible: hovered
                 ToolTip.text: root.controller.currentFavorite ? "取消收藏" : "收藏"
 
-                contentItem: Text {
-                    text: root.controller.currentFavorite ? "♥" : "♡"
+                contentItem: AppIcon {
+                    name: root.controller.currentFavorite ? "favorite-filled" : "favorite"
                     color: root.controller.currentFavorite ? Theme.danger : Theme.textSecondary
-                    font.family: "Segoe UI Symbol"
-                    font.pixelSize: 19
-                    font.weight: Font.Normal
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    iconSize: 18
                 }
                 background: Rectangle {
                     color: favoriteButton.hovered ? Theme.surfaceHover : Theme.surface
@@ -283,7 +275,7 @@ Item {
                             enabled: root.controller.canGoPrevious
                             onClicked: root.controller.previousTrack()
                             ToolTip.visible: hovered; ToolTip.text: "上一首"
-                            contentItem: Text { text: "|◀"; color: previousButton.enabled ? Theme.textPrimary : Theme.textSecondary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                            contentItem: AppIcon { name: "previous"; color: previousButton.enabled ? Theme.textPrimary : Theme.textSecondary; iconSize: 18 }
                             background: Rectangle { color: previousButton.hovered ? Theme.surfaceHover : Theme.transparent; radius: 19 }
                         }
 
@@ -294,14 +286,9 @@ Item {
                             onClicked: root.controller.togglePlayback()
                             ToolTip.visible: hovered
                             ToolTip.text: root.controller.playing ? "暂停" : "播放"
-                            contentItem: Text {
-                                text: root.controller.loading ? "…" : (root.controller.playing ? "Ⅱ" : "▶")
-                                color: Theme.buttonText
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 18
-                                font.bold: true
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
+                            contentItem: Item {
+                                AppIcon { anchors.centerIn: parent; visible: !root.controller.loading; name: root.controller.playing ? "pause" : "play"; color: Theme.buttonText; iconSize: 20 }
+                                Text { anchors.centerIn: parent; visible: root.controller.loading; text: "…"; color: Theme.buttonText; font.family: Theme.fontFamily; font.pixelSize: 18; font.bold: true }
                             }
                             background: Rectangle {
                                 color: playButton.enabled ? (playButton.hovered ? Theme.accentHover : Theme.accent) : Theme.surface
@@ -316,7 +303,7 @@ Item {
                             enabled: root.controller.canGoNext
                             onClicked: root.controller.nextTrack()
                             ToolTip.visible: hovered; ToolTip.text: "下一首"
-                            contentItem: Text { text: "▶|"; color: nextButton.enabled ? Theme.textPrimary : Theme.textSecondary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                            contentItem: AppIcon { name: "next"; color: nextButton.enabled ? Theme.textPrimary : Theme.textSecondary; iconSize: 18 }
                             background: Rectangle { color: nextButton.hovered ? Theme.surfaceHover : Theme.transparent; radius: 19 }
                         }
 
@@ -397,12 +384,10 @@ Item {
                         onClicked: root.controller.clearQueueExceptCurrent()
                         ToolTip.visible: hovered
                         ToolTip.text: "清除其他歌曲"
-                        contentItem: Text {
-                            text: "×"
+                        contentItem: AppIcon {
+                            name: "close"
                             color: clearQueueButton.enabled ? Theme.textSecondary : Theme.border
-                            font.pixelSize: 18
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
+                            iconSize: 14
                         }
                         background: Rectangle {
                             color: clearQueueButton.hovered ? Theme.surfaceHover : Theme.transparent
@@ -446,15 +431,26 @@ Item {
                             anchors.rightMargin: 12
                             spacing: 12
 
-                            Text {
+                            Item {
                                 Layout.preferredWidth: 24
-                                text: queueRow.isCurrent
-                                    ? (root.controller.loading ? "…" : (root.controller.playing ? "Ⅱ" : "▶"))
-                                    : queueRow.index + 1
-                                color: queueRow.isCurrent ? Theme.accent : Theme.textSecondary
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 11
-                                horizontalAlignment: Text.AlignHCenter
+                                Layout.preferredHeight: 24
+
+                                AppIcon {
+                                    anchors.centerIn: parent
+                                    visible: queueRow.isCurrent && !root.controller.loading
+                                    name: root.controller.playing ? "pause" : "play"
+                                    color: Theme.accent
+                                    iconSize: 13
+                                }
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    visible: !queueRow.isCurrent || root.controller.loading
+                                    text: root.controller.loading && queueRow.isCurrent ? "…" : queueRow.index + 1
+                                    color: queueRow.isCurrent ? Theme.accent : Theme.textSecondary
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 11
+                                }
                             }
                             ColumnLayout {
                                 Layout.fillWidth: true
@@ -482,13 +478,10 @@ Item {
                                     onClicked: root.controller.toggleQueueTrackFavorite(queueRow.index)
                                     ToolTip.visible: hovered
                                     ToolTip.text: queueRow.isFavorite ? "取消收藏" : "收藏"
-                                    contentItem: Text {
-                                        text: queueRow.isFavorite ? "♥" : "♡"
+                                    contentItem: AppIcon {
+                                        name: queueRow.isFavorite ? "favorite-filled" : "favorite"
                                         color: queueRow.isFavorite ? Theme.danger : Theme.textSecondary
-                                        font.family: "Segoe UI Symbol"
-                                        font.pixelSize: 17
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
+                                        iconSize: 16
                                     }
                                     background: Rectangle {
                                         color: queueFavoriteButton.hovered ? Theme.surfaceHover : Theme.surface
@@ -506,13 +499,10 @@ Item {
                                         : root.controller.playQueueTrack(queueRow.index)
                                     ToolTip.visible: hovered
                                     ToolTip.text: queueRow.isCurrent && root.controller.playing ? "暂停" : "播放"
-                                    contentItem: Text {
-                                        text: queueRow.isCurrent && root.controller.playing ? "Ⅱ" : "▶"
+                                    contentItem: AppIcon {
+                                        name: queueRow.isCurrent && root.controller.playing ? "pause" : "play"
                                         color: Theme.textPrimary
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: 11
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
+                                        iconSize: 14
                                     }
                                     background: Rectangle {
                                         color: queuePlayButton.hovered ? Theme.accentDark : Theme.surface

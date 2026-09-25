@@ -43,13 +43,10 @@ Item {
                 onClicked: root.controller.toggleShuffle()
                 ToolTip.visible: hovered
                 ToolTip.text: root.controller.shuffleEnabled ? "关闭随机播放" : "开启随机播放"
-                contentItem: Text {
-                    text: "⤨"
+                contentItem: AppIcon {
+                    name: "shuffle"
                     color: root.controller.shuffleEnabled ? Theme.accent : Theme.textSecondary
-                    font.family: "Segoe UI Symbol"
-                    font.pixelSize: 18
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    iconSize: 18
                 }
                 background: Rectangle {
                     color: headerShuffleButton.hovered ? Theme.surfaceHover : Theme.transparent
@@ -65,13 +62,10 @@ Item {
                 onClicked: root.controller.search(searchField.text)
                 ToolTip.visible: hovered
                 ToolTip.text: "刷新"
-                contentItem: Text {
-                    text: "↻"
+                contentItem: AppIcon {
+                    name: "refresh"
                     color: Theme.textSecondary
-                    font.family: "Segoe UI Symbol"
-                    font.pixelSize: 20
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    iconSize: 17
                 }
                 background: Rectangle {
                     color: refreshButton.hovered ? Theme.surfaceHover : Theme.transparent
@@ -109,7 +103,7 @@ Item {
             }
 
             AppButton {
-                text: "+"
+                iconName: "folder-open"
                 ToolTip.visible: hovered
                 ToolTip.text: "打开本地音频"
                 onClicked: localFileDialog.open()
@@ -117,6 +111,7 @@ Item {
 
             AppButton {
                 text: root.controller.searching ? "…" : "搜索"
+                iconName: root.controller.searching ? "" : "search"
                 primary: true
                 enabled: !root.controller.searching
                 onClicked: root.controller.search(searchField.text)
@@ -450,14 +445,10 @@ Item {
                         ToolTip.visible: hovered
                         ToolTip.text: trackRow.isFavorite ? "取消收藏" : "收藏"
 
-                        contentItem: Text {
-                            text: trackRow.isFavorite ? "♥" : "♡"
+                        contentItem: AppIcon {
+                            name: trackRow.isFavorite ? "favorite-filled" : "favorite"
                             color: trackRow.isFavorite ? Theme.danger : Theme.textSecondary
-                            font.family: "Segoe UI Symbol"
-                            font.pixelSize: 19
-                            font.weight: Font.Normal
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
+                            iconSize: 17
                         }
                         background: Rectangle {
                             color: favoriteButton.hovered ? Theme.surfaceHover : Theme.surface
@@ -478,12 +469,10 @@ Item {
                         ToolTip.visible: hovered
                         ToolTip.text: "加入歌单"
 
-                        contentItem: Text {
-                            text: "+"
+                        contentItem: AppIcon {
+                            name: "add"
                             color: Theme.textPrimary
-                            font.pixelSize: 18
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
+                            iconSize: 16
                         }
                         background: Rectangle {
                             color: rowAddButton.hovered ? Theme.surfaceHover : Theme.surface
@@ -501,12 +490,10 @@ Item {
                         ToolTip.visible: hovered
                         ToolTip.text: "播放"
 
-                        contentItem: Text {
-                            text: "▶"
+                        contentItem: AppIcon {
+                            name: "play"
                             color: Theme.textPrimary
-                            font.pixelSize: 12
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
+                            iconSize: 14
                         }
                         background: Rectangle {
                             color: rowPlayButton.hovered ? Theme.accentDark : Theme.surface
@@ -642,12 +629,11 @@ Item {
                         spacing: 10
                         Text { Layout.fillWidth: true; text: playlistChoice.name; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13; elide: Text.ElideRight }
                         Text { text: playlistChoice.countLabel; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-                        Text {
-                            text: "✓"
+                        AppIcon {
+                            name: "check"
                             visible: root.pendingPlaylistId === playlistChoice.playlistId
                             color: Theme.accent
-                            font.pixelSize: 15
-                            font.bold: true
+                            iconSize: 14
                         }
                     }
                     background: Rectangle {
@@ -674,6 +660,7 @@ Item {
             AppButton {
                 Layout.fillWidth: true
                 text: "新建歌单并添加"
+                iconName: "add"
                 primary: true
                 onClicked: newPlaylistWithTrackDialog.open()
             }

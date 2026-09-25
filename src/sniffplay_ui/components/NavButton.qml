@@ -5,7 +5,7 @@ import "../themes"
 Button {
     id: control
 
-    property string marker: ""
+    property string iconName: ""
     property bool selected: false
 
     implicitHeight: 42
@@ -21,13 +21,11 @@ Button {
             radius: 6
             color: control.selected ? Theme.accentDark : Theme.surface
 
-            Text {
+            AppIcon {
                 anchors.centerIn: parent
-                text: control.marker
+                name: control.iconName
                 color: control.selected ? Theme.accent : Theme.textSecondary
-                font.family: Theme.fontFamily
-                font.pixelSize: 11
-                font.weight: Font.Bold
+                iconSize: 14
             }
         }
 

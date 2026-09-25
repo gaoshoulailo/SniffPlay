@@ -201,14 +201,10 @@ Rectangle {
                 onClicked: root.controller.toggleCurrentFavorite()
                 ToolTip.visible: hovered
                 ToolTip.text: root.controller.currentFavorite ? "取消收藏" : "收藏"
-                contentItem: Text {
-                    text: root.controller.currentFavorite ? "♥" : "♡"
+                contentItem: AppIcon {
+                    name: root.controller.currentFavorite ? "favorite-filled" : "favorite"
                     color: root.controller.currentFavorite ? Theme.danger : (favoriteButton.enabled ? Theme.textPrimary : Theme.disabledText)
-                    font.family: "Segoe UI Symbol"
-                    font.pixelSize: 19
-                    font.weight: Font.Normal
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    iconSize: 18
                 }
                 background: Rectangle {
                     color: favoriteButton.hovered ? Theme.surfaceHover : Theme.transparent
@@ -224,12 +220,10 @@ Rectangle {
                 onClicked: root.controller.previousTrack()
                 ToolTip.visible: hovered
                 ToolTip.text: "上一首"
-                contentItem: Text {
-                    text: "◀|"
+                contentItem: AppIcon {
+                    name: "previous"
                     color: previousButton.enabled ? Theme.textPrimary : Theme.disabledText
-                    font.pixelSize: 11
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    iconSize: 17
                 }
                 background: Rectangle {
                     color: previousButton.hovered ? Theme.surfaceHover : Theme.transparent
@@ -246,14 +240,23 @@ Rectangle {
                 ToolTip.visible: hovered
                 ToolTip.text: root.controller.playing ? "暂停" : "播放"
 
-                contentItem: Text {
-                    text: root.controller.loading ? "…" : (root.controller.playing ? "Ⅱ" : "▶")
-                    color: playButton.enabled ? Theme.buttonText : Theme.disabledText
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 15
-                    font.bold: true
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                contentItem: Item {
+                    AppIcon {
+                        anchors.centerIn: parent
+                        visible: !root.controller.loading
+                        name: root.controller.playing ? "pause" : "play"
+                        color: playButton.enabled ? Theme.buttonText : Theme.disabledText
+                        iconSize: 17
+                    }
+                    Text {
+                        anchors.centerIn: parent
+                        visible: root.controller.loading
+                        text: "…"
+                        color: playButton.enabled ? Theme.buttonText : Theme.disabledText
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 15
+                        font.bold: true
+                    }
                 }
 
                 background: Rectangle {
@@ -272,12 +275,10 @@ Rectangle {
                 onClicked: root.controller.nextTrack()
                 ToolTip.visible: hovered
                 ToolTip.text: "下一首"
-                contentItem: Text {
-                    text: "|▶"
+                contentItem: AppIcon {
+                    name: "next"
                     color: nextButton.enabled ? Theme.textPrimary : Theme.disabledText
-                    font.pixelSize: 11
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    iconSize: 17
                 }
                 background: Rectangle {
                     color: nextButton.hovered ? Theme.surfaceHover : Theme.transparent

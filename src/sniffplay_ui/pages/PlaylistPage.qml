@@ -56,6 +56,7 @@ Item {
 
                     AppButton {
                         text: "新建歌单"
+                        iconName: "add"
                         primary: true
                         onClicked: createDialog.open()
                     }
@@ -94,7 +95,7 @@ Item {
                                 Layout.preferredHeight: 42
                                 color: Theme.accentDark
                                 radius: Theme.radiusSmall
-                                Text { anchors.centerIn: parent; text: "♫"; color: Theme.accent; font.pixelSize: 18 }
+                                AppIcon { anchors.centerIn: parent; name: "music"; color: Theme.accent; iconSize: 17 }
                             }
 
                             ColumnLayout {
@@ -104,7 +105,7 @@ Item {
                                 Text { text: playlistRow.countLabel; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12 }
                             }
 
-                            Text { text: "›"; color: Theme.textSecondary; font.pixelSize: 24 }
+                            AppIcon { name: "chevron-right"; color: Theme.textSecondary; iconSize: 16 }
                         }
 
                         MouseArea {
@@ -154,7 +155,7 @@ Item {
                         onClicked: root.controller.closePlaylist()
                         ToolTip.visible: hovered
                         ToolTip.text: "返回歌单列表"
-                        contentItem: Text { text: "‹"; color: Theme.textPrimary; font.pixelSize: 26; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                        contentItem: AppIcon { name: "back"; color: Theme.textPrimary; iconSize: 17 }
                         background: Rectangle { color: backButton.hovered ? Theme.surfaceHover : Theme.surface; border.color: Theme.border; radius: Theme.radiusMedium }
                     }
 
@@ -170,6 +171,7 @@ Item {
 
                     AppButton {
                         text: "播放全部"
+                        iconName: "play"
                         primary: true
                         enabled: playlistTrackView.count > 0
                         onClicked: root.controller.playSelectedPlaylist()
@@ -183,6 +185,7 @@ Item {
                     }
                     AppButton {
                         text: "删除歌单"
+                        iconName: "delete"
                         onClicked: root.openDeleteDialog(
                             root.controller.selectedPlaylistId,
                             root.controller.selectedPlaylistName
@@ -268,7 +271,7 @@ Item {
                                 implicitWidth: 34; implicitHeight: 34
                                 onClicked: root.controller.playPlaylistItem(trackRow.index)
                                 ToolTip.visible: hovered; ToolTip.text: "播放"
-                                contentItem: Text { text: "▶"; color: Theme.textPrimary; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                                contentItem: AppIcon { name: "play"; color: Theme.textPrimary; iconSize: 14 }
                                 background: Rectangle { color: playButton.hovered ? Theme.accentDark : Theme.surface; border.color: Theme.border; radius: 17 }
                             }
                             Button {
@@ -277,7 +280,7 @@ Item {
                                 enabled: trackRow.canMoveUp
                                 onClicked: root.controller.movePlaylistItem(trackRow.itemId, trackRow.index - 1)
                                 ToolTip.visible: hovered; ToolTip.text: "上移"
-                                contentItem: Text { text: "↑"; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                                contentItem: AppIcon { name: "up"; color: Theme.textPrimary; iconSize: 14 }
                                 background: Rectangle { color: moveUpButton.hovered ? Theme.surfaceHover : Theme.surface; border.color: Theme.border; radius: Theme.radiusSmall; opacity: moveUpButton.enabled ? 1 : 0.35 }
                             }
                             Button {
@@ -286,7 +289,7 @@ Item {
                                 enabled: trackRow.canMoveDown
                                 onClicked: root.controller.movePlaylistItem(trackRow.itemId, trackRow.index + 1)
                                 ToolTip.visible: hovered; ToolTip.text: "下移"
-                                contentItem: Text { text: "↓"; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                                contentItem: AppIcon { name: "down"; color: Theme.textPrimary; iconSize: 14 }
                                 background: Rectangle { color: moveDownButton.hovered ? Theme.surfaceHover : Theme.surface; border.color: Theme.border; radius: Theme.radiusSmall; opacity: moveDownButton.enabled ? 1 : 0.35 }
                             }
                             Button {
@@ -297,7 +300,7 @@ Item {
                                     removeItemDialog.open()
                                 }
                                 ToolTip.visible: hovered; ToolTip.text: "从歌单移除"
-                                contentItem: Text { text: "×"; color: Theme.danger; font.pixelSize: 17; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                                contentItem: AppIcon { name: "remove"; color: Theme.danger; iconSize: 14 }
                                 background: Rectangle { color: removeButton.hovered ? Theme.surfaceHover : Theme.surface; border.color: Theme.border; radius: Theme.radiusSmall }
                             }
                         }
@@ -476,7 +479,7 @@ Item {
                         spacing: 10
                         Text { Layout.fillWidth: true; text: playlistChoice.name; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13; elide: Text.ElideRight }
                         Text { text: playlistChoice.countLabel; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-                        Text { text: "✓"; visible: root.pendingPlaylistId === playlistChoice.playlistId; color: Theme.accent; font.pixelSize: 15; font.bold: true }
+                        AppIcon { name: "check"; visible: root.pendingPlaylistId === playlistChoice.playlistId; color: Theme.accent; iconSize: 14 }
                     }
 
                     background: Rectangle {
@@ -494,6 +497,7 @@ Item {
             AppButton {
                 Layout.fillWidth: true
                 text: "新建歌单并添加"
+                iconName: "add"
                 primary: true
                 onClicked: newPlaylistWithPlaylistTrackDialog.open()
             }

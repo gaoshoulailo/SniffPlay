@@ -34,13 +34,10 @@ Item {
                 onClicked: root.controller.toggleShuffle()
                 ToolTip.visible: hovered
                 ToolTip.text: root.controller.shuffleEnabled ? "关闭随机播放" : "开启随机播放"
-                contentItem: Text {
-                    text: "⤨"
+                contentItem: AppIcon {
+                    name: "shuffle"
                     color: root.controller.shuffleEnabled ? Theme.accent : Theme.textSecondary
-                    font.family: "Segoe UI Symbol"
-                    font.pixelSize: 18
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    iconSize: 18
                 }
                 background: Rectangle { color: shuffleButton.hovered ? Theme.surfaceHover : Theme.transparent; radius: 19 }
             }
@@ -50,13 +47,10 @@ Item {
                 implicitWidth: 38; implicitHeight: 38
                 onClicked: root.controller.refreshLibrary()
                 ToolTip.visible: hovered; ToolTip.text: "刷新收藏"
-                contentItem: Text {
-                    text: "↻"
+                contentItem: AppIcon {
+                    name: "refresh"
                     color: Theme.textSecondary
-                    font.family: "Segoe UI Symbol"
-                    font.pixelSize: 20
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    iconSize: 17
                 }
                 background: Rectangle { color: refreshButton.hovered ? Theme.surfaceHover : Theme.transparent; radius: 19 }
             }
@@ -261,7 +255,7 @@ Item {
                         implicitWidth: 34; implicitHeight: 34
                         onClicked: root.controller.playFavorite(favoriteRow.index)
                         ToolTip.visible: hovered; ToolTip.text: "播放"
-                        contentItem: Text { text: "▶"; color: Theme.textPrimary; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                        contentItem: AppIcon { name: "play"; color: Theme.textPrimary; iconSize: 14 }
                         background: Rectangle { color: playButton.hovered ? Theme.accentDark : Theme.surface; border.color: Theme.border; radius: 17 }
                     }
 
@@ -270,7 +264,7 @@ Item {
                         implicitWidth: 34; implicitHeight: 34
                         onClicked: root.controller.removeFavorite(favoriteRow.favoriteId)
                         ToolTip.visible: hovered; ToolTip.text: "取消收藏"
-                        contentItem: Text { text: "♥"; color: Theme.danger; font.pixelSize: 18; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                        contentItem: AppIcon { name: "favorite-filled"; color: Theme.danger; iconSize: 17 }
                         background: Rectangle { color: removeButton.hovered ? Theme.surfaceHover : Theme.surface; border.color: Theme.border; radius: 17 }
                     }
                 }
@@ -387,7 +381,7 @@ Item {
                         spacing: 10
                         Text { Layout.fillWidth: true; text: playlistChoice.name; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13; elide: Text.ElideRight }
                         Text { text: playlistChoice.countLabel; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-                        Text { text: "✓"; visible: root.pendingPlaylistId === playlistChoice.playlistId; color: Theme.accent; font.pixelSize: 15; font.bold: true }
+                        AppIcon { name: "check"; visible: root.pendingPlaylistId === playlistChoice.playlistId; color: Theme.accent; iconSize: 14 }
                     }
 
                     background: Rectangle {
@@ -414,6 +408,7 @@ Item {
             AppButton {
                 Layout.fillWidth: true
                 text: "新建歌单并添加"
+                iconName: "add"
                 primary: true
                 onClicked: newPlaylistWithFavoriteDialog.open()
             }

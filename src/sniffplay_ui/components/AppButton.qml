@@ -7,19 +7,38 @@ Button {
 
     property bool primary: false
     property bool danger: false
+    property string iconName: ""
 
     implicitHeight: 38
     leftPadding: 16
     rightPadding: 16
 
-    contentItem: Text {
-        text: control.text
-        color: control.primary || control.danger ? Theme.buttonText : Theme.textPrimary
-        font.family: Theme.fontFamily
-        font.pixelSize: 13
-        font.weight: Font.DemiBold
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+    contentItem: Item {
+        implicitWidth: contentRow.implicitWidth
+        implicitHeight: contentRow.implicitHeight
+
+        Row {
+            id: contentRow
+            anchors.centerIn: parent
+            spacing: control.iconName.length > 0 && control.text.length > 0 ? 7 : 0
+
+            AppIcon {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: control.iconName.length > 0
+                name: control.iconName
+                color: control.primary || control.danger ? Theme.buttonText : Theme.textPrimary
+                iconSize: 15
+            }
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: control.text
+                color: control.primary || control.danger ? Theme.buttonText : Theme.textPrimary
+                font.family: Theme.fontFamily
+                font.pixelSize: 13
+                font.weight: Font.DemiBold
+            }
+        }
     }
 
     background: Rectangle {

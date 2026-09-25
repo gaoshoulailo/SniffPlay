@@ -160,12 +160,10 @@ Item {
                         ToolTip.visible: hovered
                         ToolTip.text: "播放"
 
-                        contentItem: Text {
-                            text: "▶"
+                        contentItem: AppIcon {
+                            name: "play"
                             color: Theme.textPrimary
-                            font.pixelSize: 11
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
+                            iconSize: 14
                         }
                         background: Rectangle {
                             color: playButton.hovered ? Theme.accentDark : Theme.surface
@@ -294,7 +292,7 @@ Item {
                         spacing: 10
                         Text { Layout.fillWidth: true; text: playlistChoice.name; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13; elide: Text.ElideRight }
                         Text { text: playlistChoice.countLabel; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-                        Text { text: "✓"; visible: root.pendingPlaylistId === playlistChoice.playlistId; color: Theme.accent; font.pixelSize: 15; font.bold: true }
+                        AppIcon { name: "check"; visible: root.pendingPlaylistId === playlistChoice.playlistId; color: Theme.accent; iconSize: 14 }
                     }
 
                     background: Rectangle {
@@ -321,6 +319,7 @@ Item {
             AppButton {
                 Layout.fillWidth: true
                 text: "新建歌单并添加"
+                iconName: "add"
                 primary: true
                 onClicked: newPlaylistWithHistoryDialog.open()
             }
