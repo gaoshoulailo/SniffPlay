@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 import QtQuick.Layouts
 import "../components"
 import "../themes"
@@ -19,8 +20,12 @@ Item {
     property int pendingPlaylistId: -1
     property int contextPlaylistId: -1
     property string contextPlaylistName: ""
+    property bool contextPlaylistShortcut: false
+    property int pendingShortcutPlaylistId: -1
+    property string pendingShortcutPlaylistName: ""
     property int dialogPlaylistId: -1
     property string dialogPlaylistName: ""
+    readonly property bool compact: width < 760
 
     function openRenameDialog(playlistId, playlistName) {
         root.dialogPlaylistId = playlistId
@@ -34,31 +39,42 @@ Item {
         deletePlaylistDialog.open()
     }
 
-    StackLayout {
+    RowLayout {
         anchors.fill: parent
-        currentIndex: root.controller.hasSelectedPlaylist ? 1 : 0
+        anchors.margins: 24
+        spacing: 22
 
-        Item {
+        Rectangle {
+            Layout.preferredWidth: root.compact ? 190 : 230
+            Layout.fillHeight: true
+            color: Theme.transparent
+
+            Rectangle {
+                anchors.top: parent.top
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                width: 1
+                color: Theme.border
+            }
+
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 30
-                spacing: 18
+                anchors.rightMargin: 18
+                spacing: 14
 
                 RowLayout {
                     Layout.fillWidth: true
 
-                    ColumnLayout {
-                        spacing: 5
-                        Text { text: "我的歌单"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 26; font.weight: Font.Bold }
-                        Text { text: "整理喜欢的歌曲和播放顺序"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 13 }
-                    }
+                    Text { text: "我的歌单"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 22; font.weight: Font.Bold }
 
                     Item { Layout.fillWidth: true }
 
                     AppButton {
-                        text: "新建歌单"
+                        text: ""
                         iconName: "add"
                         primary: true
+                        ToolTip.visible: hovered
+                        ToolTip.text: "新建歌单"
                         onClicked: createDialog.open()
                     }
                 }
@@ -80,10 +96,20 @@ Item {
 
                         width: playlistView.width
                         height: 62
-                        color: root.contextPlaylistId === playlistRow.playlistId
+                        color: root.controller.selectedPlaylistId === playlistRow.playlistId
                             ? Theme.accentDark
                             : (playlistMouse.containsMouse ? Theme.surfaceHover : Theme.transparent)
                         radius: Theme.radiusMedium
+
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 3
+                            height: root.controller.selectedPlaylistId === playlistRow.playlistId ? 24 : 0
+                            radius: 2
+                            color: Theme.accent
+                            Behavior on height { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                        }
 
                         RowLayout {
                             anchors.fill: parent
@@ -122,6 +148,9 @@ Item {
                                 }
                                 root.contextPlaylistId = playlistRow.playlistId
                                 root.contextPlaylistName = playlistRow.name
+                                root.contextPlaylistShortcut = root.controller.isPlaylistShortcut(
+                                    playlistRow.playlistId
+                                )
                                 playlistContextMenu.popup()
                             }
                         }
@@ -144,9 +173,12 @@ Item {
         }
 
         Item {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 30
+                visible: root.controller.hasSelectedPlaylist
                 spacing: 16
 
                 RowLayout {
@@ -155,6 +187,7 @@ Item {
 
                     Button {
                         id: backButton
+                        visible: false
                         implicitWidth: 38
                         implicitHeight: 38
                         onClicked: root.controller.closePlaylist()
@@ -164,14 +197,26 @@ Item {
                         background: Rectangle { color: backButton.hovered ? Theme.surfaceHover : Theme.surface; border.color: Theme.border; radius: Theme.radiusMedium }
                     }
 
-                    Text {
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        text: root.controller.selectedPlaylistName
-                        color: Theme.textPrimary
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 24
-                        font.weight: Font.Bold
-                        elide: Text.ElideRight
+                        spacing: 3
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: root.controller.selectedPlaylistName
+                            color: Theme.textPrimary
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 24
+                            font.weight: Font.Bold
+                            elide: Text.ElideRight
+                        }
+
+                        Text {
+                            text: playlistTrackView.count + " 首歌曲 · 可拖动整理播放顺序"
+                            color: Theme.textSecondary
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 11
+                        }
                     }
 
                     AppButton {
@@ -182,15 +227,20 @@ Item {
                         onClicked: root.controller.playSelectedPlaylist()
                     }
                     AppButton {
-                        text: "重命名"
+                        text: ""
+                        iconName: "edit"
+                        ToolTip.visible: hovered
+                        ToolTip.text: "重命名歌单"
                         onClicked: root.openRenameDialog(
                             root.controller.selectedPlaylistId,
                             root.controller.selectedPlaylistName
                         )
                     }
                     AppButton {
-                        text: "删除歌单"
+                        text: ""
                         iconName: "delete"
+                        ToolTip.visible: hovered
+                        ToolTip.text: "删除歌单"
                         onClicked: root.openDeleteDialog(
                             root.controller.selectedPlaylistId,
                             root.controller.selectedPlaylistName
@@ -200,12 +250,12 @@ Item {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    Layout.leftMargin: 58
+                    Layout.leftMargin: 8
                     Layout.rightMargin: 18
                     Text { Layout.fillWidth: true; text: "歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-                    Text { Layout.preferredWidth: 150; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
+                    Text { visible: !root.compact; Layout.preferredWidth: 130; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
                     Text { Layout.preferredWidth: 54; text: "时长"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-                    Item { Layout.preferredWidth: 156 }
+                    Item { Layout.preferredWidth: root.compact ? 72 : 146 }
                 }
 
                 ListView {
@@ -256,11 +306,33 @@ Item {
                                 Image { id: trackCover; anchors.fill: parent; source: trackRow.coverUrl; sourceSize.width: 96; sourceSize.height: 96; fillMode: Image.PreserveAspectCrop; asynchronous: true; visible: status === Image.Ready }
                             }
 
-                            ColumnLayout {
+                            Item {
                                 Layout.fillWidth: true
-                                spacing: 1
-                                Text { Layout.fillWidth: true; text: trackRow.title; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Font.DemiBold; elide: Text.ElideRight }
-                                Text { Layout.fillWidth: true; text: trackRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11; elide: Text.ElideRight }
+
+                                Text {
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.bottom: parent.verticalCenter
+                                    text: trackRow.title
+                                    color: Theme.textPrimary
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 13
+                                    font.weight: Font.DemiBold
+                                    elide: Text.ElideRight
+                                }
+
+                                Text {
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.top: parent.verticalCenter
+                                    anchors.topMargin: 2
+                                    text: trackRow.artist
+                                    color: Theme.textSecondary
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 11
+                                    elide: Text.ElideRight
+                                }
+
                                 MouseArea {
                                     anchors.fill: parent
                                     acceptedButtons: Qt.LeftButton
@@ -268,7 +340,7 @@ Item {
                                 }
                             }
 
-                            Text { Layout.preferredWidth: 150; text: trackRow.album; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11; elide: Text.ElideRight }
+                            Text { visible: !root.compact; Layout.preferredWidth: 130; text: trackRow.album; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11; elide: Text.ElideRight }
                             Text { Layout.preferredWidth: 54; text: trackRow.duration; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
 
                             Button {
@@ -281,6 +353,7 @@ Item {
                             }
                             Button {
                                 id: moveUpButton
+                                visible: !root.compact
                                 implicitWidth: 32; implicitHeight: 32
                                 enabled: trackRow.canMoveUp
                                 onClicked: root.controller.movePlaylistItem(trackRow.itemId, trackRow.index - 1)
@@ -290,6 +363,7 @@ Item {
                             }
                             Button {
                                 id: moveDownButton
+                                visible: !root.compact
                                 implicitWidth: 32; implicitHeight: 32
                                 enabled: trackRow.canMoveDown
                                 onClicked: root.controller.movePlaylistItem(trackRow.itemId, trackRow.index + 1)
@@ -341,35 +415,56 @@ Item {
                     }
                 }
             }
+
+            EmptyState {
+                anchors.centerIn: parent
+                visible: !root.controller.hasSelectedPlaylist
+                width: Math.min(360, parent.width - 40)
+                iconName: "list"
+                title: "选择一个歌单"
+                description: "歌曲与播放顺序会显示在这里"
+                actionText: "新建歌单"
+                actionIcon: "add"
+                onActionTriggered: createDialog.open()
+            }
         }
     }
 
-    Menu {
+    AppMenu {
         id: playlistContextMenu
-        implicitWidth: 210
-        modal: true
-        palette.window: Theme.surface
-        palette.windowText: Theme.textPrimary
 
         onClosed: {
             root.contextPlaylistId = -1
             root.contextPlaylistName = ""
-        }
-
-        background: Rectangle {
-            color: Theme.surface
-            border.color: Theme.border
-            radius: Theme.radiusMedium
+            root.contextPlaylistShortcut = false
         }
 
         ContextMenuItem {
             text: "打开歌单"
+            iconName: "list"
             onTriggered: root.controller.openPlaylist(root.contextPlaylistId)
         }
 
         ContextMenuItem {
             text: "播放全部"
+            iconName: "play"
             onTriggered: root.controller.playPlaylist(root.contextPlaylistId)
+        }
+
+        ContextMenuItem {
+            text: root.contextPlaylistShortcut ? "取消固定" : "固定到快捷歌单"
+            iconName: root.contextPlaylistShortcut ? "remove" : "add"
+            onTriggered: {
+                if (root.contextPlaylistShortcut) {
+                    root.controller.unpinPlaylistShortcut(root.contextPlaylistId)
+                } else if (root.controller.shortcutPlaylistCount < 3) {
+                    root.controller.pinPlaylistShortcut(root.contextPlaylistId)
+                } else {
+                    root.pendingShortcutPlaylistId = root.contextPlaylistId
+                    root.pendingShortcutPlaylistName = root.contextPlaylistName
+                    Qt.callLater(function() { replaceShortcutDialog.open() })
+                }
+            }
         }
 
         MenuSeparator {
@@ -381,6 +476,7 @@ Item {
 
         ContextMenuItem {
             text: "重命名"
+            iconName: "edit"
             onTriggered: root.openRenameDialog(
                 root.contextPlaylistId,
                 root.contextPlaylistName
@@ -389,6 +485,8 @@ Item {
 
         ContextMenuItem {
             text: "删除歌单"
+            iconName: "delete"
+            danger: true
             onTriggered: root.openDeleteDialog(
                 root.contextPlaylistId,
                 root.contextPlaylistName
@@ -396,31 +494,23 @@ Item {
         }
     }
 
-    Menu {
+    AppMenu {
         id: playlistTrackContextMenu
-        implicitWidth: 210
-        modal: true
-        palette.window: Theme.surface
-        palette.windowText: Theme.textPrimary
 
         onClosed: {
             root.contextTrackIndex = -1
             root.contextTrackItemId = -1
         }
 
-        background: Rectangle {
-            color: Theme.surface
-            border.color: Theme.border
-            radius: Theme.radiusMedium
-        }
-
         ContextMenuItem {
             text: "播放"
+            iconName: "play"
             onTriggered: root.controller.playPlaylistItem(root.contextTrackIndex)
         }
 
         ContextMenuItem {
             text: root.contextTrackFavorite ? "取消收藏" : "收藏"
+            iconName: root.contextTrackFavorite ? "favorite-filled" : "favorite"
             onTriggered: {
                 root.controller.togglePlaylistTrackFavorite(root.contextTrackIndex)
                 root.contextTrackFavorite = !root.contextTrackFavorite
@@ -429,6 +519,7 @@ Item {
 
         ContextMenuItem {
             text: "添加到歌单..."
+            iconName: "add"
             onTriggered: {
                 root.pendingTrackIndex = root.contextTrackIndex
                 addPlaylistTrackDialog.open()
@@ -444,6 +535,8 @@ Item {
 
         ContextMenuItem {
             text: "从当前歌单移除"
+            iconName: "remove"
+            danger: true
             onTriggered: {
                 root.pendingRemoveItemId = root.contextTrackItemId
                 removeItemDialog.open()
@@ -554,70 +647,177 @@ Item {
         }
     }
 
-    Dialog {
+    PlaylistNameDialog {
         id: newPlaylistWithPlaylistTrackDialog
         anchors.centerIn: parent
-        width: 380
-        modal: true
-        title: "新建歌单"
-        standardButtons: Dialog.Ok | Dialog.Cancel
-        onOpened: {
-            newPlaylistWithTrackName.text = ""
-            newPlaylistWithTrackName.forceActiveFocus()
-        }
-        onAccepted: {
+        description: "创建歌单并将当前歌曲添加进去"
+        placeholderText: "输入歌单名称"
+        onSubmitted: function(name) {
             root.controller.createPlaylistWithPlaylistTrack(
-                newPlaylistWithTrackName.text,
+                name,
                 root.pendingTrackIndex
             )
             addPlaylistTrackDialog.close()
         }
-        palette.window: Theme.surface
-        palette.windowText: Theme.textPrimary
-        palette.button: Theme.accent
-        palette.buttonText: Theme.buttonText
+    }
 
-        contentItem: TextField {
-            id: newPlaylistWithTrackName
-            implicitHeight: 40
-            color: Theme.textPrimary
-            placeholderText: "歌单名称"
-            placeholderTextColor: Theme.placeholderText
-            font.family: Theme.fontFamily
-            background: Rectangle {
-                color: Theme.window
-                border.color: newPlaylistWithTrackName.activeFocus ? Theme.accent : Theme.border
-                radius: Theme.radiusMedium
+    PlaylistNameDialog {
+        id: createDialog
+        anchors.centerIn: parent
+        description: "创建一个歌单，用来整理喜欢的歌曲"
+        onSubmitted: function(name) { root.controller.createPlaylist(name) }
+    }
+
+    Dialog {
+        id: replaceShortcutDialog
+        anchors.centerIn: parent
+        width: 410
+        height: 330
+        modal: true
+        dim: true
+        title: "替换快捷歌单"
+        closePolicy: Popup.CloseOnEscape
+        transformOrigin: Item.Center
+        onClosed: {
+            root.pendingShortcutPlaylistId = -1
+            root.pendingShortcutPlaylistName = ""
+        }
+
+        enter: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 160; easing.type: Easing.OutCubic }
+                NumberAnimation { property: "scale"; from: 0.96; to: 1; duration: 190; easing.type: Easing.OutBack }
+            }
+        }
+
+        exit: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 110; easing.type: Easing.InCubic }
+                NumberAnimation { property: "scale"; from: 1; to: 0.98; duration: 110; easing.type: Easing.InCubic }
+            }
+        }
+
+        Overlay.modal: Rectangle { color: Qt.rgba(0, 0, 0, 0.42) }
+
+        header: Item {
+            implicitHeight: 62
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 20
+                anchors.rightMargin: 20
+                anchors.topMargin: 14
+                anchors.bottomMargin: 6
+                spacing: 11
+
+                Rectangle {
+                    Layout.preferredWidth: 34
+                    Layout.preferredHeight: 34
+                    color: Theme.accentDark
+                    radius: 17
+                    AppIcon { anchors.centerIn: parent; name: "list"; color: Theme.accent; iconSize: 17 }
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: replaceShortcutDialog.title
+                    color: Theme.textPrimary
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 17
+                    font.weight: Font.DemiBold
+                }
+            }
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 10
+
+            Text {
+                Layout.fillWidth: true
+                text: "快捷位置已满。选择一个歌单，将它替换为“"
+                    + root.pendingShortcutPlaylistName + "”。"
+                color: Theme.textSecondary
+                font.family: Theme.fontFamily
+                font.pixelSize: 12
+                wrapMode: Text.Wrap
+            }
+
+            ListView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                spacing: 5
+                clip: true
+                model: root.controller.shortcutPlaylistModel
+
+                delegate: Button {
+                    id: shortcutChoice
+                    required property int playlistId
+                    required property string name
+                    required property string countLabel
+                    width: ListView.view.width
+                    height: 48
+                    onClicked: {
+                        root.controller.replacePlaylistShortcut(
+                            shortcutChoice.playlistId,
+                            root.pendingShortcutPlaylistId
+                        )
+                        replaceShortcutDialog.close()
+                    }
+
+                    contentItem: RowLayout {
+                        spacing: 10
+                        AppIcon { name: "list"; color: Theme.textSecondary; iconSize: 15 }
+                        Text {
+                            Layout.fillWidth: true
+                            text: shortcutChoice.name
+                            color: Theme.textPrimary
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 13
+                            font.weight: Font.DemiBold
+                            elide: Text.ElideRight
+                        }
+                        Text {
+                            text: shortcutChoice.countLabel
+                            color: Theme.textSecondary
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 10
+                        }
+                        AppIcon { name: "refresh"; color: Theme.accent; iconSize: 14 }
+                    }
+
+                    background: Rectangle {
+                        color: shortcutChoice.hovered ? Theme.surfaceHover : Theme.window
+                        border.color: shortcutChoice.hovered ? Theme.accent : Theme.border
+                        radius: Theme.radiusMedium
+                    }
+                }
+            }
+        }
+
+        footer: Item {
+            implicitHeight: 62
+            AppButton {
+                anchors.right: parent.right
+                anchors.rightMargin: 20
+                anchors.verticalCenter: parent.verticalCenter
+                text: "取消"
+                onClicked: replaceShortcutDialog.reject()
             }
         }
 
         background: Rectangle {
-            color: Theme.surface
-            border.color: Theme.border
+            color: Qt.rgba(0.105, 0.105, 0.12, 0.99)
+            border.color: Theme.buttonBorder
             radius: Theme.radiusMedium
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                shadowEnabled: true
+                shadowColor: "#000000"
+                shadowOpacity: 0.52
+                shadowBlur: 0.78
+                shadowVerticalOffset: 12
+            }
         }
-    }
-
-    Dialog {
-        id: createDialog
-        anchors.centerIn: parent
-        modal: true
-        title: "新建歌单"
-        standardButtons: Dialog.Ok | Dialog.Cancel
-        width: 380
-        onOpened: { playlistName.text = ""; playlistName.forceActiveFocus() }
-        onAccepted: root.controller.createPlaylist(playlistName.text)
-        palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.button: Theme.accent; palette.buttonText: Theme.buttonText
-        contentItem: TextField {
-            id: playlistName
-            implicitHeight: 40
-            color: Theme.textPrimary
-            placeholderText: "例如：通勤播放"
-            placeholderTextColor: Theme.placeholderText
-            font.family: Theme.fontFamily
-            background: Rectangle { color: Theme.window; border.color: playlistName.activeFocus ? Theme.accent : Theme.border; radius: Theme.radiusMedium }
-        }
-        background: Rectangle { color: Theme.surface; border.color: Theme.border; radius: Theme.radiusMedium }
     }
 
     Dialog {
@@ -644,13 +844,168 @@ Item {
         id: deletePlaylistDialog
         anchors.centerIn: parent
         modal: true
-        width: 380
+        dim: true
+        width: 410
         title: "删除歌单"
-        standardButtons: Dialog.Yes | Dialog.Cancel
+        closePolicy: Popup.CloseOnEscape
+        transformOrigin: Item.Center
         onAccepted: root.controller.deletePlaylist(root.dialogPlaylistId)
-        palette.window: Theme.surface; palette.windowText: Theme.textPrimary; palette.button: Theme.accent; palette.buttonText: Theme.buttonText
-        contentItem: Text { text: "确定删除“" + root.dialogPlaylistName + "”吗？\n歌曲文件和播放历史不会被删除。"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13 }
-        background: Rectangle { color: Theme.surface; border.color: Theme.border; radius: Theme.radiusMedium }
+
+        enter: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 160; easing.type: Easing.OutCubic }
+                NumberAnimation { property: "scale"; from: 0.96; to: 1; duration: 190; easing.type: Easing.OutBack }
+            }
+        }
+
+        exit: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 110; easing.type: Easing.InCubic }
+                NumberAnimation { property: "scale"; from: 1; to: 0.98; duration: 110; easing.type: Easing.InCubic }
+            }
+        }
+
+        Overlay.modal: Rectangle { color: Qt.rgba(0, 0, 0, 0.46) }
+
+        header: Item {
+            implicitHeight: 64
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 20
+                anchors.rightMargin: 20
+                anchors.topMargin: 14
+                anchors.bottomMargin: 6
+                spacing: 11
+
+                Rectangle {
+                    Layout.preferredWidth: 36
+                    Layout.preferredHeight: 36
+                    color: Qt.rgba(1, 0.40, 0.45, 0.14)
+                    radius: 18
+                    AppIcon {
+                        anchors.centerIn: parent
+                        name: "delete"
+                        color: Theme.danger
+                        iconSize: 17
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 1
+
+                    Text {
+                        text: deletePlaylistDialog.title
+                        color: Theme.textPrimary
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 17
+                        font.weight: Font.DemiBold
+                    }
+
+                    Text {
+                        text: "此操作无法撤销"
+                        color: Theme.danger
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 10
+                    }
+                }
+            }
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 12
+
+            Text {
+                Layout.fillWidth: true
+                text: "确定要删除这个歌单吗？"
+                color: Theme.textPrimary
+                font.family: Theme.fontFamily
+                font.pixelSize: 13
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: 48
+                color: Theme.window
+                border.color: Theme.border
+                radius: Theme.radiusMedium
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 13
+                    anchors.rightMargin: 13
+                    spacing: 10
+
+                    AppIcon {
+                        name: "list"
+                        color: Theme.textSecondary
+                        iconSize: 16
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: root.dialogPlaylistName
+                        color: Theme.textPrimary
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 13
+                        font.weight: Font.DemiBold
+                        elide: Text.ElideRight
+                    }
+                }
+            }
+
+            Text {
+                Layout.fillWidth: true
+                text: "只会删除歌单及其收录关系，歌曲文件、收藏和播放历史都会保留。"
+                color: Theme.textSecondary
+                font.family: Theme.fontFamily
+                font.pixelSize: 11
+                wrapMode: Text.Wrap
+            }
+        }
+
+        footer: Item {
+            implicitHeight: 66
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 20
+                anchors.rightMargin: 20
+                anchors.topMargin: 10
+                anchors.bottomMargin: 16
+                spacing: 10
+
+                Item { Layout.fillWidth: true }
+
+                AppButton {
+                    text: "取消"
+                    onClicked: deletePlaylistDialog.reject()
+                }
+
+                AppButton {
+                    text: "删除歌单"
+                    iconName: "delete"
+                    danger: true
+                    onClicked: deletePlaylistDialog.accept()
+                }
+            }
+        }
+
+        background: Rectangle {
+            color: Qt.rgba(0.105, 0.105, 0.12, 0.99)
+            border.color: Theme.buttonBorder
+            radius: Theme.radiusMedium
+
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                shadowEnabled: true
+                shadowColor: "#000000"
+                shadowOpacity: 0.54
+                shadowBlur: 0.78
+                shadowVerticalOffset: 12
+            }
+        }
     }
 
     Dialog {

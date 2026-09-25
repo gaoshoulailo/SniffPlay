@@ -10,8 +10,8 @@ import "themes"
 ApplicationWindow {
     id: root
 
-    width: 1180
-    height: 760
+    width: 1260
+    height: 820
     minimumWidth: 920
     minimumHeight: 620
     visible: true
@@ -23,6 +23,18 @@ ApplicationWindow {
     property int currentPage: 0
     readonly property int sidebarWidth: 214
     readonly property int frameMargin: visibility === Window.Maximized ? 0 : 8
+    readonly property var pageTitles: [
+        "正在播放",
+        "搜索",
+        "我的收藏",
+        "我的歌单",
+        "播放历史",
+        "设置"
+    ]
+    readonly property string currentLocation: currentPage === 3
+        && controller.hasSelectedPlaylist
+        ? "我的歌单  /  " + controller.selectedPlaylistName
+        : pageTitles[currentPage]
 
     onCurrentPageChanged: {
         pageStack.opacity = 0
@@ -67,6 +79,37 @@ ApplicationWindow {
             onDoubleClicked: root.visibility === Window.Maximized
                 ? root.showNormal()
                 : root.showMaximized()
+        }
+
+        Row {
+            anchors.left: parent.left
+            anchors.leftMargin: 26
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 8
+
+            Text {
+                text: "音乐库"
+                color: Theme.disabledText
+                font.family: Theme.fontFamily
+                font.pixelSize: 11
+            }
+
+            Text {
+                text: "/"
+                color: Theme.disabledText
+                font.family: Theme.fontFamily
+                font.pixelSize: 11
+            }
+
+            Text {
+                width: Math.max(120, titleBar.width - 290)
+                text: root.currentLocation
+                color: Theme.textSecondary
+                font.family: Theme.fontFamily
+                font.pixelSize: 11
+                font.weight: Font.DemiBold
+                elide: Text.ElideRight
+            }
         }
 
         Row {
@@ -274,6 +317,82 @@ ApplicationWindow {
                     visible: false
                 }
 
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.topMargin: 14
+                    Layout.bottomMargin: 8
+                    implicitHeight: 1
+                    color: Theme.border
+                    opacity: 0.65
+                }
+
+                Text {
+                    Layout.leftMargin: 10
+                    Layout.bottomMargin: 3
+                    text: "快捷歌单"
+                    color: Theme.textSecondary
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 11
+                }
+
+                Repeater {
+                    model: root.controller.shortcutPlaylistModel
+
+                    delegate: Button {
+                        id: playlistShortcut
+                        required property int index
+                        required property int playlistId
+                        required property string name
+
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 36
+                        leftPadding: 10
+                        rightPadding: 10
+                        focusPolicy: Qt.NoFocus
+                        onClicked: {
+                            root.controller.openPlaylist(playlistShortcut.playlistId)
+                            root.currentPage = 3
+                        }
+
+                        ToolTip.visible: hovered && shortcutName.truncated
+                        ToolTip.text: playlistShortcut.name
+
+                        contentItem: RowLayout {
+                            spacing: 10
+
+                            Rectangle {
+                                Layout.preferredWidth: 9
+                                Layout.preferredHeight: 9
+                                radius: 2
+                                color: playlistShortcut.index === 0
+                                    ? Theme.warning
+                                    : (playlistShortcut.index === 1 ? "#5bd59a" : Theme.danger)
+                            }
+
+                            Text {
+                                id: shortcutName
+                                Layout.fillWidth: true
+                                text: playlistShortcut.name
+                                color: root.currentPage === 3
+                                    && root.controller.selectedPlaylistId === playlistShortcut.playlistId
+                                    ? Theme.textPrimary
+                                    : Theme.textSecondary
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 12
+                                elide: Text.ElideRight
+                            }
+                        }
+
+                        background: Rectangle {
+                            color: root.currentPage === 3
+                                && root.controller.selectedPlaylistId === playlistShortcut.playlistId
+                                ? Theme.accentDark
+                                : (playlistShortcut.hovered ? Theme.surfaceHover : Theme.transparent)
+                            radius: Theme.radiusMedium
+                        }
+                    }
+                }
+
                 Item { Layout.fillHeight: true }
 
                 Rectangle {
@@ -372,7 +491,7 @@ ApplicationWindow {
                 Layout.leftMargin: 14
                 Layout.rightMargin: 14
                 Layout.bottomMargin: 17
-                visible: root.currentPage !== 0
+                visible: true
                 controller: root.controller
                 backdropSource: backgroundImage
             }
@@ -395,7 +514,7 @@ ApplicationWindow {
         width: Math.min(implicitWidth, windowFrame.width - 40)
         anchors.horizontalCenter: windowFrame.horizontalCenter
         anchors.bottom: windowFrame.bottom
-        anchors.bottomMargin: root.currentPage === 0 ? 26 : 138
+        anchors.bottomMargin: 124
     }
 
     Connections {
