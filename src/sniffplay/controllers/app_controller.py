@@ -472,6 +472,15 @@ class AppController(QObject):
         labels = ("已关闭循环播放", "已开启列表循环", "已开启单曲循环")
         self._set_status(labels[self._repeat_mode])
 
+    @Slot()
+    def toggleSingleRepeat(self) -> None:
+        self._repeat_mode = 0 if self._repeat_mode == 2 else 2
+        self.playbackModeChanged.emit()
+        self.playerChanged.emit()
+        self._set_status(
+            "已关闭单曲循环" if self._repeat_mode == 0 else "已开启单曲循环"
+        )
+
     @asyncSlot()
     async def nextTrack(self) -> None:
         if not self.canGoNext:
@@ -985,8 +994,11 @@ class AppController(QObject):
             await self._play_queue_index(self._queue_index)
         elif self._queue and 0 <= self._queue_index < len(self._queue):
             next_index = self._queue_index + 1
-            if next_index >= len(self._queue):
-                next_index = 0
-            await self._play_queue_index(next_index)
+            if next_index < len(self._queue):
+                await self._play_queue_index(next_index)
+            elif self._repeat_mode == 1:
+                await self._play_queue_index(0)
+            else:
+                self._set_status("播放队列已结束")
         else:
             self._set_status("播放队列已结束")

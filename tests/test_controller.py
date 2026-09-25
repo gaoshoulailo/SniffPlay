@@ -59,7 +59,6 @@ async def test_search_result_playback_replaces_queue_with_all_results(
     database.close()
     assert app is not None
 
-
 def test_controller_records_history_only_after_threshold(tmp_path: Path) -> None:
     app = QCoreApplication.instance() or QCoreApplication([])
     database = Database(tmp_path / "controller.db")
@@ -611,7 +610,7 @@ async def test_controller_cycles_repeat_modes_and_wraps_queue(tmp_path: Path) ->
     assert app is not None
 
 
-async def test_controller_wraps_queue_after_last_track(tmp_path: Path) -> None:
+async def test_controller_stops_after_last_track_when_repeat_is_off(tmp_path: Path) -> None:
     class PlayableSearchService:
         async def resolve_stream(self, track: Track) -> StreamInfo:
             return StreamInfo(f"{track.provider_track_id}.wav")
@@ -635,8 +634,48 @@ async def test_controller_wraps_queue_after_last_track(tmp_path: Path) -> None:
     await controller._play_queue_index(1)
     await controller._advance_after_end(controller._play_request_id)
 
-    assert player.current_track == tracks[0]
+    assert player.current_track == tracks[1]
+    assert controller._queue_index == 1
+    assert controller.statusMessage == "播放队列已结束"
+
+    controller.close()
+    database.close()
+    assert app is not None
+
+
+async def test_controller_repeats_current_track_after_natural_end(tmp_path: Path) -> None:
+    class PlayableSearchService:
+        async def resolve_stream(self, track: Track) -> StreamInfo:
+            return StreamInfo(f"{track.provider_track_id}.wav")
+
+    app = QCoreApplication.instance() or QCoreApplication([])
+    database = Database(tmp_path / "single-repeat-controller.db")
+    database.initialize()
+    player = MockPlayer()
+    controller = AppController(
+        PlayableSearchService(),  # type: ignore[arg-type]
+        player,
+        PlaylistRepository(database),
+        HistoryRepository(database),
+    )
+    track = Track("demo", "one", "single", "artist", "album", 60_000)
+
+    await controller._play_tracks([track], 0)
+    controller.toggleSingleRepeat()
+    assert controller.repeatMode == 2
+
+    request_id = controller._play_request_id
+    player.seek(track.duration_ms)
+    controller._poll_player()
+    await asyncio.sleep(0)
+
+    assert controller._play_request_id == request_id + 1
+    assert player.current_track == track
     assert controller._queue_index == 0
+    assert player.snapshot().state.value == "playing"
+
+    controller.toggleSingleRepeat()
+    assert controller.repeatMode == 0
 
     controller.close()
     database.close()

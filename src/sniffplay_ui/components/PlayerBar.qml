@@ -286,6 +286,39 @@ Rectangle {
                 }
             }
 
+            Button {
+                id: singleRepeatButton
+                Layout.preferredWidth: 34
+                Layout.preferredHeight: 34
+                onClicked: root.controller.toggleSingleRepeat()
+                ToolTip.visible: hovered
+                ToolTip.text: root.controller.repeatMode === 2 ? "关闭单曲循环" : "开启单曲循环"
+
+                contentItem: Item {
+                    AppIcon {
+                        anchors.centerIn: parent
+                        name: "repeat"
+                        color: root.controller.repeatMode === 2 ? Theme.accent : Theme.textSecondary
+                        iconSize: 17
+                    }
+                    Text {
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        anchors.rightMargin: 1
+                        visible: root.controller.repeatMode === 2
+                        text: "1"
+                        color: Theme.accent
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 8
+                        font.bold: true
+                    }
+                }
+                background: Rectangle {
+                    color: singleRepeatButton.hovered ? Theme.surfaceHover : Theme.transparent
+                    radius: 17
+                }
+            }
+
             Item { Layout.fillWidth: true }
 
             ColumnLayout {
