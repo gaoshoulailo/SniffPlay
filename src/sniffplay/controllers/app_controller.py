@@ -177,6 +177,7 @@ class AppController(QObject):
             self._settings_repository.set("background_color", self._background_color)
             self._settings_repository.delete("background_image")
         self.backgroundChanged.emit()
+        self._set_status("已应用背景颜色")
 
     @Slot(str)
     def setBackgroundImage(self, path: str) -> None:
@@ -189,6 +190,18 @@ class AppController(QObject):
         if self._settings_repository:
             self._settings_repository.set("background_image", self._background_image)
         self.backgroundChanged.emit()
+        self._set_status("已应用背景图片")
+
+    @Slot()
+    def clearBackgroundImage(self) -> None:
+        if not self._background_image:
+            self._set_status("当前没有背景图片")
+            return
+        self._background_image = ""
+        if self._settings_repository:
+            self._settings_repository.delete("background_image")
+        self.backgroundChanged.emit()
+        self._set_status("已清除背景图片")
 
     @Slot()
     def clearCoverCache(self) -> None:
