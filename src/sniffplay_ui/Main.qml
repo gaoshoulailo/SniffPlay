@@ -26,6 +26,7 @@ ApplicationWindow {
 
     onCurrentPageChanged: {
         pageStack.opacity = 0
+        pageTranslate.y = 8
         pageFadeIn.restart()
     }
 
@@ -323,6 +324,7 @@ ApplicationWindow {
                     id: pageStack
                     anchors.fill: parent
                     currentIndex: root.currentPage
+                    transform: Translate { id: pageTranslate }
 
                     NowPlayingPage {
                         controller: root.controller
@@ -344,14 +346,24 @@ ApplicationWindow {
                     SettingsPage { controller: root.controller }
                 }
 
-                NumberAnimation {
+                ParallelAnimation {
                     id: pageFadeIn
-                    target: pageStack
-                    property: "opacity"
-                    from: 0
-                    to: 1
-                    duration: 180
-                    easing.type: Easing.OutCubic
+                    NumberAnimation {
+                        target: pageStack
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: 190
+                        easing.type: Easing.OutCubic
+                    }
+                    NumberAnimation {
+                        target: pageTranslate
+                        property: "y"
+                        from: 8
+                        to: 0
+                        duration: 220
+                        easing.type: Easing.OutCubic
+                    }
                 }
             }
 
