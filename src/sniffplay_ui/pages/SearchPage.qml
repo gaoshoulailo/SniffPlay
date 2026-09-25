@@ -83,8 +83,8 @@ Item {
                 id: searchField
                 Layout.fillWidth: true
                 implicitHeight: 42
-                leftPadding: 14
-                rightPadding: 14
+                leftPadding: 42
+                rightPadding: 44
                 placeholderText: "输入歌曲、歌手或专辑"
                 placeholderTextColor: Theme.placeholderText
                 color: Theme.textPrimary
@@ -94,11 +94,61 @@ Item {
                 font.pixelSize: 14
                 onAccepted: root.controller.search(text)
 
+                AppIcon {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 14
+                    anchors.verticalCenter: parent.verticalCenter
+                    name: "search"
+                    color: searchField.activeFocus ? Theme.accent : Theme.textSecondary
+                    iconSize: 16
+
+                    Behavior on color { ColorAnimation { duration: 140 } }
+                }
+
+                Button {
+                    id: clearSearchButton
+                    anchors.right: parent.right
+                    anchors.rightMargin: 6
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 30
+                    height: 30
+                    visible: searchField.text.length > 0
+                    onClicked: {
+                        searchField.clear()
+                        searchField.forceActiveFocus()
+                    }
+                    ToolTip.visible: hovered
+                    ToolTip.text: "清空搜索"
+                    contentItem: AppIcon {
+                        name: "close"
+                        color: clearSearchButton.hovered ? Theme.textPrimary : Theme.textSecondary
+                        iconSize: 12
+                    }
+                    background: Rectangle {
+                        color: clearSearchButton.hovered ? Theme.surfaceHover : Theme.transparent
+                        radius: 15
+                    }
+                }
+
                 background: Rectangle {
+                    id: searchFieldBackground
                     color: Theme.surface
                     border.color: searchField.activeFocus ? Theme.accent : Theme.border
-                    border.width: 1
+                    border.width: searchField.activeFocus ? 2 : 1
                     radius: Theme.radiusMedium
+
+                    layer.enabled: true
+                    layer.effect: MultiEffect {
+                        shadowEnabled: true
+                        shadowColor: Theme.accent
+                        shadowOpacity: searchField.activeFocus ? 0.30 : 0
+                        shadowBlur: 0.55
+                        shadowScale: 1.015
+
+                        Behavior on shadowOpacity { NumberAnimation { duration: 160 } }
+                    }
+
+                    Behavior on border.color { ColorAnimation { duration: 140 } }
                 }
             }
 
