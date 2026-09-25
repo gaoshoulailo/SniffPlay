@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SniffPlay 下一阶段界面优化</title>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --canvas: #111216;
+      --window: #242428;
+      --sidebar: #1d1e22;
+      --surface: #191a1e;
+      --surface-2: #2b2c32;
+      --surface-3: #34353c;
+      --line: #3c3d45;
+      --line-soft: rgba(255,255,255,.07);
+      --text: #f3f3f5;
+      --muted: #999aa3;
+      --quiet: #696a73;
+      --blue: #0a84ff;
+      --blue-2: #3ba0ff;
+      --blue-soft: rgba(10,132,255,.16);
+      --red: #ff6875;
+      --green: #5bd59a;
+      --amber: #efbb59;
+      --radius: 7px;
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      color: var(--text);
+      background: var(--canvas);
+      font: 14px/1.45 "Microsoft YaHei UI", "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    svg { display: block; }
+    .stage { min-height: 100vh; display: grid; place-items: center; padding: 16px; background: #101115; }
+    .app {
+      width: min(1260px, calc(100vw - 32px));
+      height: min(820px, calc(100vh - 32px));
+      min-height: 620px;
+      display: grid;
+      grid-template-columns: 212px minmax(0, 1fr);
+      overflow: hidden;
+      border: 1px solid #3a3b43;
+      border-radius: 12px;
+      background: var(--window);
+      box-shadow: 0 28px 80px rgba(0,0,0,.5);
+    }
+    .sidebar { min-height: 0; display: flex; flex-direction: column; padding: 18px 13px 14px; border-right: 1px solid var(--line); background: var(--sidebar); }
+    .brand { height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 9px; margin-bottom: 13px; font-size: 17px; font-weight: 700; }
+    .brand-mark { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 7px; color: white; background: var(--blue); box-shadow: 0 7px 18px rgba(10,132,255,.24); }
+    .brand-mark svg { width: 17px; }
+    .section-label { margin: 4px 10px 8px; color: var(--quiet); font-size: 10px; }
+    .nav { display: grid; gap: 4px; }
+    .nav-btn { position: relative; height: 42px; display: flex; align-items: center; gap: 11px; padding: 0 12px; border: 0; border-radius: var(--radius); color: var(--muted); background: transparent; cursor: pointer; text-align: left; transition: color .15s, background .15s, transform .15s; }
+    .nav-btn::before { content: ""; position: absolute; left: 0; width: 3px; height: 0; border-radius: 2px; background: var(--blue); transition: height .16s; }
+    .nav-btn svg { width: 17px; height: 17px; }
+    .nav-btn:hover { color: var(--text); background: var(--surface-2); transform: translateX(3px); }
+    .nav-btn.active { color: var(--text); background: linear-gradient(90deg, rgba(10,132,255,.22), rgba(38,53,70,.52)); }
+    .nav-btn.active::before { height: 22px; }
+    .nav-btn.active svg { color: var(--blue); }
+    .playlist-shortcuts { display: grid; gap: 3px; margin-top: 18px; padding-top: 15px; border-top: 1px solid var(--line-soft); }
+    .playlist-link { height: 34px; display: flex; align-items: center; gap: 9px; padding: 0 10px; border: 0; border-radius: 6px; color: var(--muted); background: transparent; cursor: pointer; text-align: left; }
+    .playlist-link:hover { color: var(--text); background: rgba(255,255,255,.04); }
+    .playlist-link span:first-child { width: 8px; height: 8px; border-radius: 2px; background: var(--amber); }
+    .playlist-link:nth-child(3) span:first-child { background: var(--green); }
+    .playlist-link:nth-child(4) span:first-child { background: var(--red); }
+    .account { display: flex; align-items: center; gap: 10px; margin-top: auto; padding: 11px 10px; border-top: 1px solid var(--line-soft); }
+    .avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+    .account-copy { min-width: 0; flex: 1; }
+    .account-copy strong, .account-copy span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .account-copy strong { font-size: 11px; }
+    .account-copy span { margin-top: 2px; color: var(--quiet); font-size: 9px; }
+    .online { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 9px rgba(91,213,154,.55); }
+
+    .shell { min-width: 0; min-height: 0; display: grid; grid-template-rows: 43px minmax(0,1fr); }
+    .titlebar { display: flex; align-items: center; padding-left: 26px; border-bottom: 1px solid rgba(255,255,255,.025); }
+    .crumb { color: var(--quiet); font-size: 11px; }
+    .crumb b { color: var(--muted); font-weight: 500; }
+    .window-actions { display: flex; margin-left: auto; align-self: stretch; }
+    .window-btn { width: 44px; display: grid; place-items: center; border: 0; color: var(--muted); background: transparent; cursor: pointer; }
+    .window-btn:hover { color: var(--text); background: var(--surface-2); }
+    .window-btn.close:hover { color: white; background: #c94c58; }
+    .window-btn svg { width: 14px; }
+
+    .workspace { position: relative; min-height: 0; overflow: hidden; }
+    .page { position: absolute; inset: 0; display: none; min-width: 0; min-height: 0; padding: 22px 28px 132px; }
+    .page.active { display: flex; flex-direction: column; animation: pageIn .2s ease-out; }
+    @keyframes pageIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .page-head { display: flex; align-items: center; gap: 12px; min-height: 46px; margin-bottom: 16px; }
+    .page-title { min-width: 0; }
+    .page-title h1 { margin: 0; font-size: 24px; line-height: 1.15; }
+    .page-title p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+    .spacer { flex: 1; }
+    .icon-btn { width: 36px; height: 36px; display: grid; place-items: center; padding: 0; border: 1px solid transparent; border-radius: 50%; color: var(--muted); background: transparent; cursor: pointer; transition: color .15s, background .15s, border-color .15s, transform .15s; }
+    .icon-btn:hover { color: var(--text); border-color: var(--line); background: var(--surface-2); transform: translateY(-1px); }
+    .icon-btn svg { width: 17px; height: 17px; }
+    .icon-btn.active { color: var(--red); }
+    .button { height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 14px; border: 1px solid var(--line); border-radius: var(--radius); color: var(--text); background: var(--surface-2); cursor: pointer; }
+    .button:hover { background: var(--surface-3); }
+    .button.primary { border-color: var(--blue); background: var(--blue); }
+    .button.primary:hover { background: var(--blue-2); }
+    .button svg { width: 15px; height: 15px; }
+
+    .playing-grid { min-height: 0; flex: 1; display: grid; grid-template-columns: minmax(280px, .88fr) minmax(360px, 1.12fr); gap: 28px; }
+    .now-panel { min-width: 0; display: flex; flex-direction: column; align-items: center; padding: 4px 24px 0; }
+    .art-shell { position: relative; width: min(330px, 78%); aspect-ratio: 1; margin-top: 2px; }
+    .art-glow { position: absolute; inset: 12% -8% -11%; border-radius: 20px; background: url("https://images.unsplash.com/photo-1496293455970-f8581aae0e3b?auto=format&fit=crop&w=900&q=88") center/cover; filter: blur(28px) saturate(1.2); opacity: .3; }
+    .album-art { position: relative; width: 100%; height: 100%; display: block; object-fit: cover; border-radius: 8px; box-shadow: 0 22px 45px rgba(0,0,0,.44); }
+    .art-badge { position: absolute; right: 11px; bottom: 11px; display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; border: 1px solid rgba(255,255,255,.14); border-radius: 5px; color: #fff; background: rgba(15,16,20,.72); backdrop-filter: blur(12px); font-size: 9px; }
+    .art-badge svg { width: 11px; }
+    .track-heading { width: 100%; margin-top: 20px; text-align: center; }
+    .track-heading h2 { margin: 0; font-size: 20px; }
+    .track-heading p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+    .track-meta { display: flex; justify-content: center; gap: 16px; margin-top: 11px; color: var(--quiet); font-size: 10px; }
+    .track-meta span { display: flex; align-items: center; gap: 5px; }
+    .track-meta svg { width: 12px; }
+    .full-progress { width: min(420px, 100%); margin-top: 18px; }
+    .progress-line { position: relative; height: 5px; border-radius: 5px; background: var(--line); cursor: pointer; }
+    .progress-line span { display: block; width: 42%; height: 100%; border-radius: inherit; background: var(--blue); box-shadow: 0 0 9px rgba(10,132,255,.48); }
+    .progress-line i { position: absolute; left: 42%; top: 50%; width: 11px; height: 11px; border: 2px solid var(--window); border-radius: 50%; background: var(--blue); transform: translate(-50%,-50%); }
+    .time-line { display: flex; justify-content: space-between; margin-top: 7px; color: var(--quiet); font-size: 9px; }
+    .large-controls { display: flex; align-items: center; gap: 13px; margin-top: 9px; }
+    .large-controls .play { width: 50px; height: 50px; color: white; background: var(--blue); box-shadow: 0 10px 24px rgba(10,132,255,.25); }
+    .large-controls .play:hover { border-color: transparent; background: var(--blue-2); }
+
+    .detail-panel { min-width: 0; min-height: 0; display: flex; flex-direction: column; border-left: 1px solid var(--line-soft); padding-left: 26px; }
+    .segmented { align-self: flex-start; display: flex; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); }
+    .segment { height: 31px; padding: 0 15px; border: 0; border-radius: 5px; color: var(--muted); background: transparent; cursor: pointer; }
+    .segment.active { color: var(--text); background: var(--surface-3); box-shadow: 0 2px 7px rgba(0,0,0,.2); }
+    .tab-view { min-height: 0; flex: 1; display: none; margin-top: 14px; }
+    .tab-view.active { display: flex; flex-direction: column; animation: tabIn .16s ease-out; }
+    @keyframes tabIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    .queue-summary { display: flex; align-items: center; min-height: 32px; color: var(--muted); font-size: 10px; }
+    .queue-summary strong { color: var(--text); font-size: 13px; }
+    .queue-list { min-height: 0; overflow: auto; display: grid; align-content: start; gap: 3px; padding-right: 4px; }
+    .queue-row { min-height: 58px; display: grid; grid-template-columns: 26px 40px minmax(100px,1fr) 42px 64px; align-items: center; gap: 9px; padding: 0 9px; border-left: 2px solid transparent; border-radius: 6px; transition: background .15s, border-color .15s, transform .15s; }
+    .queue-row:hover { background: var(--surface-2); transform: translateX(2px); }
+    .queue-row.current { border-left-color: var(--blue); background: var(--blue-soft); }
+    .queue-row > span { color: var(--quiet); font-size: 10px; text-align: center; }
+    .queue-row.current > span { color: var(--blue); }
+    .q-cover { width: 40px; height: 40px; border-radius: 5px; object-fit: cover; }
+    .q-copy { min-width: 0; }
+    .q-copy strong, .q-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .q-copy strong { font-size: 12px; }
+    .q-copy small { margin-top: 2px; color: var(--muted); font-size: 10px; }
+    .quality { color: var(--amber); font-size: 8px; }
+    .q-actions { display: flex; justify-content: flex-end; opacity: 0; transition: opacity .15s; }
+    .queue-row:hover .q-actions { opacity: 1; }
+    .tiny { width: 28px; height: 28px; display: grid; place-items: center; border: 0; border-radius: 50%; color: var(--muted); background: transparent; cursor: pointer; }
+    .tiny:hover { color: var(--text); background: var(--surface-3); }
+    .tiny svg { width: 13px; }
+    .lyrics { min-height: 0; flex: 1; overflow: auto; padding: 10px 18px 80px 4px; mask-image: linear-gradient(to bottom, transparent, black 8%, black 88%, transparent); }
+    .lyric { margin: 0 0 19px; color: var(--quiet); font-size: 15px; transition: color .18s, font-size .18s; }
+    .lyric.active { color: var(--text); font-size: 20px; font-weight: 650; }
+    .lyric.next { color: var(--muted); }
+
+    .search-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .search-box { position: relative; min-width: 0; flex: 1; }
+    .search-box > svg { position: absolute; left: 14px; top: 12px; width: 17px; color: var(--muted); }
+    .search-box input { width: 100%; height: 42px; padding: 0 42px; border: 1px solid var(--line); outline: 0; border-radius: var(--radius); color: var(--text); background: var(--surface); }
+    .search-box input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(10,132,255,.12); }
+    .clear { position: absolute; right: 6px; top: 6px; width: 30px; height: 30px; display: none; place-items: center; border: 0; border-radius: 50%; color: var(--muted); background: transparent; cursor: pointer; }
+    .clear.show { display: grid; }
+    .clear:hover { color: var(--text); background: var(--surface-2); }
+    select { height: 38px; padding: 0 32px 0 11px; border: 1px solid var(--line); border-radius: var(--radius); color: var(--text); background: var(--surface-2); }
+    .result-head { display: grid; grid-template-columns: 28px 44px minmax(140px,1fr) 160px 70px 56px 104px; align-items: center; gap: 10px; height: 34px; padding: 0 10px; color: var(--quiet); font-size: 10px; }
+    .result-list { min-height: 0; overflow: auto; display: grid; align-content: start; gap: 3px; }
+    .result-row { height: 60px; display: grid; grid-template-columns: 28px 44px minmax(140px,1fr) 160px 70px 56px 104px; align-items: center; gap: 10px; padding: 0 10px; border-left: 2px solid transparent; border-radius: 6px; transition: background .15s, transform .15s; }
+    .result-row:hover { background: var(--surface-2); transform: translateX(2px); }
+    .result-row.playing { border-left-color: var(--blue); background: var(--blue-soft); }
+    .result-row > span { color: var(--quiet); font-size: 10px; }
+    .row-cover { width: 40px; height: 40px; border-radius: 5px; object-fit: cover; }
+    .row-copy { min-width: 0; }
+    .row-copy strong, .row-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row-copy strong { font-size: 12px; }
+    .row-copy small { margin-top: 2px; color: var(--muted); font-size: 10px; }
+    .source-mark { color: var(--green) !important; }
+    .row-actions { display: flex; justify-content: flex-end; gap: 2px; opacity: 0; transition: opacity .15s; }
+    .result-row:hover .row-actions { opacity: 1; }
+
+    .library-layout { min-height: 0; flex: 1; display: grid; grid-template-columns: 240px minmax(0,1fr); gap: 22px; }
+    .library-list { display: grid; align-content: start; gap: 4px; padding-right: 18px; border-right: 1px solid var(--line-soft); }
+    .library-item { height: 52px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 6px; color: var(--muted); background: transparent; cursor: pointer; text-align: left; }
+    .library-item.active, .library-item:hover { color: var(--text); background: var(--surface-2); }
+    .library-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 6px; color: var(--blue); background: var(--blue-soft); }
+    .library-icon svg { width: 16px; }
+    .library-item div:nth-child(2) { min-width: 0; flex: 1; }
+    .library-item strong, .library-item small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .library-item strong { font-size: 11px; }
+    .library-item small { color: var(--quiet); font-size: 9px; }
+    .library-detail { min-width: 0; display: flex; flex-direction: column; }
+    .playlist-banner { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 15px; }
+    .playlist-cover { width: 110px; height: 110px; border-radius: 7px; object-fit: cover; }
+    .playlist-copy h2 { margin: 0; font-size: 21px; }
+    .playlist-copy p { margin: 6px 0 13px; color: var(--muted); font-size: 10px; }
+
+    .player { position: absolute; left: 14px; right: 14px; bottom: 17px; z-index: 10; height: 96px; overflow: hidden; border: 1px solid rgba(255,255,255,.13); border-radius: 8px; background: rgba(28,29,33,.86); box-shadow: 0 16px 38px rgba(0,0,0,.48); backdrop-filter: blur(20px) saturate(1.15); }
+    .player-progress { position: absolute; left: 18px; right: 18px; top: 10px; height: 3px; border-radius: 3px; background: rgba(255,255,255,.15); }
+    .player-progress span { display: block; width: 42%; height: 100%; border-radius: inherit; background: var(--blue); }
+    .player-grid { height: 100%; display: grid; grid-template-columns: minmax(180px,1fr) auto minmax(180px,1fr); align-items: center; gap: 18px; padding: 17px 18px 7px; }
+    .mini-track { min-width: 0; display: flex; align-items: center; gap: 10px; }
+    .mini-track img { width: 46px; height: 46px; border-radius: 6px; object-fit: cover; }
+    .mini-copy { min-width: 0; }
+    .mini-copy strong, .mini-copy span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mini-copy strong { font-size: 12px; }
+    .mini-copy span { color: var(--muted); font-size: 10px; }
+    .transport { display: flex; align-items: center; gap: 9px; }
+    .transport .main-play { width: 42px; height: 42px; color: white; background: var(--blue); }
+    .player-extra { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+    .volume { width: 82px; height: 3px; border-radius: 3px; background: var(--line); }
+    .volume span { display: block; width: 70%; height: 100%; border-radius: inherit; background: var(--muted); }
+    .toast { position: absolute; left: 50%; bottom: 125px; z-index: 20; min-width: 300px; display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--blue); border-radius: 7px; background: rgba(25,26,30,.96); box-shadow: 0 12px 30px rgba(0,0,0,.4); opacity: 0; transform: translate(-50%, 8px); pointer-events: none; transition: opacity .16s, transform .16s; }
+    .toast.show { opacity: 1; transform: translate(-50%,0); }
+    .toast svg { width: 16px; color: var(--blue); }
+    .toast span { font-size: 12px; }
+
+    @media (max-width: 900px) {
+      .stage { padding: 0; }
+      .app { width: 100vw; height: 100vh; min-height: 560px; grid-template-columns: 70px minmax(0,1fr); border: 0; border-radius: 0; }
+      .brand { justify-content: center; padding: 0; }
+      .brand > span, .section-label, .nav-btn span, .playlist-shortcuts, .account-copy, .online { display: none; }
+      .nav-btn { justify-content: center; padding: 0; }
+      .account { justify-content: center; padding: 10px 0; }
+      .playing-grid { grid-template-columns: 1fr; }
+      .detail-panel { display: none; }
+      .art-shell { width: min(280px, 64vw); }
+      .result-head, .result-row { grid-template-columns: 26px 42px minmax(120px,1fr) 54px 96px; }
+      .result-head > :nth-child(4), .result-row > :nth-child(4), .result-head > :nth-child(5), .result-row > :nth-child(5) { display: none; }
+      .library-layout { grid-template-columns: 1fr; }
+      .library-list { display: none; }
+      .player-grid { grid-template-columns: minmax(120px,1fr) auto; }
+      .player-extra { display: none; }
+    }
+
+    @media (max-width: 600px) {
+      .app { grid-template-columns: 56px minmax(0,1fr); min-height: 520px; }
+      .sidebar { padding-inline: 8px; }
+      .titlebar { padding-left: 14px; }
+      .window-btn { width: 34px; }
+      .window-btn:nth-child(2), .window-btn:nth-child(3) { display: none; }
+      .page { padding: 15px 14px 112px; }
+      .page-head { min-height: 40px; margin-bottom: 12px; }
+      .page-title h1 { font-size: 20px; }
+      .page-title p { max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+      .search-controls {
+        display: grid;
+        grid-template-columns: minmax(0,1fr) 40px 40px;
+        gap: 7px;
+      }
+      .search-box { grid-column: 1 / -1; width: 100%; }
+      .search-controls select { width: 100%; min-width: 0; }
+      .search-controls .button { width: 40px; padding: 0; font-size: 0; white-space: nowrap; }
+      .search-controls .button svg { width: 16px; height: 16px; }
+      .clear { right: 6px; }
+
+      .result-head, .result-row {
+        grid-template-columns: 20px 38px minmax(0,1fr) 40px 58px;
+        gap: 7px;
+        padding-inline: 6px;
+      }
+      .result-head > :last-child { visibility: hidden; }
+      .result-row { height: 56px; }
+      .row-cover { width: 36px; height: 36px; }
+      .row-actions { opacity: 1; gap: 0; }
+      .row-actions .like { display: none; }
+
+      .playlist-banner { align-items: center; gap: 12px; }
+      .playlist-cover { width: 76px; height: 76px; }
+      .playlist-copy h2 { font-size: 18px; }
+      .playlist-copy p { max-width: 170px; margin: 4px 0 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .playlist-copy .button { height: 34px; }
+
+      .now-panel { padding-inline: 0; }
+      .art-shell { width: min(238px, 76vw); }
+      .track-heading { margin-top: 15px; }
+      .track-meta { gap: 10px; }
+      .large-controls { margin-top: 6px; }
+
+      .player { left: 8px; right: 8px; height: 86px; }
+      .player-progress { left: 12px; right: 12px; top: 8px; }
+      .player-grid { grid-template-columns: minmax(0,1fr) auto; gap: 6px; padding: 14px 10px 5px; }
+      .mini-track { min-width: 0; gap: 7px; }
+      .mini-track img { width: 38px; height: 38px; }
+      .mini-copy span, .mini-track > .favorite-toggle { display: none; }
+      .transport { gap: 4px; }
+      .transport > :first-child, .transport > :last-child { display: none; }
+      .transport .icon-btn { width: 32px; height: 32px; }
+      .transport .main-play { width: 38px; height: 38px; }
+      .toast { bottom: 116px; min-width: 0; width: calc(100% - 28px); }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <section class="app">
+      <aside class="sidebar">
+        <div class="brand"><span class="brand-mark"><i data-lucide="audio-lines"></i></span><span>SniffPlay</span></div>
+        <div class="section-label">音乐库</div>
+        <nav class="nav">
+          <button class="nav-btn active" data-page="playing"><i data-lucide="disc-3"></i><span>正在播放</span></button>
+          <button class="nav-btn" data-page="search"><i data-lucide="search"></i><span>搜索</span></button>
+          <button class="nav-btn" data-page="library"><i data-lucide="library"></i><span>我的歌单</span></button>
+          <button class="nav-btn" data-page="favorites"><i data-lucide="heart"></i><span>我的收藏</span></button>
+          <button class="nav-btn" data-page="history"><i data-lucide="history"></i><span>播放历史</span></button>
+        </nav>
+        <div class="playlist-shortcuts">
+          <div class="section-label">常用歌单</div>
+          <button class="playlist-link"><span></span><span>工作专注</span></button>
+          <button class="playlist-link"><span></span><span>夜间漫游</span></button>
+          <button class="playlist-link"><span></span><span>本周循环</span></button>
+        </div>
+        <div class="account">
+          <img class="avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="用户头像">
+          <div class="account-copy"><strong>本地音乐库</strong><span>Bilibili 数据源</span></div><i class="online"></i>
+        </div>
+      </aside>
+
+      <section class="shell">
+        <header class="titlebar">
+          <div class="crumb">音乐库&nbsp; / &nbsp;<b id="crumbText">正在播放</b></div>
+          <div class="window-actions">
+            <button class="window-btn" title="设置"><i data-lucide="settings"></i></button>
+            <button class="window-btn" title="最小化"><i data-lucide="minus"></i></button>
+            <button class="window-btn" title="最大化"><i data-lucide="square"></i></button>
+            <button class="window-btn close" title="关闭"><i data-lucide="x"></i></button>
+          </div>
+        </header>
+
+        <div class="workspace">
+          <section class="page active" data-view="playing">
+            <div class="page-head">
+              <div class="page-title"><h1>正在播放</h1><p>来自「夜间漫游」</p></div>
+              <div class="spacer"></div>
+              <button class="icon-btn favorite-toggle" title="收藏"><i data-lucide="heart"></i></button>
+              <button class="icon-btn" title="更多"><i data-lucide="ellipsis"></i></button>
+            </div>
+            <div class="playing-grid">
+              <section class="now-panel">
+                <div class="art-shell">
+                  <div class="art-glow"></div>
+                  <img class="album-art" src="https://images.unsplash.com/photo-1496293455970-f8581aae0e3b?auto=format&fit=crop&w=900&q=88" alt="黑胶唱片与唱机">
+                  <span class="art-badge"><i data-lucide="badge-check"></i>HQ 320K</span>
+                </div>
+                <div class="track-heading"><h2 id="heroTitle">Midnight Signals</h2><p id="heroArtist">The Paper Moons · After Hours</p></div>
+                <div class="track-meta"><span><i data-lucide="radio"></i>Bilibili</span><span><i data-lucide="calendar-days"></i>2025</span><span><i data-lucide="headphones"></i>18.4K</span></div>
+                <div class="full-progress"><div class="progress-line"><span></span><i></i></div><div class="time-line"><span>1:42</span><span>4:06</span></div></div>
+                <div class="large-controls">
+                  <button class="icon-btn" title="随机播放"><i data-lucide="shuffle"></i></button>
+                  <button class="icon-btn" title="上一首"><i data-lucide="skip-back"></i></button>
+                  <button class="icon-btn play play-toggle" title="播放或暂停"><i data-lucide="pause"></i></button>
+                  <button class="icon-btn" title="下一首"><i data-lucide="skip-forward"></i></button>
+                  <button class="icon-btn" title="循环模式"><i data-lucide="repeat-1"></i></button>
+                </div>
+              </section>
+
+              <section class="detail-panel">
+                <div class="segmented">
+                  <button class="segment active" data-tab="queue">播放队列</button>
+                  <button class="segment" data-tab="lyrics">歌词</button>
+                </div>
+                <div class="tab-view active" data-tab-view="queue">
+                  <div class="queue-summary"><strong>接下来播放</strong><span class="spacer"></span><span>8 首 · 31 分钟</span></div>
+                  <div class="queue-list" id="queueList"></div>
+                </div>
+                <div class="tab-view" data-tab-view="lyrics">
+                  <div class="lyrics">
+                    <p class="lyric">The city breathes beneath the rain</p>
+                    <p class="lyric">Streetlights write across the glass</p>
+                    <p class="lyric active">Midnight signals call my name</p>
+                    <p class="lyric next">Every shadow lets me pass</p>
+                    <p class="lyric">I follow echoes through the blue</p>
+                    <p class="lyric">Until the morning comes in view</p>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </section>
+
+          <section class="page" data-view="search">
+            <div class="page-head"><div class="page-title"><h1>搜索</h1><p id="resultSummary">为你推荐 6 首歌曲</p></div><div class="spacer"></div><button class="icon-btn" title="刷新"><i data-lucide="refresh-cw"></i></button></div>
+            <div class="search-controls">
+              <label class="search-box"><i data-lucide="search"></i><input id="searchInput" value="midnight" placeholder="输入歌曲、歌手或专辑"><button class="clear show" id="clearSearch" title="清空"><i data-lucide="x"></i></button></label>
+              <select aria-label="排序"><option>相关度</option><option>时长</option><option>歌名</option></select>
+              <button class="button"><i data-lucide="folder-open"></i>本地音频</button>
+              <button class="button primary" id="searchButton"><i data-lucide="search"></i>搜索</button>
+            </div>
+            <div class="result-head"><span>#</span><span></span><span>歌曲</span><span>专辑</span><span>来源</span><span>时长</span><span></span></div>
+            <div class="result-list" id="resultList"></div>
+          </section>
+
+          <section class="page" data-view="library">
+            <div class="page-head"><div class="page-title"><h1>我的歌单</h1><p>4 个歌单 · 46 首歌曲</p></div><div class="spacer"></div><button class="button primary" id="createPlaylist"><i data-lucide="plus"></i>新建歌单</button></div>
+            <div class="library-layout">
+              <div class="library-list">
+                <button class="library-item active"><span class="library-icon"><i data-lucide="moon"></i></span><div><strong>夜间漫游</strong><small>12 首 · 刚刚更新</small></div></button>
+                <button class="library-item"><span class="library-icon"><i data-lucide="briefcase-business"></i></span><div><strong>工作专注</strong><small>18 首</small></div></button>
+                <button class="library-item"><span class="library-icon"><i data-lucide="coffee"></i></span><div><strong>周末清晨</strong><small>9 首</small></div></button>
+              </div>
+              <div class="library-detail">
+                <div class="playlist-banner"><img class="playlist-cover" src="https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=500&q=85" alt="城市夜景"><div class="playlist-copy"><h2>夜间漫游</h2><p>适合深夜独行与长途驾驶</p><button class="button primary"><i data-lucide="play"></i>播放全部</button></div></div>
+                <div class="result-list" id="libraryTracks"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="page" data-view="favorites"><div class="page-head"><div class="page-title"><h1>我的收藏</h1><p>收藏内容集中展示，沿用搜索页的高密度列表</p></div></div><div class="result-list" id="favoriteTracks"></div></section>
+          <section class="page" data-view="history"><div class="page-head"><div class="page-title"><h1>播放历史</h1><p>按日期分组，更容易找回最近听过的歌曲</p></div></div><div class="result-list" id="historyTracks"></div></section>
+
+          <section class="player">
+            <div class="player-progress"><span></span></div>
+            <div class="player-grid">
+              <div class="mini-track"><img src="https://images.unsplash.com/photo-1496293455970-f8581aae0e3b?auto=format&fit=crop&w=200&q=82" alt="专辑封面"><div class="mini-copy"><strong id="miniTitle">Midnight Signals</strong><span id="miniArtist">The Paper Moons</span></div><button class="tiny favorite-toggle"><i data-lucide="heart"></i></button></div>
+              <div class="transport"><button class="icon-btn"><i data-lucide="shuffle"></i></button><button class="icon-btn"><i data-lucide="skip-back"></i></button><button class="icon-btn main-play play-toggle"><i data-lucide="pause"></i></button><button class="icon-btn"><i data-lucide="skip-forward"></i></button><button class="icon-btn"><i data-lucide="repeat-1"></i></button></div>
+              <div class="player-extra"><button class="tiny"><i data-lucide="list-music"></i></button><button class="tiny"><i data-lucide="volume-2"></i></button><div class="volume"><span></span></div></div>
+            </div>
+          </section>
+          <div class="toast" id="toast"><i data-lucide="circle-check"></i><span></span></div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const covers = [
+      'https://images.unsplash.com/photo-1496293455970-f8581aae0e3b?auto=format&fit=crop&w=180&q=80',
+      'https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=180&q=80',
+      'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=180&q=80',
+      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=180&q=80',
+      'https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=180&q=80',
+      'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=180&q=80'
+    ];
+    const tracks = [
+      ['Midnight Signals','The Paper Moons','After Hours','4:06'],
+      ['Neon Rain','Aster Vale','Glass Cities','3:42'],
+      ['Slow Current','Northbound','Open Water','5:11'],
+      ['Last Train Home','Mira Lane','Platform Stories','3:28'],
+      ['Parallel Lines','June Archive','Blue Rooms','4:21'],
+      ['Daybreak FM','Low Season','Static Bloom','3:56']
+    ];
+    const trackMarkup = (track, index, mode='result') => `
+      <div class="${mode === 'queue' ? 'queue-row' : 'result-row'} ${index === 0 ? 'playing' : ''}" data-index="${index}">
+        <span>${index === 0 ? '<i data-lucide="audio-lines"></i>' : index + 1}</span>
+        <img class="${mode === 'queue' ? 'q-cover' : 'row-cover'}" src="${covers[index % covers.length]}" alt="${track[0]} 封面">
+        <div class="${mode === 'queue' ? 'q-copy' : 'row-copy'}"><strong>${track[0]}</strong><small>${track[1]}</small></div>
+        ${mode === 'queue' ? '<span class="quality">HQ</span>' : `<span>${track[2]}</span><span class="source-mark">BILI</span>`}
+        <span>${track[3]}</span>
+        <div class="${mode === 'queue' ? 'q-actions' : 'row-actions'}"><button class="tiny like" title="收藏"><i data-lucide="heart"></i></button><button class="tiny row-play" title="播放"><i data-lucide="play"></i></button></div>
+      </div>`;
+
+    function renderLists() {
+      document.querySelector('#queueList').innerHTML = tracks.concat(tracks.slice(1,3)).map((t,i) => trackMarkup(t, i, 'queue')).join('');
+      document.querySelector('#resultList').innerHTML = tracks.map((t,i) => trackMarkup(t,i)).join('');
+      document.querySelector('#libraryTracks').innerHTML = tracks.slice(0,4).map((t,i) => trackMarkup(t,i)).join('');
+      document.querySelector('#favoriteTracks').innerHTML = tracks.slice(1,6).map((t,i) => trackMarkup(t,i)).join('');
+      document.querySelector('#historyTracks').innerHTML = tracks.slice().reverse().map((t,i) => trackMarkup(t,i)).join('');
+    }
+    renderLists();
+
+    const names = { playing:'正在播放', search:'搜索', library:'我的歌单', favorites:'我的收藏', history:'播放历史' };
+    function activatePage(page) {
+      const nextPage = names[page] ? page : 'playing';
+      document.querySelectorAll('.nav-btn').forEach(x => x.classList.toggle('active', x.dataset.page === nextPage));
+      document.querySelectorAll('.page').forEach(x => x.classList.toggle('active', x.dataset.view === nextPage));
+      document.querySelector('#crumbText').textContent = names[nextPage];
+    }
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => {
+      window.location.hash = btn.dataset.page;
+      activatePage(btn.dataset.page);
+    }));
+    window.addEventListener('hashchange', () => activatePage(window.location.hash.slice(1)));
+    activatePage(window.location.hash.slice(1));
+
+    document.querySelectorAll('.segment').forEach(btn => btn.addEventListener('click', () => {
+      document.querySelectorAll('.segment').forEach(x => x.classList.toggle('active', x === btn));
+      document.querySelectorAll('.tab-view').forEach(x => x.classList.toggle('active', x.dataset.tabView === btn.dataset.tab));
+    }));
+
+    let playing = true;
+    document.querySelectorAll('.play-toggle').forEach(btn => btn.addEventListener('click', () => {
+      playing = !playing;
+      document.querySelectorAll('.play-toggle').forEach(x => x.innerHTML = `<i data-lucide="${playing ? 'pause' : 'play'}"></i>`);
+      lucide.createIcons();
+    }));
+
+    const searchInput = document.querySelector('#searchInput');
+    const clearSearch = document.querySelector('#clearSearch');
+    searchInput.addEventListener('input', () => clearSearch.classList.toggle('show', searchInput.value.length > 0));
+    clearSearch.addEventListener('click', e => { e.preventDefault(); searchInput.value=''; clearSearch.classList.remove('show'); searchInput.focus(); });
+    document.querySelector('#searchButton').addEventListener('click', () => showToast(`找到 ${tracks.length} 首歌曲`));
+
+    document.addEventListener('click', event => {
+      const row = event.target.closest('[data-index]');
+      if (!row) return;
+      const index = Number(row.dataset.index) % tracks.length;
+      if (event.target.closest('.like')) { event.target.closest('.like').classList.toggle('active'); showToast('已更新收藏'); return; }
+      if (event.target.closest('.row-play') || event.detail === 2) {
+        document.querySelector('#miniTitle').textContent = tracks[index][0];
+        document.querySelector('#miniArtist').textContent = tracks[index][1];
+        document.querySelectorAll('.result-row,.queue-row').forEach(x => x.classList.remove('playing','current'));
+        row.classList.add(row.classList.contains('queue-row') ? 'current' : 'playing');
+        showToast(`正在播放：${tracks[index][0]}`);
+      }
+    });
+    document.querySelectorAll('.favorite-toggle').forEach(btn => btn.addEventListener('click', () => { btn.classList.toggle('active'); showToast(btn.classList.contains('active') ? '已收藏当前歌曲' : '已取消收藏'); }));
+    document.querySelector('#createPlaylist').addEventListener('click', () => showToast('创建歌单弹窗已在项目中统一优化'));
+
+    let toastTimer;
+    function showToast(message) {
+      const toast = document.querySelector('#toast');
+      toast.querySelector('span').textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+    lucide.createIcons();
+  </script>
+</body>
+</html>
