@@ -13,6 +13,7 @@ from sniffplay.database.repositories import (
     FavoriteRepository,
     HistoryRepository,
     PlaylistRepository,
+    SettingsRepository,
 )
 from sniffplay.models import StreamInfo, Track
 from sniffplay.player import MockPlayer
@@ -20,6 +21,58 @@ from sniffplay.providers import ProviderRegistry
 from sniffplay.providers.base import ProviderError
 from sniffplay.providers.mock import MockProvider
 from sniffplay.services.search_service import SearchService
+
+
+def test_playlist_shortcuts_are_customizable_and_persisted(tmp_path: Path) -> None:
+    app = QCoreApplication.instance() or QCoreApplication([])
+    database = Database(tmp_path / "playlist-shortcuts.db")
+    database.initialize()
+    playlists = PlaylistRepository(database)
+    settings = SettingsRepository(database)
+    created = [playlists.create(f"歌单 {index}") for index in range(1, 5)]
+    registry = ProviderRegistry()
+    registry.register(MockProvider())
+    controller = AppController(
+        SearchService(registry),
+        MockPlayer(),
+        playlists,
+        HistoryRepository(database),
+        settings_repository=settings,
+    )
+
+    assert controller.shortcutPlaylistCount == 3
+    assert [
+        item["playlistId"] for item in controller._shortcut_playlist_model._items
+    ] == [playlist.id for playlist in created[:3]]
+
+    controller.pinPlaylistShortcut(created[3].id)
+    assert controller.shortcutPlaylistCount == 3
+
+    controller.unpinPlaylistShortcut(created[1].id)
+    controller.pinPlaylistShortcut(created[3].id)
+    assert [
+        item["playlistId"] for item in controller._shortcut_playlist_model._items
+    ] == [created[0].id, created[2].id, created[3].id]
+
+    controller.replacePlaylistShortcut(created[0].id, created[1].id)
+    playlists.rename(created[1].id, "新的快捷歌单")
+    controller.refreshLibrary()
+    assert [
+        item["playlistId"] for item in controller._shortcut_playlist_model._items
+    ] == [created[1].id, created[2].id, created[3].id]
+    assert controller._shortcut_playlist_model._items[0]["name"] == "新的快捷歌单"
+
+    controller.deletePlaylist(created[2].id)
+    assert [
+        item["playlistId"] for item in controller._shortcut_playlist_model._items
+    ] == [created[1].id, created[3].id]
+    assert settings.get("pinned_playlist_ids") == (
+        f"[{created[1].id}, {created[3].id}]"
+    )
+
+    controller.close()
+    database.close()
+    assert app is not None
 
 
 async def test_search_result_playback_replaces_queue_with_all_results(

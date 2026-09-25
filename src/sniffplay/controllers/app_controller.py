@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 from dataclasses import replace
 import random
@@ -46,6 +47,7 @@ class AppController(QObject):
     favoritesChanged = Signal()
     queueChanged = Signal()
     playbackModeChanged = Signal()
+    shortcutsChanged = Signal()
 
     def __init__(
         self,
@@ -70,6 +72,7 @@ class AppController(QObject):
         self._track_model = TrackListModel()
         self._favorite_model = FavoriteListModel()
         self._playlist_model = PlaylistListModel()
+        self._shortcut_playlist_model = PlaylistListModel()
         self._playlist_track_model = PlaylistTrackListModel()
         self._queue_model = QueueListModel()
         self._history_model = HistoryListModel()
@@ -92,6 +95,9 @@ class AppController(QObject):
         self._selected_playlist_id = -1
         self._selected_playlist_name = ""
         self._favorite_keys: set[tuple[str, str]] = set()
+        self._pinned_playlist_ids, self._shortcuts_initialized = (
+            self._load_pinned_playlist_ids()
+        )
 
         self._player_timer = QTimer(self)
         self._player_timer.setInterval(250)
@@ -106,6 +112,14 @@ class AppController(QObject):
     @Property(QObject, constant=True)
     def playlistModel(self) -> QObject:
         return self._playlist_model
+
+    @Property(QObject, constant=True)
+    def shortcutPlaylistModel(self) -> QObject:
+        return self._shortcut_playlist_model
+
+    @Property(int, notify=shortcutsChanged)
+    def shortcutPlaylistCount(self) -> int:
+        return len(self._pinned_playlist_ids)
 
     @Property(QObject, constant=True)
     def playlistTrackModel(self) -> QObject:
@@ -219,6 +233,16 @@ class AppController(QObject):
     def currentArtist(self) -> str:
         track = self._player.current_track
         return track.artist if track else "打开本地音频或选择可播放歌曲"
+
+    @Property(str, notify=playerChanged)
+    def currentAlbum(self) -> str:
+        track = self._player.current_track
+        return track.album if track and track.album else "未知专辑"
+
+    @Property(str, notify=playerChanged)
+    def currentSource(self) -> str:
+        track = self._player.current_track
+        return track.provider_id.upper() if track else "--"
 
     @Property(str, notify=playerChanged)
     def currentAccent(self) -> str:
@@ -713,7 +737,7 @@ class AppController(QObject):
         except ValueError as error:
             self._set_status(str(error))
             return
-        self._playlist_model.set_playlists(self._playlist_repository.list_all())
+        self._refresh_playlists()
         self._set_status(f"已创建歌单：{playlist.name}")
 
     @Slot(str, int)
@@ -731,6 +755,65 @@ class AppController(QObject):
             return
         self._refresh_playlists()
         self._set_status(f"已创建歌单并添加歌曲：{playlist.name}")
+
+    @Slot(int, result=bool)
+    def isPlaylistShortcut(self, playlist_id: int) -> bool:
+        return playlist_id in self._pinned_playlist_ids
+
+    @Slot(int)
+    def pinPlaylistShortcut(self, playlist_id: int) -> None:
+        if playlist_id in self._pinned_playlist_ids:
+            return
+        if len(self._pinned_playlist_ids) >= 3:
+            self._set_status("快捷歌单已满，请选择一个歌单进行替换")
+            return
+        try:
+            playlist = self._playlist_repository.get(playlist_id)
+        except LookupError as error:
+            self._set_status(str(error))
+            return
+        self._pinned_playlist_ids.append(playlist_id)
+        self._shortcuts_initialized = True
+        self._save_pinned_playlist_ids()
+        self._refresh_playlists()
+        self._set_status(f"已固定到快捷歌单：{playlist.name}")
+
+    @Slot(int)
+    def unpinPlaylistShortcut(self, playlist_id: int) -> None:
+        if playlist_id not in self._pinned_playlist_ids:
+            return
+        playlist_name = next(
+            (
+                item.name
+                for item in self._playlist_repository.list_all()
+                if item.id == playlist_id
+            ),
+            "歌单",
+        )
+        self._pinned_playlist_ids.remove(playlist_id)
+        self._shortcuts_initialized = True
+        self._save_pinned_playlist_ids()
+        self._refresh_playlists()
+        self._set_status(f"已取消快捷歌单：{playlist_name}")
+
+    @Slot(int, int)
+    def replacePlaylistShortcut(self, old_playlist_id: int, new_playlist_id: int) -> None:
+        if old_playlist_id not in self._pinned_playlist_ids:
+            return
+        if new_playlist_id in self._pinned_playlist_ids:
+            self._set_status("该歌单已经固定在侧边栏")
+            return
+        try:
+            playlist = self._playlist_repository.get(new_playlist_id)
+        except LookupError as error:
+            self._set_status(str(error))
+            return
+        index = self._pinned_playlist_ids.index(old_playlist_id)
+        self._pinned_playlist_ids[index] = new_playlist_id
+        self._shortcuts_initialized = True
+        self._save_pinned_playlist_ids()
+        self._refresh_playlists()
+        self._set_status(f"已替换快捷歌单：{playlist.name}")
 
     @Slot(int)
     def openPlaylist(self, playlist_id: int) -> None:
@@ -889,7 +972,61 @@ class AppController(QObject):
         self._refresh_favorites()
 
     def _refresh_playlists(self) -> None:
-        self._playlist_model.set_playlists(self._playlist_repository.list_all())
+        playlists = self._playlist_repository.list_all()
+        self._playlist_model.set_playlists(playlists)
+
+        playlists_by_id = {playlist.id: playlist for playlist in playlists}
+        if not self._shortcuts_initialized and playlists:
+            self._pinned_playlist_ids = [playlist.id for playlist in playlists[:3]]
+            self._shortcuts_initialized = True
+            self._save_pinned_playlist_ids()
+        else:
+            valid_ids = [
+                playlist_id
+                for playlist_id in self._pinned_playlist_ids
+                if playlist_id in playlists_by_id
+            ]
+            if valid_ids != self._pinned_playlist_ids:
+                self._pinned_playlist_ids = valid_ids
+                self._save_pinned_playlist_ids()
+
+        shortcuts = [
+            playlists_by_id[playlist_id]
+            for playlist_id in self._pinned_playlist_ids
+            if playlist_id in playlists_by_id
+        ]
+        self._shortcut_playlist_model.set_playlists(shortcuts)
+        self.shortcutsChanged.emit()
+
+    def _load_pinned_playlist_ids(self) -> tuple[list[int], bool]:
+        if self._settings_repository is None:
+            return [], False
+        raw_value = self._settings_repository.get("pinned_playlist_ids")
+        if raw_value is None:
+            return [], False
+        try:
+            values = json.loads(raw_value)
+        except (TypeError, ValueError):
+            return [], False
+        if not isinstance(values, list):
+            return [], False
+        playlist_ids: list[int] = []
+        for value in values:
+            if (
+                isinstance(value, int)
+                and not isinstance(value, bool)
+                and value > 0
+                and value not in playlist_ids
+            ):
+                playlist_ids.append(value)
+        return playlist_ids[:3], True
+
+    def _save_pinned_playlist_ids(self) -> None:
+        if self._settings_repository is not None:
+            self._settings_repository.set(
+                "pinned_playlist_ids",
+                json.dumps(self._pinned_playlist_ids),
+            )
 
     def _refresh_favorites(self) -> None:
         if self._favorite_repository is None:
