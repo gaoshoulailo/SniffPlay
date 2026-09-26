@@ -93,10 +93,11 @@ Item {
                         required property int playlistId
                         required property string name
                         required property string countLabel
+                        readonly property bool currentPlaylist: root.controller.selectedPlaylistId === playlistRow.playlistId
 
                         width: playlistView.width
                         height: 62
-                        color: root.controller.selectedPlaylistId === playlistRow.playlistId
+                        color: playlistRow.currentPlaylist
                             ? Theme.accentDark
                             : (playlistMouse.containsMouse ? Theme.surfaceHover : Theme.transparent)
                         radius: Theme.radiusMedium
@@ -105,7 +106,7 @@ Item {
                             anchors.left: parent.left
                             anchors.verticalCenter: parent.verticalCenter
                             width: 3
-                            height: root.controller.selectedPlaylistId === playlistRow.playlistId ? 24 : 0
+                            height: playlistRow.currentPlaylist ? 24 : 0
                             radius: 2
                             color: Theme.accent
                             Behavior on height { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
@@ -128,11 +129,23 @@ Item {
                             ColumnLayout {
                                 Layout.fillWidth: true
                                 spacing: 2
-                                Text { Layout.fillWidth: true; text: playlistRow.name; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 14; font.weight: Font.DemiBold; elide: Text.ElideRight }
-                                Text { text: playlistRow.countLabel; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12 }
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: playlistRow.name
+                                    color: playlistRow.currentPlaylist
+                                        ? Theme.buttonText
+                                        : (playlistMouse.containsMouse ? Theme.textPrimary : Theme.textSecondary)
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 11
+                                    font.weight: playlistRow.currentPlaylist ? Font.Bold : Font.Normal
+                                    elide: Text.ElideRight
+
+                                    Behavior on color { ColorAnimation { duration: 140 } }
+                                }
+                                Text { text: playlistRow.countLabel; color: playlistRow.currentPlaylist ? Theme.textSecondary : Theme.disabledText; font.family: Theme.fontFamily; font.pixelSize: 9 }
                             }
 
-                            AppIcon { name: "chevron-right"; color: Theme.textSecondary; iconSize: 16 }
+                            AppIcon { name: "chevron-right"; color: playlistRow.currentPlaylist ? Theme.textPrimary : Theme.textSecondary; iconSize: 16 }
                         }
 
                         MouseArea {
