@@ -365,16 +365,26 @@ class AppController(QObject):
 
     @asyncSlot(str)
     async def search(self, query: str) -> None:
+        await self._search(query, show_result_toast=True)
+
+    @asyncSlot(str)
+    async def loadInitialSearch(self, query: str) -> None:
+        await self._search(query, show_result_toast=False)
+
+    async def _search(self, query: str, *, show_result_toast: bool) -> None:
         self._set_searching(True)
         self._set_status("正在搜索...", toast=False)
         try:
             tracks = await self._search_service.search(query)
             self._track_model.set_tracks(tracks, self._favorite_keys)
-            self._set_status(f"找到 {len(tracks)} 首歌曲")
+            self._set_status(
+                f"找到 {len(tracks)} 首歌曲",
+                toast=show_result_toast,
+            )
         except Exception:
             logger.exception("Search failed")
             self._track_model.set_tracks([])
-            self._set_status("搜索失败，请稍后重试")
+            self._set_status("搜索失败，请稍后重试", toast=show_result_toast)
         finally:
             self._set_searching(False)
 

@@ -802,5 +802,5 @@ Item {
         }
     }
 
-    Component.onCompleted: root.controller.search("")
+    Component.onCompleted: root.controller.loadInitialSearch("")
 }

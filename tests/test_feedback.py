@@ -35,3 +35,30 @@ def test_controller_emits_repeatable_toasts(tmp_path) -> None:
     controller.close()
     database.close()
     assert app is not None
+
+
+async def test_initial_search_does_not_emit_toast(tmp_path) -> None:
+    app = QCoreApplication.instance() or QCoreApplication([])
+    database = Database(tmp_path / "initial-search-feedback.db")
+    database.initialize()
+    controller = AppController(
+        SearchService(ProviderRegistry()),
+        MockPlayer(),
+        PlaylistRepository(database),
+        HistoryRepository(database),
+    )
+    messages: list[str] = []
+    controller.toastRequested.connect(messages.append)
+
+    await controller.loadInitialSearch("")
+
+    assert controller.statusMessage == "找到 0 首歌曲"
+    assert messages == []
+
+    await controller.search("")
+
+    assert messages == ["找到 0 首歌曲"]
+
+    controller.close()
+    database.close()
+    assert app is not None
