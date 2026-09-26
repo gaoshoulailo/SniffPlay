@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Effects
 import QtQuick.Layouts
 import "../components"
 import "../themes"
@@ -15,7 +14,6 @@ Item {
     property int contextFavoriteIndex: -1
     property int contextFavoriteId: -1
     property int pendingPlaylistId: -1
-    readonly property bool compact: width < 760
 
     ColumnLayout {
         anchors.fill: parent
@@ -57,144 +55,32 @@ Item {
             }
         }
 
-        GridLayout {
+        Text {
             Layout.fillWidth: true
-            Layout.fillHeight: true
-            columns: root.compact ? 1 : 2
-            columnSpacing: 28
-
-            Rectangle {
-                visible: !root.compact
-                Layout.preferredWidth: 350
-                Layout.maximumWidth: 370
-                Layout.fillHeight: true
-                color: Theme.sidebar
-                border.color: Theme.border
-                radius: Theme.radiusMedium
-
-                layer.enabled: true
-                layer.effect: MultiEffect {
-                    shadowEnabled: true
-                    shadowColor: "#000000"
-                    shadowOpacity: 0.42
-                    shadowBlur: 0.65
-                    shadowVerticalOffset: 10
-                }
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 24
-                    spacing: 18
-
-                    Rectangle {
-                        id: favoriteCover
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: width
-                        Layout.maximumHeight: 310
-                        color: root.controller && root.controller.hasCurrentTrack && favoriteCoverImage.status === Image.Ready
-                            ? root.controller.currentAccent
-                            : (root.controller && root.controller.hasCurrentTrack ? "#3d8bff" : Theme.surface)
-                        radius: Theme.radiusMedium
-                        clip: true
-                        scale: favoriteCoverHover.hovered ? 1.018 : 1.0
-
-                        Behavior on scale {
-                            NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
-                        }
-
-                        layer.enabled: true
-                        layer.effect: MultiEffect {
-                            shadowEnabled: true
-                            shadowColor: "#000000"
-                            shadowOpacity: favoriteCoverHover.hovered ? 0.38 : 0.0
-                            shadowBlur: 0.5
-                            shadowVerticalOffset: 7
-
-                            Behavior on shadowOpacity {
-                                NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
-                            }
-                        }
-
-                        HoverHandler { id: favoriteCoverHover }
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: root.controller.hasCurrentTrack
-                                ? root.controller.currentInitials
-                                : "♥"
-                            color: root.controller.hasCurrentTrack
-                                ? Theme.coverText
-                                : Theme.textSecondary
-                            font.family: root.controller.hasCurrentTrack
-                                ? Theme.fontFamily
-                                : "Segoe UI Symbol"
-                            font.pixelSize: 68
-                            font.bold: root.controller.hasCurrentTrack
-                            visible: favoriteCoverImage.status !== Image.Ready
-                        }
-
-                        Image {
-                            id: favoriteCoverImage
-                            anchors.fill: parent
-                            source: root.controller.currentCoverUrl
-                            sourceSize.width: 640
-                            sourceSize.height: 640
-                            asynchronous: true
-                            cache: true
-                            fillMode: Image.PreserveAspectCrop
-                            visible: status === Image.Ready
-                        }
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        text: root.controller.hasCurrentTrack
-                            ? root.controller.currentTitle
-                            : "你喜欢的歌曲"
-                        color: Theme.textPrimary
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 15
-                        font.weight: Font.DemiBold
-                        horizontalAlignment: Text.AlignHCenter
-                        elide: Text.ElideRight
-                        maximumLineCount: 1
-                        clip: true
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        text: root.controller.hasCurrentTrack
-                            ? root.controller.currentArtist
-                            : root.controller.favoriteCount + " 首收藏"
-                        color: Theme.textSecondary
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 11
-                        horizontalAlignment: Text.AlignHCenter
-                        elide: Text.ElideRight
-                        maximumLineCount: 1
-                        clip: true
-                    }
-
-                    Item { Layout.fillHeight: true }
-                }
-            }
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                spacing: 8
+            text: "集中查看和管理已收藏的歌曲"
+            color: Theme.textSecondary
+            font.family: Theme.fontFamily
+            font.pixelSize: 13
+        }
 
         RowLayout {
             Layout.fillWidth: true
-            Text { text: "喜爱的歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12; font.weight: Font.DemiBold }
-            Item { Layout.fillWidth: true }
-            Text { text: root.controller.favoriteCount + " 首"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12 }
+            Layout.leftMargin: 62
+            Layout.rightMargin: 18
+            spacing: 12
+
+            Text { Layout.fillWidth: true; text: "歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
+            Text { visible: root.width >= 820; Layout.preferredWidth: 170; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
+            Text { visible: root.width >= 700; Layout.preferredWidth: 100; text: "收藏时间"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+            Text { Layout.preferredWidth: 42; text: "时长"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
+            Item { Layout.preferredWidth: 76 }
         }
 
         ListView {
             id: favoriteView
             Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.topMargin: 2
             clip: true
             spacing: 2
             model: root.controller.favoriteModel
@@ -214,26 +100,46 @@ Item {
                 required property string favoritedAt
 
                 width: favoriteView.width
-                height: 64
+                height: 58
                 color: root.contextFavoriteIndex === favoriteRow.index
                     ? Theme.accentDark
-                    : (rowMouse.containsMouse ? Theme.surfaceHover : Theme.transparent)
+                    : (favoriteHover.hovered ? Theme.surfaceHover : Theme.transparent)
                 radius: Theme.radiusMedium
 
                 RowLayout {
                     z: 1
                     anchors.fill: parent
-                    anchors.leftMargin: 6
-                    anchors.rightMargin: 8
+                    anchors.leftMargin: 8
+                    anchors.rightMargin: 18
                     spacing: 12
 
-                    Text {
-                        Layout.preferredWidth: 30
-                        text: favoriteRow.index + 1
-                        color: Theme.textSecondary
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 11
-                        horizontalAlignment: Text.AlignHCenter
+                    Rectangle {
+                        Layout.preferredWidth: 42
+                        Layout.preferredHeight: 42
+                        color: favoriteCoverImage.status === Image.Ready ? favoriteRow.accent : "#3d8bff"
+                        radius: Theme.radiusSmall
+                        clip: true
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: favoriteRow.initials
+                            color: Theme.buttonText
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 15
+                            font.bold: true
+                            visible: favoriteCoverImage.status !== Image.Ready
+                        }
+
+                        Image {
+                            id: favoriteCoverImage
+                            anchors.fill: parent
+                            source: favoriteRow.coverUrl
+                            sourceSize.width: 96
+                            sourceSize.height: 96
+                            asynchronous: true
+                            fillMode: Image.PreserveAspectCrop
+                            visible: status === Image.Ready
+                        }
                     }
 
                     ColumnLayout {
@@ -241,34 +147,57 @@ Item {
                         spacing: 1
                         Text { Layout.fillWidth: true; text: favoriteRow.title; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Font.DemiBold; elide: Text.ElideRight }
                         Text { Layout.fillWidth: true; text: favoriteRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11; elide: Text.ElideRight }
-                        MouseArea {
-                            anchors.fill: parent
-                            acceptedButtons: Qt.LeftButton
-                            onDoubleClicked: root.controller.playFavorite(favoriteRow.index)
-                        }
                     }
 
-                    Text { visible: false; text: favoriteRow.album }
+                    Text {
+                        visible: root.width >= 820
+                        Layout.preferredWidth: 170
+                        text: favoriteRow.album
+                        color: Theme.textSecondary
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 11
+                        elide: Text.ElideRight
+                    }
+                    Text {
+                        visible: root.width >= 700
+                        Layout.preferredWidth: 100
+                        text: favoriteRow.favoritedAt
+                        color: Theme.textSecondary
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 11
+                        horizontalAlignment: Text.AlignRight
+                    }
                     Text { Layout.preferredWidth: 42; text: favoriteRow.duration; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
 
-                    Button {
-                        id: playButton
-                        implicitWidth: 34; implicitHeight: 34
-                        onClicked: root.controller.playFavorite(favoriteRow.index)
-                        ToolTip.visible: hovered; ToolTip.text: "播放"
-                        contentItem: AppIcon { name: "play"; color: Theme.textPrimary; iconSize: 14 }
-                        background: Rectangle { color: playButton.hovered ? Theme.accentDark : Theme.surface; border.color: Theme.border; radius: 17 }
-                    }
+                    RowLayout {
+                        Layout.preferredWidth: 76
+                        spacing: 4
+                        opacity: favoriteHover.hovered || root.contextFavoriteIndex === favoriteRow.index ? 1 : 0
+                        enabled: favoriteHover.hovered || root.contextFavoriteIndex === favoriteRow.index
 
-                    Button {
-                        id: removeButton
-                        implicitWidth: 34; implicitHeight: 34
-                        onClicked: root.controller.removeFavorite(favoriteRow.favoriteId)
-                        ToolTip.visible: hovered; ToolTip.text: "取消收藏"
-                        contentItem: AppIcon { name: "favorite-filled"; color: Theme.danger; iconSize: 17 }
-                        background: Rectangle { color: removeButton.hovered ? Theme.surfaceHover : Theme.surface; border.color: Theme.border; radius: 17 }
+                        Behavior on opacity { NumberAnimation { duration: 120 } }
+
+                        Button {
+                            id: playButton
+                            implicitWidth: 34; implicitHeight: 34
+                            onClicked: root.controller.playFavorite(favoriteRow.index)
+                            ToolTip.visible: hovered; ToolTip.text: "播放"
+                            contentItem: AppIcon { name: "play"; color: Theme.textPrimary; iconSize: 14 }
+                            background: Rectangle { color: playButton.hovered ? Theme.accentDark : Theme.surface; border.color: Theme.border; radius: 17 }
+                        }
+
+                        Button {
+                            id: removeButton
+                            implicitWidth: 34; implicitHeight: 34
+                            onClicked: root.controller.removeFavorite(favoriteRow.favoriteId)
+                            ToolTip.visible: hovered; ToolTip.text: "取消收藏"
+                            contentItem: AppIcon { name: "favorite-filled"; color: Theme.danger; iconSize: 17 }
+                            background: Rectangle { color: removeButton.hovered ? Theme.surfaceHover : Theme.surface; border.color: Theme.border; radius: 17 }
+                        }
                     }
                 }
+
+                HoverHandler { id: favoriteHover }
 
                 MouseArea {
                     id: rowMouse
@@ -276,6 +205,10 @@ Item {
                     z: 0
                     hoverEnabled: true
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onDoubleClicked: function(mouse) {
+                        if (mouse.button === Qt.LeftButton)
+                            root.controller.playFavorite(favoriteRow.index)
+                    }
                     onClicked: function(mouse) {
                         if (mouse.button !== Qt.RightButton)
                             return
@@ -297,8 +230,6 @@ Item {
                 actionText: "去搜索歌曲"
                 actionIcon: "search"
                 onActionTriggered: root.browseRequested()
-            }
-        }
             }
         }
     }
