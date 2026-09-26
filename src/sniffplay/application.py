@@ -12,7 +12,7 @@ from sniffplay.qt_bootstrap import prepare_qt_runtime
 prepare_qt_runtime()
 
 from PySide6.QtCore import QCoreApplication, Qt, QTimer, QUrl
-from PySide6.QtGui import QColor, QGuiApplication, QIcon, QPalette, QWindow
+from PySide6.QtGui import QColor, QFont, QGuiApplication, QIcon, QPalette, QWindow
 from PySide6.QtQml import QQmlApplicationEngine
 from qasync import QEventLoop
 
@@ -74,6 +74,11 @@ def run() -> int:
     instance_guard = SingleInstanceGuard(settings.data_dir)
     if not instance_guard.acquire_or_notify(startup_audio):
         return 0
+
+    application_font = QFont()
+    application_font.setFamilies(["Microsoft YaHei UI", "Segoe UI"])
+    application_font.setPixelSize(14)
+    app.setFont(application_font)
 
     palette = app.palette()
     palette.setColor(QPalette.ColorRole.Window, QColor("#1b1b1e"))

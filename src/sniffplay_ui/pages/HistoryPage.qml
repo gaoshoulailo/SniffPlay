@@ -26,7 +26,7 @@ Item {
             text: "播放历史"
             color: Theme.textPrimary
             font.family: Theme.fontFamily
-            font.pixelSize: 26
+            font.pixelSize: Theme.pageTitleSize
             font.weight: Font.Bold
         }
 
@@ -34,17 +34,17 @@ Item {
             text: "最近播放过的歌曲会保存在本机"
             color: Theme.textSecondary
             font.family: Theme.fontFamily
-            font.pixelSize: 13
+            font.pixelSize: 11
         }
 
         RowLayout {
             Layout.fillWidth: true
             Layout.leftMargin: 58
             Layout.rightMargin: 18
-            Text { Layout.fillWidth: true; text: "歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-            Text { Layout.preferredWidth: 170; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-            Text { Layout.preferredWidth: 52; text: "时长"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-            Text { Layout.preferredWidth: 100; text: "播放时间"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+            Text { Layout.fillWidth: true; text: "歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
+            Text { Layout.preferredWidth: 170; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
+            Text { Layout.preferredWidth: 52; text: "时长"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
+            Text { Layout.preferredWidth: 100; text: "播放时间"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize; horizontalAlignment: Text.AlignRight }
             Item { Layout.preferredWidth: 34 }
         }
 
@@ -118,8 +118,8 @@ Item {
                         Layout.fillWidth: true
                         spacing: 2
 
-                        Text { Layout.fillWidth: true; text: historyRow.title; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 14; font.weight: Font.DemiBold; elide: Text.ElideRight }
-                        Text { Layout.fillWidth: true; text: historyRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 12; elide: Text.ElideRight }
+                        Text { Layout.fillWidth: true; text: historyRow.title; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: Theme.listTitleSize; font.weight: Font.DemiBold; elide: Text.ElideRight }
+                        Text { Layout.fillWidth: true; text: historyRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize; elide: Text.ElideRight }
                         MouseArea {
                             anchors.fill: parent
                             acceptedButtons: Qt.LeftButton
@@ -132,7 +132,7 @@ Item {
                         text: historyRow.album
                         color: Theme.textSecondary
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.listMetaSize
                         elide: Text.ElideRight
                     }
 
@@ -141,7 +141,7 @@ Item {
                         text: historyRow.duration
                         color: Theme.textSecondary
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.listMetaSize
                     }
 
                     Text {
@@ -149,7 +149,7 @@ Item {
                         text: historyRow.playedAt
                         color: Theme.textSecondary
                         font.family: Theme.fontFamily
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.listMetaSize
                         horizontalAlignment: Text.AlignRight
                     }
 

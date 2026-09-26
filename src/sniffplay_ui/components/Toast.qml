@@ -61,7 +61,7 @@ Rectangle {
             text: root.message
             color: Theme.textPrimary
             font.family: Theme.fontFamily
-            font.pixelSize: 13
+            font.pixelSize: 12
             elide: Text.ElideRight
         }
 

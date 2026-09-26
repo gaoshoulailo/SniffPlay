@@ -177,7 +177,7 @@ Rectangle {
                     text: root.controller.currentTitle
                     color: Theme.textPrimary
                     font.family: Theme.fontFamily
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.listTitleSize
                     font.weight: Font.DemiBold
                     elide: Text.ElideRight
                 }
@@ -187,7 +187,7 @@ Rectangle {
                     text: root.controller.currentArtist
                     color: Theme.textSecondary
                     font.family: Theme.fontFamily
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.listMetaSize
                     elide: Text.ElideRight
                 }
             }

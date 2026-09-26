@@ -253,7 +253,7 @@ Item {
                             text: root.controller.currentTitle
                             color: Theme.textPrimary
                             font.family: Theme.fontFamily
-                            font.pixelSize: 22
+                            font.pixelSize: 20
                             font.weight: Font.Bold
                             horizontalAlignment: Text.AlignHCenter
                             elide: Text.ElideRight
@@ -263,7 +263,7 @@ Item {
                             text: root.controller.currentArtist
                             color: Theme.textSecondary
                             font.family: Theme.fontFamily
-                            font.pixelSize: 13
+                            font.pixelSize: 12
                             horizontalAlignment: Text.AlignHCenter
                             elide: Text.ElideRight
                         }
@@ -704,10 +704,10 @@ Item {
                             ColumnLayout {
                                 Layout.fillWidth: true
                                 spacing: 1
-                                Text { Layout.fillWidth: true; text: queueRow.title; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Font.DemiBold; elide: Text.ElideRight }
-                                Text { Layout.fillWidth: true; text: queueRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11; elide: Text.ElideRight }
+                                Text { Layout.fillWidth: true; text: queueRow.title; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: Theme.listTitleSize; font.weight: Font.DemiBold; elide: Text.ElideRight }
+                                Text { Layout.fillWidth: true; text: queueRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize; elide: Text.ElideRight }
                             }
-                            Text { text: queueRow.duration; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
+                            Text { text: queueRow.duration; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
 
                             Row {
                                 Layout.preferredWidth: 72

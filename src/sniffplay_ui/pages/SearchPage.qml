@@ -30,7 +30,7 @@ Item {
                 text: "搜索"
                 color: Theme.textPrimary
                 font.family: Theme.fontFamily
-                font.pixelSize: 26
+                font.pixelSize: Theme.pageTitleSize
                 font.weight: Font.Bold
             }
 
@@ -351,11 +351,11 @@ Item {
                 spacing: 12
 
                 Item { Layout.preferredWidth: 28 }
-                Item { Layout.preferredWidth: 48 }
-                Text { Layout.fillWidth: true; text: "歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-                Text { visible: resultsList.showAlbum; Layout.preferredWidth: 130; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-                Text { visible: resultsList.showSource; Layout.preferredWidth: 58; text: "来源"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-                Text { Layout.preferredWidth: 44; text: "时长"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
+                Item { Layout.preferredWidth: 40 }
+                Text { Layout.fillWidth: true; text: "歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
+                Text { visible: resultsList.showAlbum; Layout.preferredWidth: 130; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
+                Text { visible: resultsList.showSource; Layout.preferredWidth: 58; text: "来源"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
+                Text { Layout.preferredWidth: 44; text: "时长"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
                 Item { Layout.preferredWidth: 126 }
             }
         }
@@ -387,7 +387,7 @@ Item {
                 required property bool isFavorite
 
                 width: resultsList.width
-                height: 72
+                height: 60
                 color: root.contextTrackIndex === trackRow.index
                     ? Theme.accentDark
                     : (rowMouse.containsMouse ? Theme.surfaceHover : Theme.transparent)
@@ -414,8 +414,8 @@ Item {
 
                     Rectangle {
                         id: coverContainer
-                        Layout.preferredWidth: 48
-                        Layout.preferredHeight: 48
+                        Layout.preferredWidth: 40
+                        Layout.preferredHeight: 40
                         color: coverImage.status === Image.Ready ? trackRow.accent : "#3d8bff"
                         radius: Theme.radiusSmall
                         clip: true
@@ -447,8 +447,8 @@ Item {
                         Layout.fillWidth: true
                         spacing: 1
 
-                        Text { Layout.fillWidth: true; maximumLineCount: 1; text: trackRow.title; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Font.DemiBold; elide: Text.ElideRight }
-                        Text { Layout.fillWidth: true; maximumLineCount: 1; text: trackRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11; elide: Text.ElideRight }
+                        Text { Layout.fillWidth: true; maximumLineCount: 1; text: trackRow.title; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: Theme.listTitleSize; font.weight: Font.DemiBold; elide: Text.ElideRight }
+                        Text { Layout.fillWidth: true; maximumLineCount: 1; text: trackRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize; elide: Text.ElideRight }
                         MouseArea {
                             anchors.fill: parent
                             acceptedButtons: Qt.LeftButton
@@ -463,7 +463,7 @@ Item {
                         text: trackRow.album
                         color: Theme.textSecondary
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.listMetaSize
                         elide: Text.ElideRight
                     }
 
@@ -474,7 +474,7 @@ Item {
                         text: trackRow.source
                         color: Theme.textSecondary
                         font.family: Theme.fontFamily
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.listMetaSize
                         elide: Text.ElideRight
                     }
 

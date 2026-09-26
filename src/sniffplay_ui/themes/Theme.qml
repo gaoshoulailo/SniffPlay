@@ -26,6 +26,9 @@ QtObject {
     readonly property color transparent: "transparent"
 
     readonly property string fontFamily: "Microsoft YaHei UI"
+    readonly property int pageTitleSize: 24
+    readonly property int listTitleSize: 12
+    readonly property int listMetaSize: 10
     readonly property int radiusSmall: 4
     readonly property int radiusMedium: 7
 }

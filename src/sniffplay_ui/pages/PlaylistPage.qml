@@ -65,7 +65,7 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
 
-                    Text { text: "我的歌单"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 22; font.weight: Font.Bold }
+                    Text { text: "我的歌单"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: Theme.pageTitleSize; font.weight: Font.Bold }
 
                     Item { Layout.fillWidth: true }
 
@@ -206,7 +206,7 @@ Item {
                             text: root.controller.selectedPlaylistName
                             color: Theme.textPrimary
                             font.family: Theme.fontFamily
-                            font.pixelSize: 24
+                            font.pixelSize: 21
                             font.weight: Font.Bold
                             elide: Text.ElideRight
                         }
@@ -252,9 +252,9 @@ Item {
                     Layout.fillWidth: true
                     Layout.leftMargin: 8
                     Layout.rightMargin: 18
-                    Text { Layout.fillWidth: true; text: "歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-                    Text { visible: !root.compact; Layout.preferredWidth: 130; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-                    Text { Layout.preferredWidth: 54; text: "时长"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
+                    Text { Layout.fillWidth: true; text: "歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
+                    Text { visible: !root.compact; Layout.preferredWidth: 130; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
+                    Text { Layout.preferredWidth: 54; text: "时长"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
                     Item { Layout.preferredWidth: root.compact ? 72 : 146 }
                 }
 
@@ -316,7 +316,7 @@ Item {
                                     text: trackRow.title
                                     color: Theme.textPrimary
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 13
+                                    font.pixelSize: Theme.listTitleSize
                                     font.weight: Font.DemiBold
                                     elide: Text.ElideRight
                                 }
@@ -329,7 +329,7 @@ Item {
                                     text: trackRow.artist
                                     color: Theme.textSecondary
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: 11
+                                    font.pixelSize: Theme.listMetaSize
                                     elide: Text.ElideRight
                                 }
 
@@ -340,8 +340,8 @@ Item {
                                 }
                             }
 
-                            Text { visible: !root.compact; Layout.preferredWidth: 130; text: trackRow.album; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11; elide: Text.ElideRight }
-                            Text { Layout.preferredWidth: 54; text: trackRow.duration; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
+                            Text { visible: !root.compact; Layout.preferredWidth: 130; text: trackRow.album; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize; elide: Text.ElideRight }
+                            Text { Layout.preferredWidth: 54; text: trackRow.duration; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
 
                             Button {
                                 id: playButton

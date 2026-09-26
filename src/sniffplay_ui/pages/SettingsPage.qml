@@ -24,7 +24,7 @@ Item {
             text: "设置"
             color: Theme.textPrimary
             font.family: Theme.fontFamily
-            font.pixelSize: 26
+            font.pixelSize: Theme.pageTitleSize
             font.weight: Font.Bold
         }
 
@@ -32,7 +32,7 @@ Item {
             text: "调整界面外观并管理本地存储"
             color: Theme.textSecondary
             font.family: Theme.fontFamily
-            font.pixelSize: 13
+            font.pixelSize: 11
         }
 
         RowLayout {

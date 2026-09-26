@@ -23,7 +23,7 @@ Item {
         RowLayout {
             Layout.fillWidth: true
 
-            Text { text: "喜爱"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 26; font.weight: Font.Bold }
+            Text { text: "喜爱"; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: Theme.pageTitleSize; font.weight: Font.Bold }
 
             Item { Layout.fillWidth: true }
 
@@ -60,7 +60,7 @@ Item {
             text: "集中查看和管理已收藏的歌曲"
             color: Theme.textSecondary
             font.family: Theme.fontFamily
-            font.pixelSize: 13
+            font.pixelSize: 11
         }
 
         RowLayout {
@@ -69,10 +69,10 @@ Item {
             Layout.rightMargin: 18
             spacing: 12
 
-            Text { Layout.fillWidth: true; text: "歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-            Text { visible: root.width >= 820; Layout.preferredWidth: 170; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
-            Text { visible: root.width >= 700; Layout.preferredWidth: 100; text: "收藏时间"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
-            Text { Layout.preferredWidth: 42; text: "时长"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
+            Text { Layout.fillWidth: true; text: "歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
+            Text { visible: root.width >= 820; Layout.preferredWidth: 170; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
+            Text { visible: root.width >= 700; Layout.preferredWidth: 100; text: "收藏时间"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize; horizontalAlignment: Text.AlignRight }
+            Text { Layout.preferredWidth: 42; text: "时长"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
             Item { Layout.preferredWidth: 76 }
         }
 
@@ -145,8 +145,8 @@ Item {
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 1
-                        Text { Layout.fillWidth: true; text: favoriteRow.title; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Font.DemiBold; elide: Text.ElideRight }
-                        Text { Layout.fillWidth: true; text: favoriteRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11; elide: Text.ElideRight }
+                        Text { Layout.fillWidth: true; text: favoriteRow.title; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: Theme.listTitleSize; font.weight: Font.DemiBold; elide: Text.ElideRight }
+                        Text { Layout.fillWidth: true; text: favoriteRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize; elide: Text.ElideRight }
                     }
 
                     Text {
@@ -155,7 +155,7 @@ Item {
                         text: favoriteRow.album
                         color: Theme.textSecondary
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.listMetaSize
                         elide: Text.ElideRight
                     }
                     Text {
@@ -164,10 +164,10 @@ Item {
                         text: favoriteRow.favoritedAt
                         color: Theme.textSecondary
                         font.family: Theme.fontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.listMetaSize
                         horizontalAlignment: Text.AlignRight
                     }
-                    Text { Layout.preferredWidth: 42; text: favoriteRow.duration; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 11 }
+                    Text { Layout.preferredWidth: 42; text: favoriteRow.duration; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
 
                     RowLayout {
                         Layout.preferredWidth: 76
