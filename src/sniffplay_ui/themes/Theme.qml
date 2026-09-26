@@ -23,6 +23,7 @@ QtObject {
     readonly property color coverText: "#16171a"
     readonly property color warning: "#f0b849"
     readonly property color danger: "#ff6572"
+    readonly property color sourceAccent: "#5bd59a"
     readonly property color transparent: "transparent"
 
     readonly property string fontFamily: "Microsoft YaHei UI"

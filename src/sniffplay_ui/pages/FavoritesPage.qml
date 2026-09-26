@@ -70,14 +70,18 @@ Item {
             spacing: 12
 
             Text { Layout.fillWidth: true; text: "歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
-            Text { visible: root.width >= 820; Layout.preferredWidth: 170; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
-            Text { visible: root.width >= 700; Layout.preferredWidth: 100; text: "收藏时间"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize; horizontalAlignment: Text.AlignRight }
+            Text { visible: favoriteView.showAlbum; Layout.preferredWidth: 150; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
+            Text { visible: favoriteView.showSource; Layout.preferredWidth: 58; text: "来源"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
+            Text { visible: favoriteView.showDate; Layout.preferredWidth: 100; text: "收藏时间"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize; horizontalAlignment: Text.AlignRight }
             Text { Layout.preferredWidth: 42; text: "时长"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
             Item { Layout.preferredWidth: 76 }
         }
 
         ListView {
             id: favoriteView
+            readonly property bool showAlbum: width >= 780
+            readonly property bool showSource: width >= 600
+            readonly property bool showDate: width >= 900
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.topMargin: 2
@@ -94,6 +98,7 @@ Item {
                 required property string artist
                 required property string album
                 required property string duration
+                required property string source
                 required property string accent
                 required property string initials
                 required property string coverUrl
@@ -150,8 +155,8 @@ Item {
                     }
 
                     Text {
-                        visible: root.width >= 820
-                        Layout.preferredWidth: 170
+                        visible: favoriteView.showAlbum
+                        Layout.preferredWidth: 150
                         text: favoriteRow.album
                         color: Theme.textSecondary
                         font.family: Theme.fontFamily
@@ -159,7 +164,17 @@ Item {
                         elide: Text.ElideRight
                     }
                     Text {
-                        visible: root.width >= 700
+                        visible: favoriteView.showSource
+                        Layout.preferredWidth: 58
+                        text: favoriteRow.source
+                        color: Theme.sourceAccent
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 9
+                        font.weight: Font.DemiBold
+                        elide: Text.ElideRight
+                    }
+                    Text {
+                        visible: favoriteView.showDate
                         Layout.preferredWidth: 100
                         text: favoriteRow.favoritedAt
                         color: Theme.textSecondary

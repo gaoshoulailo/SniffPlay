@@ -631,6 +631,7 @@ Item {
                         required property string title
                         required property string artist
                         required property string duration
+                        required property string source
                         required property string accent
                         required property string initials
                         required property string coverUrl
@@ -707,6 +708,7 @@ Item {
                                 Text { Layout.fillWidth: true; text: queueRow.title; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: Theme.listTitleSize; font.weight: Font.DemiBold; elide: Text.ElideRight }
                                 Text { Layout.fillWidth: true; text: queueRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize; elide: Text.ElideRight }
                             }
+                            Text { Layout.preferredWidth: 42; text: queueRow.source; color: Theme.sourceAccent; font.family: Theme.fontFamily; font.pixelSize: 9; font.weight: Font.DemiBold; elide: Text.ElideRight }
                             Text { text: queueRow.duration; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
 
                             Row {

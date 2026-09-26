@@ -42,14 +42,18 @@ Item {
             Layout.leftMargin: 58
             Layout.rightMargin: 18
             Text { Layout.fillWidth: true; text: "歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
-            Text { Layout.preferredWidth: 170; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
+            Text { visible: historyView.showAlbum; Layout.preferredWidth: 150; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
+            Text { visible: historyView.showSource; Layout.preferredWidth: 58; text: "来源"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
             Text { Layout.preferredWidth: 52; text: "时长"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
-            Text { Layout.preferredWidth: 100; text: "播放时间"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize; horizontalAlignment: Text.AlignRight }
+            Text { visible: historyView.showDate; Layout.preferredWidth: 100; text: "播放时间"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize; horizontalAlignment: Text.AlignRight }
             Item { Layout.preferredWidth: 34 }
         }
 
         ListView {
             id: historyView
+            readonly property bool showAlbum: width >= 760
+            readonly property bool showSource: width >= 600
+            readonly property bool showDate: width >= 860
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.topMargin: 8
@@ -65,6 +69,7 @@ Item {
                 required property string artist
                 required property string album
                 required property string duration
+                required property string source
                 required property string accent
                 required property string initials
                 required property string coverUrl
@@ -128,11 +133,23 @@ Item {
                     }
 
                     Text {
-                        Layout.preferredWidth: 170
+                        visible: historyView.showAlbum
+                        Layout.preferredWidth: 150
                         text: historyRow.album
                         color: Theme.textSecondary
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.listMetaSize
+                        elide: Text.ElideRight
+                    }
+
+                    Text {
+                        visible: historyView.showSource
+                        Layout.preferredWidth: 58
+                        text: historyRow.source
+                        color: Theme.sourceAccent
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 9
+                        font.weight: Font.DemiBold
                         elide: Text.ElideRight
                     }
 
@@ -145,6 +162,7 @@ Item {
                     }
 
                     Text {
+                        visible: historyView.showDate
                         Layout.preferredWidth: 100
                         text: historyRow.playedAt
                         color: Theme.textSecondary

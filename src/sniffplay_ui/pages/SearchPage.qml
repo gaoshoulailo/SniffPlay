@@ -461,9 +461,10 @@ Item {
                         Layout.preferredWidth: 130
                         maximumLineCount: 1
                         text: trackRow.album
-                        color: Theme.textSecondary
+                        color: Theme.sourceAccent
                         font.family: Theme.fontFamily
-                        font.pixelSize: Theme.listMetaSize
+                        font.pixelSize: 9
+                        font.weight: Font.DemiBold
                         elide: Text.ElideRight
                     }
 

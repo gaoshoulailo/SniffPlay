@@ -22,6 +22,13 @@ def _cover_accent(track: Track) -> str:
     return track.accent if _display_cover_url(track.cover_url) else FALLBACK_COVER_ACCENT
 
 
+def _source_label(track: Track) -> str:
+    return {"bilibili": "BILI", "local": "LOCAL"}.get(
+        track.provider_id.casefold(),
+        track.provider_id.upper(),
+    )
+
+
 def _display_cover_url(url: str | None) -> str:
     """Only expose local cover URLs while their cache file still exists."""
     if not url:
@@ -97,7 +104,7 @@ class TrackListModel(DictionaryListModel):
                     "artist": track.artist,
                     "album": track.album,
                     "duration": track.duration_text,
-                    "source": track.provider_id.upper(),
+                    "source": _source_label(track),
                     "accent": _cover_accent(track),
                     "initials": track.initials,
                     "coverUrl": _display_cover_url(track.cover_url),
@@ -139,6 +146,7 @@ class QueueListModel(DictionaryListModel):
                 "title",
                 "artist",
                 "duration",
+                "source",
                 "accent",
                 "initials",
                 "coverUrl",
@@ -163,6 +171,7 @@ class QueueListModel(DictionaryListModel):
                     "title": track.title,
                     "artist": track.artist,
                     "duration": track.duration_text,
+                    "source": _source_label(track),
                     "accent": _cover_accent(track),
                     "initials": track.initials,
                     "coverUrl": _display_cover_url(track.cover_url),
@@ -223,7 +232,7 @@ class FavoriteListModel(DictionaryListModel):
                     "artist": entry.track.artist,
                     "album": entry.track.album,
                     "duration": entry.track.duration_text,
-                    "source": entry.track.provider_id.upper(),
+                    "source": _source_label(entry.track),
                     "accent": _cover_accent(entry.track),
                     "initials": entry.track.initials,
                     "coverUrl": _display_cover_url(entry.track.cover_url),
@@ -276,7 +285,7 @@ class PlaylistTrackListModel(DictionaryListModel):
                     "artist": entry.track.artist,
                     "album": entry.track.album,
                     "duration": entry.track.duration_text,
-                    "source": entry.track.provider_id.upper(),
+                    "source": _source_label(entry.track),
                     "accent": _cover_accent(entry.track),
                     "initials": entry.track.initials,
                     "coverUrl": _display_cover_url(entry.track.cover_url),
@@ -328,7 +337,7 @@ class HistoryListModel(DictionaryListModel):
                     "artist": entry.track.artist,
                     "album": entry.track.album,
                     "duration": entry.track.duration_text,
-                    "source": entry.track.provider_id.upper(),
+                    "source": _source_label(entry.track),
                     "accent": _cover_accent(entry.track),
                     "initials": entry.track.initials,
                     "coverUrl": _display_cover_url(entry.track.cover_url),

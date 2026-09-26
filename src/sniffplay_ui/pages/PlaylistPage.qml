@@ -253,13 +253,16 @@ Item {
                     Layout.leftMargin: 8
                     Layout.rightMargin: 18
                     Text { Layout.fillWidth: true; text: "歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
-                    Text { visible: !root.compact; Layout.preferredWidth: 130; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
+                    Text { visible: playlistTrackView.showAlbum; Layout.preferredWidth: 130; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
+                    Text { visible: playlistTrackView.showSource; Layout.preferredWidth: 58; text: "来源"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
                     Text { Layout.preferredWidth: 54; text: "时长"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
                     Item { Layout.preferredWidth: root.compact ? 72 : 146 }
                 }
 
                 ListView {
                     id: playlistTrackView
+                    readonly property bool showAlbum: width >= 680
+                    readonly property bool showSource: width >= 540
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     clip: true
@@ -275,6 +278,7 @@ Item {
                         required property string artist
                         required property string album
                         required property string duration
+                        required property string source
                         required property string accent
                         required property string initials
                         required property string coverUrl
@@ -340,7 +344,8 @@ Item {
                                 }
                             }
 
-                            Text { visible: !root.compact; Layout.preferredWidth: 130; text: trackRow.album; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize; elide: Text.ElideRight }
+                            Text { visible: playlistTrackView.showAlbum; Layout.preferredWidth: 130; text: trackRow.album; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize; elide: Text.ElideRight }
+                            Text { visible: playlistTrackView.showSource; Layout.preferredWidth: 58; text: trackRow.source; color: Theme.sourceAccent; font.family: Theme.fontFamily; font.pixelSize: 9; font.weight: Font.DemiBold; elide: Text.ElideRight }
                             Text { Layout.preferredWidth: 54; text: trackRow.duration; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
 
                             Button {
