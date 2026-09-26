@@ -12,7 +12,7 @@ from sniffplay.qt_bootstrap import prepare_qt_runtime
 prepare_qt_runtime()
 
 from PySide6.QtCore import QCoreApplication, Qt, QTimer, QUrl
-from PySide6.QtGui import QGuiApplication, QIcon, QPalette, QColor
+from PySide6.QtGui import QColor, QGuiApplication, QIcon, QPalette, QWindow
 from PySide6.QtQml import QQmlApplicationEngine
 from qasync import QEventLoop
 
@@ -31,6 +31,7 @@ from sniffplay.player import create_player
 from sniffplay.providers.BilibiliDataSource import BilibiliDataSource
 from sniffplay.providers import ProviderRegistry
 from sniffplay.services.search_service import SearchService
+from sniffplay.single_instance import SingleInstanceGuard
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,10 @@ def run() -> int:
     os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Basic")
     startup_audio = _startup_audio_path(sys.argv)
     app = QGuiApplication(sys.argv)
+    instance_guard = SingleInstanceGuard(settings.data_dir)
+    if not instance_guard.acquire_or_notify(startup_audio):
+        return 0
+
     palette = app.palette()
     palette.setColor(QPalette.ColorRole.Window, QColor("#1b1b1e"))
     palette.setColor(QPalette.ColorRole.WindowText, QColor("#f1f1f3"))
@@ -112,7 +117,24 @@ def run() -> int:
         logger.error("Could not load the QML interface")
         database.close()
         event_loop.close()
+        instance_guard.close()
         return 1
+
+    window = engine.rootObjects()[0]
+
+    def handle_activation(audio_path: str) -> None:
+        if window.visibility() == QWindow.Visibility.Minimized:
+            window.showNormal()
+        elif not window.isVisible():
+            window.show()
+        window.raise_()
+        window.requestActivate()
+        if audio_path:
+            path = Path(audio_path)
+            if path.is_file():
+                controller.openLocalFile(QUrl.fromLocalFile(str(path)))
+
+    instance_guard.activationRequested.connect(handle_activation)
 
     if startup_audio is not None:
         audio_url = QUrl.fromLocalFile(str(startup_audio))
@@ -120,6 +142,7 @@ def run() -> int:
 
     app.aboutToQuit.connect(controller.close)
     app.aboutToQuit.connect(database.close)
+    app.aboutToQuit.connect(instance_guard.close)
     app.aboutToQuit.connect(event_loop.stop)
     with event_loop:
         event_loop.run_forever()
