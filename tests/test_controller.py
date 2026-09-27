@@ -112,6 +112,41 @@ async def test_search_result_playback_replaces_queue_with_all_results(
     database.close()
     assert app is not None
 
+
+async def test_search_results_can_be_sorted_and_restored(tmp_path: Path) -> None:
+    app = QCoreApplication.instance() or QCoreApplication([])
+    database = Database(tmp_path / "search-sort-controller.db")
+    database.initialize()
+    registry = ProviderRegistry()
+    registry.register(MockProvider())
+    controller = AppController(
+        SearchService(registry),
+        MockPlayer(),
+        PlaylistRepository(database),
+        HistoryRepository(database),
+    )
+
+    await controller.search("")
+    relevance_order = [track.title for track in controller._track_model.tracks]
+
+    controller.sortSearchResults(1)
+    assert [track.duration_ms for track in controller._track_model.tracks] == sorted(
+        track.duration_ms for track in controller._track_model.tracks
+    )
+
+    controller.sortSearchResults(2)
+    assert [track.title for track in controller._track_model.tracks] == sorted(
+        relevance_order,
+        key=str.casefold,
+    )
+
+    controller.sortSearchResults(0)
+    assert [track.title for track in controller._track_model.tracks] == relevance_order
+
+    controller.close()
+    database.close()
+    assert app is not None
+
 def test_controller_records_history_only_after_threshold(tmp_path: Path) -> None:
     app = QCoreApplication.instance() or QCoreApplication([])
     database = Database(tmp_path / "controller.db")

@@ -16,50 +16,49 @@ Item {
     property int pendingPlaylistId: -1
     property int contextTrackIndex: -1
     property bool contextTrackFavorite: false
-    readonly property bool compact: width < 760
-
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 30
-        spacing: 18
+        anchors.leftMargin: 28
+        anchors.rightMargin: 28
+        anchors.topMargin: 22
+        anchors.bottomMargin: 22
+        spacing: 14
 
         RowLayout {
             Layout.fillWidth: true
 
-            Text {
-                text: "搜索"
-                color: Theme.textPrimary
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.pageTitleSize
-                font.weight: Font.Bold
+            ColumnLayout {
+                spacing: 4
+
+                Text {
+                    text: "搜索"
+                    color: Theme.textPrimary
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.pageTitleSize
+                    font.weight: Font.Bold
+                }
+
+                Text {
+                    text: searchField.text.length > 0
+                        ? "找到 " + resultsList.count + " 首歌曲"
+                        : "为你推荐 " + resultsList.count + " 首歌曲"
+                    color: Theme.textSecondary
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 11
+                }
             }
 
             Item { Layout.fillWidth: true }
-
-            Button {
-                id: headerShuffleButton
-                implicitWidth: 38
-                implicitHeight: 38
-                onClicked: root.controller.toggleShuffle()
-                ToolTip.visible: hovered
-                ToolTip.text: root.controller.shuffleEnabled ? "关闭随机播放" : "开启随机播放"
-                contentItem: AppIcon {
-                    name: "shuffle"
-                    color: root.controller.shuffleEnabled ? Theme.accent : Theme.textSecondary
-                    iconSize: 18
-                }
-                background: Rectangle {
-                    color: headerShuffleButton.hovered ? Theme.surfaceHover : Theme.transparent
-                    radius: 19
-                }
-            }
 
             Button {
                 id: refreshButton
                 implicitWidth: 38
                 implicitHeight: 38
                 enabled: !root.controller.searching
-                onClicked: root.controller.search(searchField.text)
+                onClicked: {
+                    sortBox.currentIndex = 0
+                    root.controller.search(searchField.text)
+                }
                 ToolTip.visible: hovered
                 ToolTip.text: "刷新"
                 contentItem: AppIcon {
@@ -92,7 +91,10 @@ Item {
                 selectedTextColor: Theme.textPrimary
                 font.family: Theme.fontFamily
                 font.pixelSize: 14
-                onAccepted: root.controller.search(text)
+                onAccepted: {
+                    sortBox.currentIndex = 0
+                    root.controller.search(text)
+                }
 
                 AppIcon {
                     anchors.left: parent.left
@@ -152,8 +154,42 @@ Item {
                 }
             }
 
+            ComboBox {
+                id: sortBox
+                implicitWidth: 102
+                implicitHeight: 38
+                model: ["相关度", "时长", "歌名"]
+                onActivated: root.controller.sortSearchResults(currentIndex)
+
+                contentItem: Text {
+                    leftPadding: 11
+                    rightPadding: 28
+                    text: sortBox.displayText
+                    color: Theme.textPrimary
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 12
+                    verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideRight
+                }
+
+                indicator: AppIcon {
+                    x: sortBox.width - width - 10
+                    anchors.verticalCenter: parent.verticalCenter
+                    name: "down"
+                    color: Theme.textSecondary
+                    iconSize: 12
+                }
+
+                background: Rectangle {
+                    color: sortBox.hovered ? Theme.buttonHover : Theme.buttonSurface
+                    border.color: sortBox.activeFocus ? Theme.accent : Theme.border
+                    radius: Theme.radiusMedium
+                }
+            }
+
             AppButton {
                 iconName: "folder-open"
+                text: root.width >= 820 ? "本地音频" : ""
                 ToolTip.visible: hovered
                 ToolTip.text: "打开本地音频"
                 onClicked: localFileDialog.open()
@@ -164,7 +200,10 @@ Item {
                 iconName: root.controller.searching ? "" : "search"
                 primary: true
                 enabled: !root.controller.searching
-                onClicked: root.controller.search(searchField.text)
+                onClicked: {
+                    sortBox.currentIndex = 0
+                    root.controller.search(searchField.text)
+                }
             }
 
             BusyIndicator {
@@ -174,169 +213,10 @@ Item {
             }
         }
 
-        GridLayout {
+        ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            columns: root.compact ? 1 : 2
-            columnSpacing: 22
-            rowSpacing: 18
-
-            Rectangle {
-                Layout.fillWidth: root.compact
-                Layout.preferredWidth: root.compact ? -1 : 330
-                Layout.maximumWidth: root.compact ? 760 : 350
-                Layout.fillHeight: !root.compact
-                Layout.preferredHeight: root.compact ? 250 : -1
-                color: Theme.sidebar
-                border.color: Theme.border
-                radius: Theme.radiusMedium
-
-                layer.enabled: true
-                layer.effect: MultiEffect {
-                    shadowEnabled: true
-                    shadowColor: "#000000"
-                    shadowOpacity: 0.42
-                    shadowBlur: 0.65
-                    shadowVerticalOffset: 10
-                }
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: root.compact ? 14 : 22
-                    spacing: root.compact ? 8 : 14
-
-                    Text {
-                        text: "发现新音乐"
-                        color: Theme.textPrimary
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 18
-                        font.weight: Font.DemiBold
-                    }
-
-                    Text {
-                        visible: !root.compact
-                        text: "搜索歌曲、歌手或专辑"
-                        color: Theme.textSecondary
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 12
-                    }
-
-                    Rectangle {
-                        id: discoveryCover
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: root.compact ? 100 : width
-                        Layout.maximumHeight: root.compact ? 100 : width
-                        color: root.controller && root.controller.hasCurrentTrack
-                            ? root.controller.currentAccent
-                            : Theme.surface
-                        radius: Theme.radiusMedium
-                        clip: true
-                        scale: discoveryCoverHover.hovered ? 1.018 : 1.0
-
-                        Behavior on scale {
-                            NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
-                        }
-
-                        layer.enabled: true
-                        layer.effect: MultiEffect {
-                            shadowEnabled: true
-                            shadowColor: "#000000"
-                            shadowOpacity: discoveryCoverHover.hovered ? 0.38 : 0.0
-                            shadowBlur: 0.5
-                            shadowVerticalOffset: 7
-
-                            Behavior on shadowOpacity {
-                                NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
-                            }
-                        }
-
-                        HoverHandler { id: discoveryCoverHover }
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: root.controller.hasCurrentTrack
-                                ? root.controller.currentInitials
-                                : "⌕"
-                            color: root.controller.hasCurrentTrack
-                                ? Theme.coverText
-                                : Theme.textSecondary
-                            font.family: root.controller.hasCurrentTrack
-                                ? Theme.fontFamily
-                                : "Segoe UI Symbol"
-                            font.pixelSize: root.compact ? 42 : 64
-                            font.bold: root.controller.hasCurrentTrack
-                            opacity: root.controller.hasCurrentTrack ? 1 : 0.65
-                            visible: discoveryCoverImage.status !== Image.Ready
-                        }
-
-                        Image {
-                            id: discoveryCoverImage
-                            anchors.fill: parent
-                            source: root.controller.currentCoverUrl
-                            sourceSize.width: 640
-                            sourceSize.height: 640
-                            asynchronous: true
-                            cache: true
-                            fillMode: Image.PreserveAspectCrop
-                            visible: status === Image.Ready
-                        }
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        text: root.controller.hasCurrentTrack
-                            ? root.controller.currentTitle
-                            : "从搜索结果中选择歌曲"
-                        color: Theme.textPrimary
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 13
-                        font.weight: Font.DemiBold
-                        horizontalAlignment: Text.AlignHCenter
-                        elide: Text.ElideRight
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        visible: root.controller.hasCurrentTrack && !root.compact
-                        text: root.controller.currentArtist
-                        color: Theme.textSecondary
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 11
-                        horizontalAlignment: Text.AlignHCenter
-                        elide: Text.ElideRight
-                    }
-
-                    Item { Layout.fillHeight: true }
-
-                }
-            }
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                spacing: 10
-
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.topMargin: 8
-
-            Text {
-                text: searchField.text.length > 0 ? "搜索结果" : "推荐试听"
-                color: Theme.textPrimary
-                font.family: Theme.fontFamily
-                font.pixelSize: 16
-                font.weight: Font.DemiBold
-            }
-
-            Item { Layout.fillWidth: true }
-
-            Text {
-                text: resultsList.count + " 首"
-                color: Theme.textSecondary
-                font.family: Theme.fontFamily
-                font.pixelSize: 12
-            }
-        }
+            spacing: 3
 
         Rectangle {
             Layout.fillWidth: true
@@ -352,11 +232,12 @@ Item {
 
                 Item { Layout.preferredWidth: 28 }
                 Item { Layout.preferredWidth: 40 }
-                Text { Layout.fillWidth: true; text: "歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
+                Text { Layout.fillWidth: true; Layout.maximumWidth: 320; text: "歌曲"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
+                Item { Layout.fillWidth: true }
                 Text { visible: resultsList.showAlbum; Layout.preferredWidth: 130; text: "专辑"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
                 Text { visible: resultsList.showSource; Layout.preferredWidth: 58; text: "来源"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
                 Text { Layout.preferredWidth: 44; text: "时长"; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize }
-                Item { Layout.preferredWidth: 126 }
+                Item { Layout.preferredWidth: 104 }
             }
         }
 
@@ -368,7 +249,7 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            spacing: 4
+            spacing: 3
             model: root.controller.trackModel
 
             ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
@@ -386,15 +267,25 @@ Item {
                 required property string coverUrl
                 required property bool isFavorite
 
-                width: resultsList.width
                 height: 60
+                x: rowHover.hovered ? 2 : 0
+                width: resultsList.width - 2
                 color: root.contextTrackIndex === trackRow.index
                     ? Theme.accentDark
-                    : (rowMouse.containsMouse ? Theme.surfaceHover : Theme.transparent)
+                    : (rowHover.hovered ? Theme.surfaceHover : Theme.transparent)
                 radius: Theme.radiusMedium
-                border.color: root.contextTrackIndex === trackRow.index
-                    ? Theme.accent
-                    : Theme.transparent
+
+                Behavior on x { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 2
+                    height: root.contextTrackIndex === trackRow.index ? 34 : 0
+                    radius: 1
+                    color: Theme.accent
+                    Behavior on height { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                }
 
                 RowLayout {
                     z: 1
@@ -445,26 +336,33 @@ Item {
 
                     ColumnLayout {
                         Layout.fillWidth: true
+                        Layout.maximumWidth: 320
                         spacing: 1
 
-                        Text { Layout.fillWidth: true; maximumLineCount: 1; text: trackRow.title; color: Theme.textPrimary; font.family: Theme.fontFamily; font.pixelSize: Theme.listTitleSize; font.weight: Font.DemiBold; elide: Text.ElideRight }
-                        Text { Layout.fillWidth: true; maximumLineCount: 1; text: trackRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize; elide: Text.ElideRight }
-                        MouseArea {
-                            anchors.fill: parent
-                            acceptedButtons: Qt.LeftButton
-                            onDoubleClicked: root.controller.playSearchResult(trackRow.index)
+                        Text {
+                            id: titleText
+                            Layout.fillWidth: true
+                            maximumLineCount: 1
+                            text: trackRow.title
+                            color: Theme.textPrimary
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.listTitleSize
+                            font.weight: Font.DemiBold
+                            elide: Text.ElideRight
                         }
+                        Text { Layout.fillWidth: true; maximumLineCount: 1; text: trackRow.artist; color: Theme.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.listMetaSize; elide: Text.ElideRight }
                     }
+
+                    Item { Layout.fillWidth: true }
 
                     Text {
                         visible: resultsList.showAlbum
                         Layout.preferredWidth: 130
                         maximumLineCount: 1
                         text: trackRow.album
-                        color: Theme.sourceAccent
+                        color: Theme.textSecondary
                         font.family: Theme.fontFamily
-                        font.pixelSize: 9
-                        font.weight: Font.DemiBold
+                        font.pixelSize: Theme.listMetaSize
                         elide: Text.ElideRight
                     }
 
@@ -473,9 +371,10 @@ Item {
                         Layout.preferredWidth: 58
                         maximumLineCount: 1
                         text: trackRow.source
-                        color: Theme.textSecondary
+                        color: Theme.sourceAccent
                         font.family: Theme.fontFamily
-                        font.pixelSize: Theme.listMetaSize
+                        font.pixelSize: 9
+                        font.weight: Font.DemiBold
                         elide: Text.ElideRight
                     }
 
@@ -487,72 +386,51 @@ Item {
                         font.pixelSize: 10
                     }
 
-                    Button {
-                        id: favoriteButton
-                        Layout.preferredWidth: 34
-                        Layout.preferredHeight: 34
-                        opacity: 1
-                        onClicked: root.controller.toggleTrackFavorite(trackRow.index)
-                        ToolTip.visible: hovered
-                        ToolTip.text: trackRow.isFavorite ? "取消收藏" : "收藏"
+                    Row {
+                        Layout.preferredWidth: 104
+                        Layout.preferredHeight: 30
+                        spacing: 2
+                        opacity: rowHover.hovered || root.contextTrackIndex === trackRow.index ? 1 : 0
+                        enabled: opacity > 0
 
-                        contentItem: AppIcon {
-                            name: trackRow.isFavorite ? "favorite-filled" : "favorite"
-                            color: trackRow.isFavorite ? Theme.danger : Theme.textSecondary
-                            iconSize: 17
-                        }
-                        background: Rectangle {
-                            color: favoriteButton.hovered ? Theme.surfaceHover : Theme.surface
-                            border.color: trackRow.isFavorite ? Theme.danger : Theme.border
-                            radius: 17
-                        }
-                    }
+                        Behavior on opacity { NumberAnimation { duration: 140 } }
 
-                    Button {
-                        id: rowAddButton
-                        Layout.preferredWidth: 34
-                        Layout.preferredHeight: 34
-                        opacity: 1
-                        onClicked: {
-                            root.pendingTrackIndex = trackRow.index
-                            addToPlaylistDialog.open()
+                        Button {
+                            id: favoriteButton
+                            width: 30; height: 30
+                            onClicked: root.controller.toggleTrackFavorite(trackRow.index)
+                            ToolTip.visible: hovered
+                            ToolTip.text: trackRow.isFavorite ? "取消收藏" : "收藏"
+                            contentItem: AppIcon { name: trackRow.isFavorite ? "favorite-filled" : "favorite"; color: trackRow.isFavorite ? Theme.danger : Theme.textSecondary; iconSize: 15 }
+                            background: Rectangle { color: favoriteButton.hovered ? Theme.buttonHover : Theme.transparent; radius: 15 }
                         }
-                        ToolTip.visible: hovered
-                        ToolTip.text: "加入歌单"
 
-                        contentItem: AppIcon {
-                            name: "add"
-                            color: Theme.textPrimary
-                            iconSize: 16
+                        Button {
+                            id: rowAddButton
+                            width: 30; height: 30
+                            onClicked: {
+                                root.pendingTrackIndex = trackRow.index
+                                addToPlaylistDialog.open()
+                            }
+                            ToolTip.visible: hovered
+                            ToolTip.text: "加入歌单"
+                            contentItem: AppIcon { name: "add"; color: Theme.textSecondary; iconSize: 15 }
+                            background: Rectangle { color: rowAddButton.hovered ? Theme.buttonHover : Theme.transparent; radius: 15 }
                         }
-                        background: Rectangle {
-                            color: rowAddButton.hovered ? Theme.surfaceHover : Theme.surface
-                            border.color: Theme.border
-                            radius: 17
-                        }
-                    }
 
-                    Button {
-                        id: rowPlayButton
-                        Layout.preferredWidth: 34
-                        Layout.preferredHeight: 34
-                        opacity: 1
-                        onClicked: root.controller.playSearchResult(trackRow.index)
-                        ToolTip.visible: hovered
-                        ToolTip.text: "播放"
-
-                        contentItem: AppIcon {
-                            name: "play"
-                            color: Theme.textPrimary
-                            iconSize: 14
-                        }
-                        background: Rectangle {
-                            color: rowPlayButton.hovered ? Theme.accentDark : Theme.surface
-                            border.color: Theme.border
-                            radius: 17
+                        Button {
+                            id: rowPlayButton
+                            width: 30; height: 30
+                            onClicked: root.controller.playSearchResult(trackRow.index)
+                            ToolTip.visible: hovered
+                            ToolTip.text: "播放"
+                            contentItem: AppIcon { name: "play"; color: Theme.textPrimary; iconSize: 13 }
+                            background: Rectangle { color: rowPlayButton.hovered ? Theme.buttonHover : Theme.transparent; radius: 15 }
                         }
                     }
                 }
+
+                HoverHandler { id: rowHover }
 
                 MouseArea {
                     id: rowMouse
@@ -560,6 +438,10 @@ Item {
                     hoverEnabled: true
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
                     z: 0
+                    onDoubleClicked: function(mouse) {
+                        if (mouse.button === Qt.LeftButton)
+                            root.controller.playSearchResult(trackRow.index)
+                    }
                     onClicked: function(mouse) {
                         if (mouse.button !== Qt.RightButton)
                             return
@@ -583,8 +465,7 @@ Item {
                 onActionTriggered: searchField.forceActiveFocus()
             }
         }
-            }
-        }
+    }
     }
 
     AppMenu {

@@ -94,6 +94,7 @@ class AppController(QObject):
         self._play_lock = asyncio.Lock()
         self._selected_playlist_id = -1
         self._selected_playlist_name = ""
+        self._search_results: list[Track] = []
         self._favorite_keys: set[tuple[str, str]] = set()
         self._pinned_playlist_ids, self._shortcuts_initialized = (
             self._load_pinned_playlist_ids()
@@ -376,6 +377,7 @@ class AppController(QObject):
         self._set_status("正在搜索...", toast=False)
         try:
             tracks = await self._search_service.search(query)
+            self._search_results = list(tracks)
             self._track_model.set_tracks(tracks, self._favorite_keys)
             self._set_status(
                 f"找到 {len(tracks)} 首歌曲",
@@ -383,10 +385,24 @@ class AppController(QObject):
             )
         except Exception:
             logger.exception("Search failed")
+            self._search_results = []
             self._track_model.set_tracks([])
             self._set_status("搜索失败，请稍后重试", toast=show_result_toast)
         finally:
             self._set_searching(False)
+
+    @Slot(int)
+    def sortSearchResults(self, mode: int) -> None:
+        if mode == 1:
+            tracks = sorted(self._search_results, key=lambda track: track.duration_ms)
+        elif mode == 2:
+            tracks = sorted(
+                self._search_results,
+                key=lambda track: (track.title.casefold(), track.artist.casefold()),
+            )
+        else:
+            tracks = list(self._search_results)
+        self._track_model.set_tracks(tracks, self._favorite_keys)
 
     @asyncSlot(int)
     async def playTrack(self, index: int) -> None:
