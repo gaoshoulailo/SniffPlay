@@ -51,7 +51,7 @@ class PlaylistRepository:
                     PlaylistItemRecord.playlist_id == PlaylistRecord.id,
                 )
                 .group_by(PlaylistRecord.id)
-                .order_by(PlaylistRecord.created_at.desc())
+                .order_by(PlaylistRecord.created_at.desc(), PlaylistRecord.id.desc())
             ).all()
         return [PlaylistSummary(row[0], row[1], row[2]) for row in rows]
 

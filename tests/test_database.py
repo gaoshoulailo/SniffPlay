@@ -1,10 +1,29 @@
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
 
 from sniffplay.database import Database
+from sniffplay.database.models import PlaylistRecord
 from sniffplay.database.repositories import HistoryRepository, PlaylistRepository
 from sniffplay.models import Track
+
+
+def test_playlists_sort_newest_first_with_deterministic_ties(tmp_path: Path) -> None:
+    database = Database(tmp_path / "playlist-order.db")
+    database.initialize()
+    try:
+        playlists = PlaylistRepository(database)
+        created = [playlists.create(f"Playlist {index}") for index in range(4)]
+        with database.session_factory.begin() as session:
+            for playlist, seconds in zip(created, [0, 2, 2, 1], strict=True):
+                record = session.get(PlaylistRecord, playlist.id)
+                record.created_at = datetime(2026, 1, 1) + timedelta(seconds=seconds)
+        assert [playlist.id for playlist in playlists.list_all()] == [
+            created[2].id, created[1].id, created[3].id, created[0].id,
+        ]
+    finally:
+        database.close()
 
 
 def test_playlist_and_history_are_persisted(tmp_path: Path) -> None:

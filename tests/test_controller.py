@@ -1,5 +1,8 @@
 import asyncio
+from datetime import datetime, timedelta
 from pathlib import Path
+
+import pytest
 
 from sniffplay.qt_bootstrap import prepare_qt_runtime
 
@@ -9,6 +12,7 @@ from PySide6.QtCore import QCoreApplication
 
 from sniffplay.controllers import AppController
 from sniffplay.database import Database
+from sniffplay.database.models import PlaylistRecord
 from sniffplay.database.repositories import (
     FavoriteRepository,
     HistoryRepository,
@@ -23,13 +27,23 @@ from sniffplay.providers.mock import MockProvider
 from sniffplay.services.search_service import SearchService
 
 
-def test_playlist_shortcuts_are_customizable_and_persisted(tmp_path: Path) -> None:
+@pytest.mark.parametrize("same_timestamp", [True, False])
+def test_playlist_shortcuts_are_customizable_and_persisted(
+    tmp_path: Path, same_timestamp: bool
+) -> None:
     app = QCoreApplication.instance() or QCoreApplication([])
     database = Database(tmp_path / "playlist-shortcuts.db")
     database.initialize()
     playlists = PlaylistRepository(database)
     settings = SettingsRepository(database)
     created = [playlists.create(f"歌单 {index}") for index in range(1, 5)]
+    with database.session_factory.begin() as session:
+        for index, playlist in enumerate(created):
+            record = session.get(PlaylistRecord, playlist.id)
+            record.created_at = datetime(2026, 1, 1) + timedelta(
+                seconds=0 if same_timestamp else index
+            )
+    created.reverse()
     registry = ProviderRegistry()
     registry.register(MockProvider())
     controller = AppController(
