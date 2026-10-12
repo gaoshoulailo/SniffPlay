@@ -77,6 +77,7 @@ class AppController(QObject):
         self._queue_model = QueueListModel()
         self._history_model = HistoryListModel()
         self._searching = False
+        self._search_request_id = 0
         self._status_message = (
             f"{player.backend_name} 已就绪"
             if player.available
@@ -373,10 +374,14 @@ class AppController(QObject):
         await self._search(query, show_result_toast=False)
 
     async def _search(self, query: str, *, show_result_toast: bool) -> None:
+        self._search_request_id += 1
+        request_id = self._search_request_id
         self._set_searching(True)
         self._set_status("正在搜索...", toast=False)
         try:
             tracks = await self._search_service.search(query)
+            if request_id != self._search_request_id:
+                return
             self._search_results = list(tracks)
             self._track_model.set_tracks(tracks, self._favorite_keys)
             self._set_status(
@@ -384,12 +389,15 @@ class AppController(QObject):
                 toast=show_result_toast,
             )
         except Exception:
+            if request_id != self._search_request_id:
+                return
             logger.exception("Search failed")
             self._search_results = []
             self._track_model.set_tracks([])
             self._set_status("搜索失败，请稍后重试", toast=show_result_toast)
         finally:
-            self._set_searching(False)
+            if request_id == self._search_request_id:
+                self._set_searching(False)
 
     @Slot(int)
     def sortSearchResults(self, mode: int) -> None:
@@ -1122,6 +1130,7 @@ class AppController(QObject):
 
     @Slot()
     def close(self) -> None:
+        self._search_request_id += 1
         self._play_request_id += 1
         self._player_timer.stop()
         self._player.close()
@@ -1145,7 +1154,10 @@ class AppController(QObject):
             if track:
                 self._set_status(f"正在播放：{track.title}", toast=False)
         elif self._snapshot.state is PlayerState.ERROR:
-            self._set_status("播放内核发生错误")
+            if not self._advance_scheduled:
+                self._set_status("播放失败，正在尝试下一首")
+                self._advance_scheduled = True
+                asyncio.create_task(self._advance_after_error(self._play_request_id))
         elif (
             (self._snapshot.state is PlayerState.ENDED or duration_reached)
             and previous_state is not PlayerState.ENDED
@@ -1156,7 +1168,13 @@ class AppController(QObject):
 
     def _record_history_when_eligible(self) -> None:
         track = self._player.current_track
-        if track is None or self._history_recorded:
+        if (
+            track is None
+            or self._history_recorded
+            or self._snapshot.state not in (
+                PlayerState.PLAYING, PlayerState.PAUSED, PlayerState.ENDED
+            )
+        ):
             return
         duration = self._snapshot.duration_ms or track.duration_ms
         threshold = 30_000 if duration <= 0 else min(30_000, max(1_000, duration // 2))
@@ -1165,6 +1183,21 @@ class AppController(QObject):
         self._history_repository.record(track, listened_ms=self._snapshot.position_ms)
         self._refresh_history()
         self._history_recorded = True
+
+    async def _advance_after_error(self, expected_request_id: int) -> None:
+        if expected_request_id != self._play_request_id:
+            return
+        if 0 <= self._queue_index < len(self._queue):
+            for next_index in range(self._queue_index + 1, len(self._queue)):
+                queue_revision = self._queue_revision
+                await self._play_queue_index(next_index)
+                expected_request_id += 1
+                if (
+                    expected_request_id != self._play_request_id
+                    or queue_revision != self._queue_revision
+                ):
+                    return
+        self._set_status("没有可播放的后续歌曲，已停止自动切歌")
 
     async def _advance_after_end(self, expected_request_id: int) -> None:
         if expected_request_id != self._play_request_id:

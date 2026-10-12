@@ -69,6 +69,7 @@ class MpvPlayer(Player):
         self._volume = 80
         self._paused = False
         self._end_file_seen = False
+        self._end_file_error = False
         self._awaiting_start_file = False
 
         @self._client.event_callback("start-file")
@@ -100,6 +101,7 @@ class MpvPlayer(Player):
     def _handle_start_file(self, _event: object) -> None:
         self._awaiting_start_file = False
         self._end_file_seen = False
+        self._end_file_error = False
 
     def _handle_end_file(self, event: object) -> None:
         # Replacing a file emits RESTARTED/ABORTED for the previous item.
@@ -110,6 +112,7 @@ class MpvPlayer(Player):
             _MPV_END_FILE_ERROR,
         ):
             self._end_file_seen = True
+            self._end_file_error = reason == _MPV_END_FILE_ERROR
 
     def play(self, track: Track, stream: StreamInfo) -> None:
         header_fields = ",".join(
@@ -120,6 +123,7 @@ class MpvPlayer(Player):
         self._state = PlayerState.LOADING
         self._paused = False
         self._end_file_seen = False
+        self._end_file_error = False
         self._awaiting_start_file = True
         self._client.play(stream.url)
         self._client.pause = False
@@ -149,8 +153,8 @@ class MpvPlayer(Player):
         if getattr(self, "_awaiting_start_file", False):
             return PlayerSnapshot(
                 PlayerState.LOADING,
-                position_ms,
-                duration_ms,
+                0,
+                self._current_track.duration_ms,
                 self._volume,
             )
         reached_duration = (
@@ -161,7 +165,9 @@ class MpvPlayer(Player):
         # The end-file callback is authoritative. libmpv can retain the
         # previous file's eof-reached property after a new file is loaded,
         # which would otherwise make a playing/paused track look ended.
-        if (
+        if getattr(self, "_end_file_error", False):
+            state = PlayerState.ERROR
+        elif (
             getattr(self, "_end_file_seen", False)
             or reached_duration
         ):

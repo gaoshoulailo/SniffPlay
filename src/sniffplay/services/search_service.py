@@ -6,6 +6,7 @@ from pathlib import Path
 
 from sniffplay.models import StreamInfo, Track
 from sniffplay.providers import ProviderRegistry
+from sniffplay.providers.base import ProviderError
 
 logger = logging.getLogger(__name__)
 
@@ -24,11 +25,15 @@ class SearchService:
             return_exceptions=True,
         )
         tracks: list[Track] = []
+        successful_sources = 0
         for provider, result in zip(providers, results, strict=True):
             if isinstance(result, BaseException):
                 logger.warning("Provider %s search failed: %s", provider.id, result)
                 continue
+            successful_sources += 1
             tracks.extend(result)
+        if not successful_sources:
+            raise ProviderError("所有音乐来源搜索失败，请稍后重试")
         return tracks[:limit]
 
     async def resolve_stream(self, track: Track) -> StreamInfo:
