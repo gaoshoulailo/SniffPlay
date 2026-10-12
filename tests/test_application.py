@@ -38,6 +38,8 @@ def test_second_instance_notifies_primary(tmp_path: Path) -> None:
             (
                 "import sys",
                 "from pathlib import Path",
+                "from sniffplay.qt_bootstrap import prepare_qt_runtime",
+                "prepare_qt_runtime()",
                 "from PySide6.QtCore import QCoreApplication",
                 "from sniffplay.single_instance import SingleInstanceGuard",
                 "app = QCoreApplication([])",

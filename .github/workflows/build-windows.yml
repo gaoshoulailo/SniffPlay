@@ -26,6 +26,10 @@ jobs:
     name: Windows x64 便携版
     runs-on: windows-latest
     timeout-minutes: 60
+    outputs:
+      channel: ${{ steps.metadata.outputs.channel }}
+      release_tag: ${{ steps.metadata.outputs.release_tag }}
+      artifact_name: ${{ steps.metadata.outputs.artifact_name }}
 
     steps:
       - name: 检出代码
@@ -43,15 +47,9 @@ jobs:
       - name: 按锁文件安装依赖
         run: uv sync --locked --extra dev
 
-      - name: 校验发布标签
-        if: github.ref_type == 'tag'
-        shell: pwsh
-        run: |
-          $projectVersion = uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])"
-          $expectedTag = "v$projectVersion"
-          if ($env:GITHUB_REF_NAME -ne $expectedTag) {
-            throw "Release tag must match pyproject.toml: expected $expectedTag, got $env:GITHUB_REF_NAME."
-          }
+      - name: 生成构建标识并校验发布标签
+        id: metadata
+        run: uv run python scripts/build_metadata.py
 
       - name: 下载并校验 libmpv
         shell: pwsh
@@ -122,11 +120,15 @@ jobs:
       - name: 生成 ZIP 和 SHA-256
         id: package
         shell: pwsh
+        env:
+          ZIP_NAME: ${{ steps.metadata.outputs.zip_name }}
         run: |
           $artifactDirectory = "artifacts"
-          $zipName = "SniffPlay-Windows-x64.zip"
+          $zipName = $env:ZIP_NAME
           $zipPath = Join-Path $artifactDirectory $zipName
           New-Item -ItemType Directory -Force -Path $artifactDirectory | Out-Null
+          Copy-Item -LiteralPath "build-metadata/build-info.json" -Destination "dist/SniffPlay/build-info.json"
+          Copy-Item -LiteralPath "build-metadata/build-info.json" -Destination "$artifactDirectory/build-info.json"
 
           Push-Location "dist"
           try {
@@ -147,10 +149,11 @@ jobs:
       - name: 上传构建产物
         uses: actions/upload-artifact@v5
         with:
-          name: SniffPlay-Windows-x64-${{ github.sha }}
+          name: ${{ steps.metadata.outputs.artifact_name }}
           path: |
-            artifacts/SniffPlay-Windows-x64.zip
-            artifacts/SniffPlay-Windows-x64.zip.sha256
+            artifacts/*.zip
+            artifacts/*.sha256
+            artifacts/build-info.json
           if-no-files-found: error
           retention-days: 14
           compression-level: 0
@@ -161,7 +164,9 @@ jobs:
           @'
           ## Windows 构建完成
 
-          - 文件：`SniffPlay-Windows-x64.zip`
+          - 文件：`${{ steps.metadata.outputs.zip_name }}`
+          - 渠道：`${{ steps.metadata.outputs.channel }}`
+          - 源码提交：`${{ github.sha }}`
           - SHA-256：`${{ steps.package.outputs.sha256 }}`
           - Artifact 保留：14 天
           - SniffPlay：GPL-3.0-or-later
@@ -170,9 +175,9 @@ jobs:
           libmpv 构建来源、固定版本、依赖裁剪和校验值见 `licenses/libmpv-README.md`。
           '@ >> $env:GITHUB_STEP_SUMMARY
 
-  create-draft-release:
-    name: 创建草稿 Release
-    if: github.ref_type == 'tag'
+  publish-release:
+    name: 发布预览版或正式版
+    if: github.event_name == 'push' && (needs.build-windows.outputs.channel == 'preview' || needs.build-windows.outputs.channel == 'stable')
     needs: build-windows
     runs-on: ubuntu-latest
     permissions:
@@ -183,20 +188,48 @@ jobs:
       - name: 下载已验证的 Windows 构建
         uses: actions/download-artifact@v5
         with:
-          name: SniffPlay-Windows-x64-${{ github.sha }}
+          name: ${{ needs.build-windows.outputs.artifact_name }}
           path: artifacts
 
-      - name: 创建草稿 Release
-        uses: softprops/action-gh-release@v2
-        with:
-          draft: true
-          generate_release_notes: true
-          fail_on_unmatched_files: true
-          name: SniffPlay ${{ github.ref_name }}
-          body: |
-            Windows x64 便携版已通过自动测试、打包和启动烟雾测试。
+      - name: 发布已验证的构建
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.build-windows.outputs.release_tag }}
+          CHANNEL: ${{ needs.build-windows.outputs.channel }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
 
-            SniffPlay 采用 GPL-3.0-or-later，内置经过项目测试的 LGPL 兼容 libmpv 构建。构建来源和校验值随包提供。
-          files: |
-            artifacts/SniffPlay-Windows-x64.zip
-            artifacts/SniffPlay-Windows-x64.zip.sha256
+          metadata = json.loads(Path("artifacts/build-info.json").read_text(encoding="utf-8"))
+          notes = [
+              "Windows x64 便携版已通过自动测试、打包和启动烟雾测试。",
+              "",
+              f"- 渠道：{metadata['channel']}",
+              f"- 项目版本：{metadata['version']}",
+              f"- 源码提交：{metadata['commit']}",
+              f"- 构建时间（UTC）：{metadata['built_at_utc']}",
+              f"- 构建记录：{metadata['run_url']}",
+              "",
+              "SniffPlay：GPL-3.0-or-later。内置固定 libmpv 构建，来源及许可证随包提供。",
+          ]
+          if metadata["channel"] == "preview":
+              notes.extend(["", "此为开发预览版，不代表稳定版本。"])
+          Path("release-notes.md").write_text("\n".join(notes) + "\n", encoding="utf-8")
+          PY
+          if [[ "$CHANNEL" == "preview" ]]; then
+            flags=(--prerelease --latest=false --target "$COMMIT_SHA")
+            title="SniffPlay 预览版 $RELEASE_TAG"
+          else
+            flags=(--verify-tag --latest)
+            title="SniffPlay $RELEASE_TAG"
+          fi
+          gh release create "$RELEASE_TAG" \
+            --title "$title" \
+            --notes-file release-notes.md \
+            "${flags[@]}" \
+            artifacts/*.zip artifacts/*.sha256 artifacts/build-info.json

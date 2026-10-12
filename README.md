@@ -229,24 +229,28 @@ dist/SniffPlay/
 
 ## GitHub Windows 自动构建
 
-`.github/workflows/build-windows.yml` 会在推送 `main` 或手动触发时执行：
+`.github/workflows/build-windows.yml` 会在推送 `main`、推送 `v*` 标签或手动触发时执行：
 
 1. 按 `uv.lock` 安装 Python 3.12 依赖。
 2. 下载固定版本的 libmpv，同时校验归档和 DLL 的 SHA-256。
 3. 调用 `scripts/build_windows.ps1` 运行测试、打包和启动烟雾测试。
-4. 将 SniffPlay 的 GPL-3.0 和 libmpv 的 LGPL-2.1/LGPL-3.0 许可证文本加入发行目录，生成 `SniffPlay-Windows-x64.zip` 和 SHA-256 文件。
+4. 将许可证和 `build-info.json` 构建信息加入发行目录，生成带版本标识的 Windows x64 ZIP 和 SHA-256 文件。
 5. 上传保留 14 天的 GitHub Actions Artifact。
 
-普通 `main` 分支构建只生成 Artifact。推送与 `pyproject.toml` 版本一致的标签（例如当前版本 `v0.1.4`）时，工作流会在构建成功后创建草稿 Release，并附上 ZIP、SHA-256 和自动生成的更新说明：
+- 推送 `main`：成功后自动公开发布独立预览版 `build-<运行编号>.<重试次数>-<提交短哈希>`，标记为 Pre-release，不占用正式版 Latest。
+- 推送与 `pyproject.toml` 版本一致的 `v*` 标签：成功后自动公开发布正式 Release，并设为 Latest；不再创建草稿。
+- 手动运行：仅生成 Artifact，不发布 Release，即使选择版本标签也不会发布。
+
+例如，项目版本更新为 `1.2.1` 并同步、提交 `uv.lock` 后：
 
 ```powershell
-git tag v0.1.4
-git push origin v0.1.4
+git tag -a v1.2.1 -m "SniffPlay v1.2.1"
+git push origin v1.2.1
 ```
 
 完整的本地构建、版本发布和常见问题说明见 [`BUILD_WINDOWS_CN.md`](BUILD_WINDOWS_CN.md)。
 
-草稿 Release 不会直接对外公开。SniffPlay 采用 `GPL-3.0-or-later`，内置 LGPL 兼容 libmpv 构建；检查自动测试、许可证文件和构建来源说明无误后，再到 GitHub Release 页面手动发布草稿。
+在仓库 Releases 页面下载预览版或正式版。每个 Release 附带 ZIP、SHA-256 和 `build-info.json`，记录版本、源码提交、构建时间和 Actions 运行信息。测试、打包或启动检查失败时不会发布新版本。正式版本号由维护者明确指定，不随每次推送自动递增。
 
 ## 扩展音乐来源
 
